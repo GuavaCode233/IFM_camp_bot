@@ -41,10 +41,9 @@ async def reload(ctx: Context, extension: str):
     await ctx.send(f"Reloaded **{extension}**!")
 
 
-# for file_name in os.listdir(".\\Cogs"):     # load Cogs
-#     if(file_name.endswith(".py")):
-#         bot.load_extension(f"Cogs.{file_name[:-3]}")
-bot.load_extension(f"Cogs.main_bot")
+for file_name in os.listdir(".\\Cogs"):     # load Cogs
+    if(file_name.endswith(".py")):
+        bot.load_extension(f"Cogs.{file_name[:-3]}")
 
 if(__name__ == "__main__"):
     bot.run(os.environ.get("TOKEN"))

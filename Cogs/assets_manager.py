@@ -2,15 +2,14 @@
 """
 from nextcord.ext import commands, application_checks
 from nextcord.interactions import Interaction
-from nextcord.ui import View, Button
-from nextcord import ApplicationCheckFailure, SlashOption
+from nextcord import SlashOption
 import nextcord as ntd
 
-from typing import List, Dict, Any
-import os
-import json
 import asyncio
 from pprint import pprint
+from typing import List, Dict
+
+from .utilities import AccessFile
 
 
 # class TeamDepositView(View):
@@ -33,40 +32,7 @@ update content
 json.dump(json_object, file)
 """
 
-class AccessFile:
-    """存取檔案用之母類別。
-    """
-    @classmethod
-    def acc_game_config(cls) -> Dict[str, Any]:
-        with open(".\\Data\\game_config.json", "r") as temp_file:
-            return json.load(temp_file)
 
-    @classmethod
-    def acc_team_assets(cls) -> Dict[str, Dict[str, Any]]:
-        with open(".\\Data\\team_assets.json", "r") as temp_file:
-            return json.load(temp_file)
-
-    @classmethod
-    def save_to(cls, file_name: str, dict_: Dict):
-        """開啟指定檔名的檔案並將dict_寫入。
-
-        如果未找到檔案則 raise `FileNotFoundError`。
-        """
-
-        file_path = f".\\Data\\{file_name}.json"
-        if not os.path.exists(file_path):
-            raise FileNotFoundError(f"File: '{file_name}' not found.")
-        
-        with open(
-            file_path,
-            mode="w",
-            encoding="utf-8"
-        ) as json_file:
-            json.dump(
-                dict_, json_file,
-                ensure_ascii=False,
-                indent=4
-            )
 
 
 class Stock:
@@ -119,6 +85,8 @@ class AssetsManager(commands.Cog, AccessFile):
         如果要開啟新遊戲，重整資料。
         如果資料有損失，重新抓取資料。
         """
+
+        print("assets_manager Ready!")
 
         NEW_GAME: bool = self.CONFIG["NEW_GAME"]
         if(NEW_GAME):   # 開新遊戲
@@ -226,83 +194,6 @@ class AssetsManager(commands.Cog, AccessFile):
             ephemeral=True
         )
 
-class DiscordUI(commands.Cog, AccessFile):
-    """控制Discord端的UI介面
-    """
-
-    def __init__(self, bot: commands.Bot):
-        self.bot = bot
-
-    # 連結Cog方法
-    # @commands.command()
-    # async def inter_com(self, ctx: commands.Context):
-    #     assets: AssetsManager = self.bot.get_cog("AssetsManager") # return type: <class 'Cogs.main_bot.AssetsManager'>
-    #     print(assets.team_assets[0].deposit)  # 可提示子class方便撰寫
-
-    async def resend_assets_ui(self):
-        """|coro|
-
-        刪除舊的資產訊息並重新發送。
-        """
-        pass
-    
-    async def update_assets(self):
-        """|coro|
-
-        任一操作改變資產時更新所有小隊資產訊息。
-        """
-        pass
-
-class MainBot(commands.Cog):
-
-    def __init__(self, bot: commands.Bot):
-        self.bot = bot
-
-    @commands.Cog.listener()
-    async def on_ready(self):
-        print("main_bot Ready!")
-
-    @ntd.slash_command(name="ping", description="Replies Pong!")
-    @application_checks.has_any_role(
-        1218179373522358313,    # 最強大腦活動組
-        1218184965435691019     # 大神等級幹部組
-    )
-    async def ping(self, interaction: Interaction):
-        """Replies Pong!
-        """
-        await interaction.response.send_message("Pong!")
-        # await original_message.edit("ahahah")
-
-    @ntd.slash_command(name="test", description="For general testing.")
-    @application_checks.is_owner()
-    async def test(
-        self,
-        interaction: Interaction,
-        ):
-        """Slash command for general testing.
-        """
-        await interaction.response.send_message("great!")
-
-
-    @ping.error
-    @test.error
-    async def application_command_error_handler(
-        self,
-        interaction: Interaction,
-        error: Exception
-    ):
-        """Application command error handler.
-        """
-        if(isinstance(error, ApplicationCheckFailure)):
-            await interaction.response.send_message(
-                "**你沒有權限使用這個指令!!!**",
-                delete_after=3,
-                ephemeral=True
-            )
-
-    
 
 def setup(bot: commands.Bot):
-    bot.add_cog(MainBot(bot))
     bot.add_cog(AssetsManager(bot))
-    bot.add_cog(DiscordUI(bot))
