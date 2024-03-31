@@ -8,12 +8,12 @@ class AccessFile:
     """
     @classmethod
     def acc_game_config(cls) -> Dict[str, Any]:
-        with open(".\\.\\Data\\game_config.json", "r") as temp_file:
+        with open(".\\Data\\game_config.json", "r") as temp_file:
             return json.load(temp_file)
 
     @classmethod
     def acc_team_assets(cls) -> Dict[str, Dict[str, Any]]:
-        with open(".\\.\\Data\\team_assets.json", "r") as temp_file:
+        with open(".\\Data\\team_assets.json", "r") as temp_file:
             return json.load(temp_file)
 
     @classmethod
