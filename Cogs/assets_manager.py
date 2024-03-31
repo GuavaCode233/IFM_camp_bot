@@ -2,7 +2,6 @@
 """
 from nextcord.ext import commands, application_checks
 from nextcord.interactions import Interaction
-from nextcord import SlashOption
 import nextcord as ntd
 
 import asyncio
@@ -10,29 +9,6 @@ from pprint import pprint
 from typing import List, Dict
 
 from .utilities import AccessFile
-
-
-# class TeamDepositView(View):
-#     """小隊收支按鈕
-#     """
-
-#     @ntd.ui.button(label="加錢", style=ntd.ButtonStyle.green, emoji="➕")
-#     async def deposit_button_callback(self, button: Button, interaction: Interaction):
-#         await interaction.response.send_message("加錢啦", ephemeral=True, delete_after=3)
-
-#     @ntd.ui.button(label="扣錢", style=ntd.ButtonStyle.red, emoji="➖")
-#     async def withdraw_button_callback(self, button: Button, interaction: Interaction):
-#         await interaction.response.send_message("扣錢啦", ephemeral=True, delete_after=3)
-
-#     @ntd.ui.button(label="更改餘額", style=ntd.ButtonStyle.gray, emoji="🔑")
-#     async def change_button_callback(self, button: Button, interaction: Interaction):
-#         await interaction.response.send_message("改餘額", ephemeral=True, delete_after=3)
-"""
-update content
-json.dump(json_object, file)
-"""
-
-
 
 
 class Stock:
@@ -172,12 +148,12 @@ class AssetsManager(commands.Cog, AccessFile):
     async def change_deposit(
         self,
         interaction: Interaction,
-        team: int = SlashOption(
+        team: int = ntd.SlashOption(
             name="小隊",
             description="輸入小隊阿拉伯數字",
             choices={str(t):t for t in range(1, 9)}
         ),
-        amount: int = SlashOption(
+        amount: int = ntd.SlashOption(
             name="改變金額",
             description="輸入金額阿拉伯數字(可為負數)",
         )

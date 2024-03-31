@@ -1,15 +1,12 @@
 """所有機器人管理方面的指令
 """
 from nextcord.ext import commands
-from nextcord.ext.commands import Bot, Context
 import nextcord as ntd
-
-import os
 
 
 class ModCommands(commands.Cog):
 
-    def __init__(self, bot: Bot):
+    def __init__(self, bot: commands.Bot):
         self.bot = bot
 
     @commands.Cog.listener()
@@ -21,21 +18,21 @@ class ModCommands(commands.Cog):
         1218179373522358313,    # 最強大腦活動組
         1218184965435691019     # 大神等級幹部組
     )
-    async def ping(self, ctx: Context):
+    async def ping(self, ctx: commands.Context):
         """Replies Pong!
         """
         await ctx.send("Pong!")
 
     @commands.command()
     @commands.is_owner()
-    async def test(self, ctx: Context):
+    async def test(self, ctx: commands.Context):
         """command for general testing.
         """
         pass
 
     @commands.command()
     @commands.is_owner()
-    async def permanent_invite_link(self, ctx: Context):
+    async def permanent_invite_link(self, ctx: commands.Context):
         """永久邀請連結訊息
         """
         channel = self.bot.get_channel(1218194582840541245)
@@ -53,5 +50,6 @@ class ModCommands(commands.Cog):
         # link itself
         await channel.send("https://discord.gg/hacjPr8fat")
 
-def setup(bot: Bot):
+
+def setup(bot: commands.Bot):
     bot.add_cog(ModCommands(bot))

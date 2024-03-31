@@ -4,6 +4,23 @@ from .utilities import AccessFile
 from .assets_manager import AssetsManager
 
 
+# class TeamDepositView(View):
+#     """小隊收支按鈕
+#     """
+
+#     @ntd.ui.button(label="加錢", style=ntd.ButtonStyle.green, emoji="➕")
+#     async def deposit_button_callback(self, button: Button, interaction: Interaction):
+#         await interaction.response.send_message("加錢啦", ephemeral=True, delete_after=3)
+
+#     @ntd.ui.button(label="扣錢", style=ntd.ButtonStyle.red, emoji="➖")
+#     async def withdraw_button_callback(self, button: Button, interaction: Interaction):
+#         await interaction.response.send_message("扣錢啦", ephemeral=True, delete_after=3)
+
+#     @ntd.ui.button(label="更改餘額", style=ntd.ButtonStyle.gray, emoji="🔑")
+#     async def change_button_callback(self, button: Button, interaction: Interaction):
+#         await interaction.response.send_message("改餘額", ephemeral=True, delete_after=3)
+
+
 class DiscordUI(commands.Cog, AccessFile):
     """控制Discord端的UI介面
     """

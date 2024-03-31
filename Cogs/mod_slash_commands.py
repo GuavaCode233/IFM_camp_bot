@@ -2,7 +2,6 @@
 """
 from nextcord.ext import commands, application_checks
 from nextcord.interactions import Interaction
-
 import nextcord as ntd
 
 
