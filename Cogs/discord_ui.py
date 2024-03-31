@@ -28,11 +28,15 @@ class DiscordUI(commands.Cog, AccessFile):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    #連結Cog方法
+    # #連結Cog方法
+    # @commands.command()
+    # async def inter_com(self, ctx: commands.Context):
+    #     assets: AssetsManager = self.bot.get_cog("AssetsManager") # return type: <class 'Cogs.main_bot.AssetsManager'>
+    #     print(assets.team_assets[0].deposit)  # 可提示子class方便撰寫
+        
     @commands.command()
-    async def inter_com(self, ctx: commands.Context):
-        assets: AssetsManager = self.bot.get_cog("AssetsManager") # return type: <class 'Cogs.main_bot.AssetsManager'>
-        print(assets.team_assets[0].deposit)  # 可提示子class方便撰寫
+    async def test_ui(self, ctx: commands.Context):
+        pass
 
     async def resend_assets_ui(self):
         """|coro|
