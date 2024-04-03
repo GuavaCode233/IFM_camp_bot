@@ -136,6 +136,23 @@ class AssetsManager(commands.Cog, AccessFile):
         self.save_to("team_assets", d)
         pprint(d)
         print()
+    
+    def update_deposit(
+            self,
+            team: int,
+            mode: str,  # "1": deposit, "2": withdraw, "3": change
+            amount: int
+    ):
+        """更新小隊存款額。
+        """
+        
+        if(mode == "1"):
+            self.team_assets[team-1].deposit += amount
+        elif(mode == "2"):
+            self.team_assets[team-1].deposit -= amount
+        elif(mode == "3"):
+            self.team_assets[team-1].deposit = amount
+        self.save_asset(team)
 
     @ntd.slash_command(
         name="change_deposit",
@@ -161,11 +178,14 @@ class AssetsManager(commands.Cog, AccessFile):
         """用指令改變指定小隊存款額。
         """
         
-        self.team_assets[team-1].deposit += amount
-        self.save_asset(team)
+        self.update_deposit(
+            team=team,
+            mode="1",
+            amount=amount
+        )
         # update_asset_ui 更新資產ui顯示
         await interaction.response.send_message(
-            "改變成功!!!",
+            "**改變成功!!!**",
             delete_after=3,
             ephemeral=True
         )
