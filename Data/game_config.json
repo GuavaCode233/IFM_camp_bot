@@ -1,4 +1,11 @@
 {
     "NEW_GAME": true,
-    "STARTER_CASH": 10000
+    "RESET_UI": true,
+    "STARTER_CASH": 10000,
+    "channel_ids":{
+        "CHANGE_DEPOSIT": 1218186135264821298
+    },
+    "message_ids":{
+        "CHANGE_DEPOSIT": 1225413706742239335
+    }
 }

@@ -3,8 +3,10 @@
 from nextcord.ext import commands
 import nextcord as ntd
 
+from .utilities import AccessFile
 
-class ModCommands(commands.Cog):
+
+class ModCommands(commands.Cog, AccessFile):
 
     def __init__(self, bot: commands.Bot):
         self.bot = bot

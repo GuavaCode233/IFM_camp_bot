@@ -2,10 +2,73 @@ from nextcord.ext import commands
 import nextcord as ntd
 
 from datetime import datetime
+from typing import Dict
 
 from .utilities import AccessFile
 from .assets_manager import AssetsManager
 
+
+class ChangeDepositButton(ntd.ui.View):
+    """變更小隊存款按鈕。
+    """
+
+    __slots__ = (
+        "bot"
+    )
+
+    def __init__(self, bot: commands.Bot):
+        super().__init__()
+        self.bot = bot
+
+    def embed_message(self) -> ntd.Embed:
+        """嵌入訊息。
+        """
+
+        time = datetime.now()
+        time = time.strftime("%m/%d %I:%M%p")
+
+        embed = ntd.Embed(
+            color=0x433274,
+            title="變更小隊存款",
+            type="rich"
+        )
+        embed.add_field(
+            name="功能介紹",
+            value="➕__增加存款__\n" \
+                  "增加指定小隊的存款額\n" \
+                  "➖__減少存款__\n" \
+                  "減少指定小隊的存款額\n" \
+                  "🔑__更改存款額__\n" \
+                  "直接更改指定小隊的存款額"
+        )
+        embed.set_footer(
+            text=f"按下按鈕以變更小隊存款 • {time}"
+        )
+
+        return embed
+    
+    @ntd.ui.button(
+        label="變更小隊存款",
+        style=ntd.ButtonStyle.gray,
+        emoji="⚙️"
+    )
+    async def change_deposit_button_callback(
+        self,
+        button: ntd.ui.Button,
+        interaction: ntd.Interaction
+    ):
+        view = ChangeDepositView(
+            interaction.user.display_name,
+            interaction.user.display_avatar,
+            self.bot
+        )
+        await interaction.response.send_message(
+            view=view,
+            embed=view.status_embed(),
+            delete_after=180,
+            ephemeral=True
+        )
+        
 
 class ChangeDepositView(ntd.ui.View):
     """變更小隊存款更能View。
@@ -44,15 +107,17 @@ class ChangeDepositView(ntd.ui.View):
         self.bot = bot
 
     def status_embed(self) -> ntd.Embed:
-        """用於編排嵌入訊息
+        """用於編排嵌入訊息。
         """
+
+        time = datetime.now()
+        time = time.strftime("%I:%M%p")
 
         embed = ntd.Embed(
             colour=0x433274,
             title=self.embed_title,
             type="rich",
-            description=self.embed_description,
-            timestamp=datetime.now()
+            description=self.embed_description
         )
         embed.add_field(
             name="變更模式",
@@ -63,7 +128,7 @@ class ChangeDepositView(ntd.ui.View):
             value=self.amount
         )
         embed.set_footer(
-            text=self.author_name,
+            text=f"{self.author_name} | Today at {time}",
             icon_url=self.author_icon
         )
 
@@ -278,15 +343,28 @@ class DiscordUI(commands.Cog, AccessFile):
 
     def __init__(self, bot: commands.Bot):
         self.bot = bot
+        self.CONFIG = self.acc_game_config()
+        self.CHANNEL_IDS: Dict[str, int] = self.CONFIG["channel_ids"]
+        self.MESSAGE_IDS: Dict[str, int] = self.CONFIG["message_ids"]
 
     # #連結Cog方法
     # @commands.command()
     # async def inter_com(self, ctx: commands.Context):
     #     assets: AssetsManager = self.bot.get_cog("AssetsManager") # return type: <class 'Cogs.main_bot.AssetsManager'>
     #     print(assets.team_assets[0].deposit)  # 可提示子class方便撰寫
+    # @commands.Cog.listener()
+    # async def on_message(self, message: ntd.Message):
+    #     await self.bot.process_commands(message)
+    @commands.Cog.listener()
+    async def on_ready(self):
+        print("discord_ui Ready!")
+
+        RESET_UI: bool = self.CONFIG["RESET_UI"]
+        if(RESET_UI):
+            await self.reset_all_ui()
         
     @commands.command()
-    async def test_ui(self, ctx: commands.Context):
+    async def test_ui_com(self, ctx: commands.Context):
         pass
 
     @ntd.slash_command(
@@ -307,12 +385,25 @@ class DiscordUI(commands.Cog, AccessFile):
             ephemeral=True
         )
 
-    async def resend_assets_ui(self):
+    async def reset_all_ui(self):
         """|coro|
 
-        刪除舊的資產訊息並重新發送。
+        重置有ui元素的訊息，包括:
+
+        `ChangeDepositButton`: 變更小隊存款按鈕；
         """
-        pass
+        
+        channel = self.bot.get_channel(
+            self.CHANNEL_IDS["CHANGE_DEPOSIT"]
+        )
+        message = await channel.fetch_message(
+            self.MESSAGE_IDS["CHANGE_DEPOSIT"]
+        )
+        view = ChangeDepositButton(self.bot)
+        await message.edit(
+            embed=view.embed_message(),
+            view=view
+        )
     
     async def update_assets(self):
         """|coro|
