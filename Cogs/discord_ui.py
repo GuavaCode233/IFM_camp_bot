@@ -385,6 +385,30 @@ class DiscordUI(commands.Cog, AccessFile):
             ephemeral=True
         )
 
+    @commands.command()
+    async def fetch_team_message_ids(self, ctx: commands.Context, count: int):
+        """擷取所有小隊(資產)頻道的最初訊息id。
+
+        count: 擷取幾則訊息
+        """
+
+        dict_ = self.CONFIG
+        message_ids: Dict[str: Dict[str: int]] = dict_["message_ids"]
+        
+        for t in range(1, 9):
+            channel = self.bot.get_channel(
+                self.CHANNEL_IDS[f"team_{t}"]["ASSET"]
+            )
+            message_ids.update({f"team_{t}": {}})   # 創建t小隊之訊息id字典
+            for m in range(1, count+1): # 依照指定訊息數量存入訊息id字典
+                if(message_ids[f"team_{t}"].get(f"msg_{m}", None) is None):
+                    msg = await channel.send(f"initial message {m}")
+                    message_ids[f"team_{t}"].update(
+                        {f"msg_{m}": msg.id}
+                    )
+                
+        self.save_to("game_config", dict_)
+
     async def reset_all_ui(self):
         """|coro|
 
