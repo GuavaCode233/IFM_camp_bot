@@ -4,8 +4,8 @@ import nextcord as ntd
 from datetime import datetime
 from typing import Dict, List, Any
 
-from Cogs.utilities import AccessFile
-from Cogs.assets_manager import AssetsManager
+from .utilities import AccessFile
+from .assets_manager import AssetsManager
 
 
 class ChangeDepositButton(ntd.ui.View):

@@ -10,10 +10,6 @@ import asyncio
 from .utilities import AccessFile
 
 
-class Stock:
-    pass
-
-
 class TeamAssets:
     """儲存小隊資產。
     包括「小隊編號」、「資產總額」、「存款總額」。
