@@ -4,20 +4,18 @@ import nextcord as ntd
 from datetime import datetime
 from typing import Dict, List, Any
 
-from .utilities import AccessFile
-from .assets_manager import AssetsManager
+from Cogs.utilities import AccessFile
+from Cogs.assets_manager import AssetsManager
 
 
 class ChangeDepositButton(ntd.ui.View):
     """變更小隊存款按鈕。
     """
 
-    __slots__ = (
-        "bot"
-    )
+    __slots__ = ("bot")
 
     def __init__(self, bot: commands.Bot):
-        super().__init__()
+        super().__init__(timeout=None)
         self.bot = bot
 
     def embed_message(self) -> ntd.Embed:
@@ -262,6 +260,14 @@ class ChangeDepositView(ntd.ui.View):
                 delete_after=5,
                 view=self
             )
+            ui: DiscordUI = self.bot.get_cog("DiscordUI")
+            await ui.update_log(
+                type_="AssetUpdate",
+                team=self.selected_team,
+                mode=self.selected_mode,
+                amount=self.amount,
+                user=interaction.user.display_name
+            )
             self.stop()
         else:
             await interaction.response.send_message(
@@ -297,6 +303,8 @@ class ChangeDepositView(ntd.ui.View):
 class InputAmount(ntd.ui.Modal):
     """按下「輸入存款」按鈕後彈出的視窗。
     """
+
+    __slots__ = ("original_view", "amount")
 
     def __init__(
             self,
@@ -338,9 +346,74 @@ class InputAmount(ntd.ui.Modal):
         self.stop()
 
 
-class FormattedLogView(ntd.ui.View):
-    """收支動態View
+class FormattedLogEmbed(ntd.Embed, AccessFile):
+    """收支動態 Embed Message。
     """
+
+    def __init__(self):
+        super().__init__(
+            color=0x433274,
+            title="小隊收支",
+            type="rich",
+            description="小隊存款金額的變動紀錄以及\n買賣股票紀錄"
+        )
+
+        log: Dict[str, List[Dict[str, Any]]] = self.acc_log().copy()
+        log.pop("serial")
+        # 將所有字典展開唯一list並按照serial排序
+        record_list: List[Dict[str, Any]] = sorted(
+            [item for sublist in log.values() for item in sublist],
+            key=lambda x: x["serial"]
+        )
+        for record in record_list:
+            if(record["type"] == "AssetUpdate"):
+                self.add_field(
+                    name=f"{record["user"]} 在 {record["time"]}\n" \
+                         f"變更第{record["team"]}小隊存款",
+                    value=f"{record["original"]} {u"\u2192"} {record["updated"]}"
+                )
+            else:
+                pass
+        
+        self.set_footer(
+            text=f"資料更新時間: {datetime.now().strftime("%m/%d %I:%M%p")}"
+        )
+
+
+class FormattedTeamLogEmbed(ntd.Embed, AccessFile):
+    """收支動態 Embed Message。
+    """
+
+    def __init__(
+            self,
+            type_: str,
+            mode: str,
+            amount: int,
+            user: str
+    ):
+        if(type_ == "AssetUpdate"):
+            title = {
+                "1": "🔔即時入帳通知🔔",
+                "2": "💸F-pay消費通知💸",
+                "3": "🔑帳戶額變更通知🔑"
+            }[mode]
+            description = {
+                "1": f"關主: {user} 已將 **FP${amount}** 匯入帳戶!",
+                "2": f"關主: {user} 已將 **FP${amount}** 從帳戶中扣除!",
+                "3": f"關主: {user} 已改變帳戶餘額為 **$FP{amount}** !"
+            }[mode]
+        else:
+            pass
+        
+        super().__init__(
+            color=0x433274,
+            title=title,
+            type="rich",
+            description=description
+        )
+        self.set_footer(
+            text=f"{datetime.now().strftime("%m/%d %I:%M%p")}"
+        )
 
 
 class DiscordUI(commands.Cog, AccessFile):
@@ -373,6 +446,8 @@ class DiscordUI(commands.Cog, AccessFile):
         
         if(CLEAR_LOG):
             await self.clear_log()
+        else:
+            await self.update_log()
 
     @commands.command()
     async def test_ui_com(self, ctx: commands.Context):
@@ -388,17 +463,10 @@ class DiscordUI(commands.Cog, AccessFile):
             guild_ids=[1218130958536937492]
     )
     async def test_ui(self, interaction: ntd.Interaction):
-        view = ChangeDepositView(
-            interaction.user.display_name,
-            interaction.user.display_avatar,
-            self.bot
-        )
-        await interaction.response.send_message(
-            view=view,
-            embed=view.status_embed(),
-            delete_after=180,
-            ephemeral=True
-        )
+        # await interaction.response.send_message(
+        #     embed=FormattedLogEmbed()
+        # )
+        pass
 
     @commands.command()
     async def fetch_team_message_ids(self, ctx: commands.Context, count: int):
@@ -445,7 +513,9 @@ class DiscordUI(commands.Cog, AccessFile):
         )
     
     async def clear_log(self):
-        """清除已發送的小隊即時訊息以及清除收支動態。
+        """|coro|
+        
+        清除已發送的小隊即時訊息以及清除收支動態，並清除log資料。
         """
 
         log = self.acc_log()
@@ -462,11 +532,47 @@ class DiscordUI(commands.Cog, AccessFile):
             msg_count = len(log[f"{t}"])
             await channel.purge(limit=msg_count)
         
-
-        
-        # 清除收支動態
+        # 清除log資料
+        self.clear_log_data()
+        # 更新log
+        await self.update_log()
             
-    
+    async def update_log(
+            self,
+            type_: str | None = None,
+            team: int | None = None,
+            mode: str | None = None,
+            amount: int | None = None,
+            user: str | None = None
+    ):
+        """|coro|
+
+        更新收支動態，或更新收支並發送即時動態訊息。
+        """
+
+        channel = self.bot.get_channel(
+            self.CHANNEL_IDS["ALTERATION_LOG"]
+        )
+        message = await channel.fetch_message(
+            self.MESSAGE_IDS["ALTERATION_LOG"]
+        )
+        await message.edit(
+            content=None,
+            embed=FormattedLogEmbed()
+        )
+        if(isinstance(type_, str)):
+            channel = self.bot.get_channel(
+                self.CHANNEL_IDS[f"team_{team}"]["NOTICE"]
+            )
+            await channel.send(
+                embed=FormattedTeamLogEmbed(
+                    type_=type_,
+                    mode=mode,
+                    amount=amount,
+                    user=user
+                )
+            )
+
     async def update_assets(self):
         """|coro|
 

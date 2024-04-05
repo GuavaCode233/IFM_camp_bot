@@ -155,6 +155,7 @@ class AssetsManager(commands.Cog, AccessFile):
         elif(mode == "3"):
             self.team_assets[team-1].deposit = amount
         
+        # 儲存紀錄
         self.log(
             type_="AssetUpdate",
             time=datetime.now(),
@@ -163,8 +164,9 @@ class AssetsManager(commands.Cog, AccessFile):
             original=original,
             updated=self.team_assets[team-1].deposit
         )
-
+        # 儲存資料
         self.save_asset(team)
+        
 
     @ntd.slash_command(
         name="change_deposit",

@@ -1,27 +1,3 @@
 {
-    "2": [
-        {
-            "type": "AssetUpdate",
-            "time": "05/04 10:54AM",
-            "user": "guava.png",
-            "original": 10000,
-            "updated": 8500
-        },
-        {
-            "type": "AssetUpdate",
-            "time": "05/04 10:54AM",
-            "user": "guava.png",
-            "original": 8500,
-            "updated": 68500
-        }
-    ],
-    "8": [
-        {
-            "type": "AssetUpdate",
-            "time": "05/04 10:55AM",
-            "user": "guava.png",
-            "original": 10000,
-            "updated": 6667
-        }
-    ]
+    "serial": 0
 }

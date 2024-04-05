@@ -20,7 +20,7 @@ class AccessFile:
         
     @classmethod
     def acc_log(cls) -> Dict[str, List[Dict[str, Any]]]:
-        with open(".\\Data\\alteration_log", "r") as temp_file:
+        with open(".\\Data\\alteration_log.json", "r") as temp_file:
             return json.load(temp_file)
 
     @classmethod
@@ -64,7 +64,7 @@ class AccessFile:
             mode="r",
             encoding="utf-8"
         ) as json_file:
-            dict_: Dict[str, List[Dict[str, Any]]] = json.load(json_file)
+            dict_: Dict[str, int | List[Dict[str, Any]]] = json.load(json_file)
 
         if(dict_.get(team, None) is None):
             dict_[team] = []
@@ -73,8 +73,10 @@ class AccessFile:
             dict_[team].append(
                 {
                     "type": type_,
-                    "time": time.strftime("%d/%m %I:%M%p"),
+                    "time": time.strftime("%m/%d %I:%M%p"),
                     "user": user,
+                    "serial": dict_["serial"],
+                    "team": team,
                     "original": original,
                     "updated": updated
                 }            
@@ -83,6 +85,8 @@ class AccessFile:
             raise NotImplementedError("StockChange log not implemented .")
         else:
             raise Exception(f"log type: {type_} not found.")
+
+        dict_["serial"] += 1
 
         with open(
             ".\\Data\\alteration_log.json",
@@ -96,7 +100,7 @@ class AccessFile:
             )
     
     @classmethod
-    def clear_log(cls):
+    def clear_log_data(cls):
         """清除log。
         """
 
@@ -106,7 +110,7 @@ class AccessFile:
             encoding="utf-8"
         ) as json_file:
             json.dump(
-                {}, json_file,
+                {"serial": 0}, json_file,
                 ensure_ascii=False,
                 indent=4
             )
