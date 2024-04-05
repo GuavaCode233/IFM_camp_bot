@@ -1,9 +1,11 @@
 {
     "NEW_GAME": true,
     "RESET_UI": true,
+    "CLEAR_LOG": false,
     "STARTER_CASH": 10000,
     "channel_ids": {
         "CHANGE_DEPOSIT": 1218186135264821298,
+        "ALTERATION_LOG": 1218186923747577998,
         "team_1": {
             "ASSET": 1218142530076676137,
             "NOTICE": 1225459270515036304
@@ -39,6 +41,7 @@
     },
     "message_ids": {
         "CHANGE_DEPOSIT": 1225413706742239335,
+        "ALTERATION_LOG": 1225645557263896637,
         "team_1": {
             "msg_1": 1225472053487075401
         },

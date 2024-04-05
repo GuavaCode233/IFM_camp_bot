@@ -1,12 +1,11 @@
-"""主要功能，包含所有application commands
-"""
 from nextcord.ext import commands, application_checks
 from nextcord.interactions import Interaction
 import nextcord as ntd
 
-import asyncio
-from pprint import pprint
 from typing import List, Dict
+from datetime import datetime
+from pprint import pprint
+import asyncio
 
 from .utilities import AccessFile
 
@@ -141,17 +140,30 @@ class AssetsManager(commands.Cog, AccessFile):
             self,
             team: int,
             mode: str,  # "1": deposit, "2": withdraw, "3": change
-            amount: int
+            amount: int,
+            user: str
     ):
-        """更新小隊存款額。
+        """更新小隊存款額並記錄log。
         """
         
+        original = self.team_assets[team-1].deposit # 原餘額
+
         if(mode == "1"):
             self.team_assets[team-1].deposit += amount
         elif(mode == "2"):
             self.team_assets[team-1].deposit -= amount
         elif(mode == "3"):
             self.team_assets[team-1].deposit = amount
+        
+        self.log(
+            type_="AssetUpdate",
+            time=datetime.now(),
+            user=user,
+            team=str(team),
+            original=original,
+            updated=self.team_assets[team-1].deposit
+        )
+
         self.save_asset(team)
 
     @ntd.slash_command(
@@ -181,7 +193,8 @@ class AssetsManager(commands.Cog, AccessFile):
         self.update_deposit(
             team=team,
             mode="1",
-            amount=amount
+            amount=amount,
+            user=interaction.user.display_name
         )
         # update_asset_ui 更新資產ui顯示
         await interaction.response.send_message(

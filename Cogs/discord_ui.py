@@ -2,7 +2,7 @@ from nextcord.ext import commands
 import nextcord as ntd
 
 from datetime import datetime
-from typing import Dict
+from typing import Dict, List, Any
 
 from .utilities import AccessFile
 from .assets_manager import AssetsManager
@@ -252,7 +252,8 @@ class ChangeDepositView(ntd.ui.View):
             asset.update_deposit(
                 team=self.selected_team,  # 變更第n小隊存款
                 mode=self.selected_mode,
-                amount=self.amount
+                amount=self.amount,
+                user=interaction.user.display_name
             )
             self.clear_items()
             await interaction.response.edit_message(
@@ -337,6 +338,11 @@ class InputAmount(ntd.ui.Modal):
         self.stop()
 
 
+class FormattedLogView(ntd.ui.View):
+    """收支動態View
+    """
+
+
 class DiscordUI(commands.Cog, AccessFile):
     """控制Discord端的UI介面
     """
@@ -360,12 +366,21 @@ class DiscordUI(commands.Cog, AccessFile):
         print("discord_ui Ready!")
 
         RESET_UI: bool = self.CONFIG["RESET_UI"]
+        CLEAR_LOG: bool = self.CONFIG["CLEAR_LOG"]
         if(RESET_UI):
             await self.reset_all_ui()
+            print("All ui elements has been reset.")
         
+        if(CLEAR_LOG):
+            await self.clear_log()
+
     @commands.command()
     async def test_ui_com(self, ctx: commands.Context):
-        pass
+        channel = self.bot.get_channel(
+            self.CHANNEL_IDS["ALTERATION_LOG"]
+        )
+        msg = await channel.send("initial log message")
+        print(msg.id)
 
     @ntd.slash_command(
             name="test_ui",
@@ -428,6 +443,29 @@ class DiscordUI(commands.Cog, AccessFile):
             embed=view.embed_message(),
             view=view
         )
+    
+    async def clear_log(self):
+        """清除已發送的小隊即時訊息以及清除收支動態。
+        """
+
+        log = self.acc_log()
+
+        # 清除各小隊即時訊息
+        for t in range(1, 9):
+            channel = self.bot.get_channel(
+                self.CHANNEL_IDS[f"team_{t}"]["NOTICE"]
+            )
+
+            if(log.get(str(t), None) is None):  # 有記錄才需要刪
+                continue
+            
+            msg_count = len(log[f"{t}"])
+            await channel.purge(limit=msg_count)
+        
+
+        
+        # 清除收支動態
+            
     
     async def update_assets(self):
         """|coro|
