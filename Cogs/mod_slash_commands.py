@@ -12,7 +12,8 @@ class SlashCommands(commands.Cog):
 
     @commands.Cog.listener()
     async def on_ready(self):
-        print("mod_slash_commands Ready!")
+        print("Loaded mod_slash_commands")
+        print()
 
     @ntd.slash_command(name="ping", description="Replies Pong!")
     @application_checks.has_any_role(

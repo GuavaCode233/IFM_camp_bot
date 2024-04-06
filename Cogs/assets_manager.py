@@ -57,13 +57,18 @@ class AssetsManager(commands.Cog, AccessFile):
         如果資料有損失，重新抓取資料。
         """
 
-        print("assets_manager Ready!")
+        print("Loaded asset_manager")
 
+        print("Asset Status:")
         NEW_GAME: bool = self.CONFIG["NEW_GAME"]
         if(NEW_GAME):   # 開新遊戲
             self.reset_all_assets()
+            print("All assets has been reset.")
         elif(self.team_assets is None): # 資料不對等
             self.fetch_assets()
+            print("Assets restored.")
+        
+        print()
         
     def reset_all_assets(self):
         """清除所有資產資料，重創銀行帳戶。

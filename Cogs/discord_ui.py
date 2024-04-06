@@ -75,7 +75,7 @@ class ChangeDepositButton(ntd.ui.View):
         )
         
 
-class ChangeDepositView(ntd.ui.View):
+class ChangeDepositView(ntd.ui.View, AccessFile):
     """變更小隊存款更能View。
     """
 
@@ -87,6 +87,7 @@ class ChangeDepositView(ntd.ui.View):
         "author_name",
         "author_icon",
         "selected_team",
+        "selected_team_deposit",
         "selected_mode",
         "bot"
     )
@@ -100,13 +101,14 @@ class ChangeDepositView(ntd.ui.View):
         super().__init__(timeout=180)
         # embed message
         self.embed_title: str = "變更小隊存款"  # 變更第n小隊存款
-        self.embed_description: str | None = "請選擇小隊" # None
+        self.embed_description: str = "請選擇小隊"
         self.mode_field_value: str = "請選擇變更模式"
         self.amount: str | int = "請輸入金額"   # 金額: int
         self.author_name = author_name
         self.author_icon = author_icon
         # slect status
         self.selected_team: int | None = None
+        self.selected_team_deposit: int | None = None # 該小隊目前存款
         self.selected_mode: str | None = None
         # bot
         self.bot = bot
@@ -128,10 +130,16 @@ class ChangeDepositView(ntd.ui.View):
             name="變更模式",
             value=self.mode_field_value
         )
-        embed.add_field(
-            name="變更金額",
-            value=self.amount
-        )
+        if(isinstance(self.amount, str)):
+            embed.add_field(
+                name="變更金額",
+                value=self.amount
+            )
+        else:
+            embed.add_field(
+                name="變更金額",
+                value=f"{self.amount:,}"
+            )
         embed.set_footer(
             text=f"{self.author_name} | Today at {time}",
             icon_url=self.author_icon
@@ -173,7 +181,11 @@ class ChangeDepositView(ntd.ui.View):
 
         self.selected_team = int(select.values[0])
         self.embed_title = f"變更第{select.values[0]}小隊存款"
-        self.embed_description = None
+        self.selected_team_deposit = \
+            self.acc_team_assets()[select.values[0]]["deposit"]
+        self.embed_description = \
+            f"第{select.values[0]}小隊目前存款: " \
+            f"{self.selected_team_deposit:,}"
 
         await interaction.response.edit_message(
             embed=self.status_embed()
@@ -251,8 +263,19 @@ class ChangeDepositView(ntd.ui.View):
     ):
         """確認送出按扭callback。
         """
-
+        
         if(self.input_check()): # 有效的輸入
+            # 檢查小隊金額是否足夠
+            self.selected_team_deposit = \
+                self.acc_team_assets()[f"{self.selected_team}"]["deposit"]
+            if(self.selected_mode == "2" and
+               self.selected_team_deposit < self.amount):   # 此小隊金額不足扣繳
+                await interaction.response.send_message(
+                    content=f"**第{self.selected_team}小隊帳戶餘額不足!!!**",
+                    delete_after=5,
+                    ephemeral=True
+                )
+                return
             # 變更第n小隊存款
             asset: AssetsManager = self.bot.get_cog("AssetsManager")
             asset.update_deposit(   
@@ -383,7 +406,7 @@ class LogEmbed(ntd.Embed, AccessFile):
                 self.add_field(
                     name=f"{record["user"]} 在 {record["time"]}\n" \
                          f"變更第{record["team"]}小隊存款",
-                    value=f"{record["original"]} {u"\u2192"} {record["updated"]}"
+                    value=f"{record["original"]:,} {u"\u2192"} {record["updated"]:,}"
                 )
             else:
                 pass
@@ -411,9 +434,9 @@ class TeamLogEmbed(ntd.Embed, AccessFile):
                 "3": "🔑帳戶額變更通知🔑"
             }[mode]
             description = {
-                "1": f"關主: {user} 已將 **FP${amount}** 匯入帳戶!",
-                "2": f"關主: {user} 已將 **FP${amount}** 從帳戶中扣除!",
-                "3": f"關主: {user} 已改變帳戶餘額為 **$FP{amount}** !"
+                "1": f"關主: {user} 已將 **FP${amount:,}** 匯入帳戶!",
+                "2": f"關主: {user} 已將 **FP${amount:,}** 從帳戶中扣除!",
+                "3": f"關主: {user} 已改變帳戶餘額為 **$FP{amount:,}** !"
             }[mode]
         else:
             pass
@@ -444,11 +467,11 @@ class TeamAssetEmbed(ntd.Embed, AccessFile):
         asset_data = self.acc_team_assets()[f"{team}"]
         self.add_field( # 要加市值
             name="",
-            value=f"**總資產: {asset_data["deposit"]}** (股票市值+存款)"
+            value=f"**總資產: {asset_data["deposit"]:,}** (股票市值+存款)"
         )
         self.add_field(
             name="",
-            value=f"**存款: {asset_data["deposit"]}**"
+            value=f"**存款: {asset_data["deposit"]:,}**"
         )
 
 
@@ -480,19 +503,28 @@ class DiscordUI(commands.Cog, AccessFile):
 
     @commands.Cog.listener()
     async def on_ready(self):
-        print("discord_ui Ready!")
+        print("Loaded discord_ui")
 
+        print("UI Status:")
         RESET_UI: bool = self.CONFIG["RESET_UI"]
         CLEAR_LOG: bool = self.CONFIG["CLEAR_LOG"]
+        UPDATE_ASSET: bool = self.CONFIG["UPDATE_ASSET"]
         if(RESET_UI):
             await self.reset_all_ui()
-            await self.update_asset()
             print("All ui elements has been reset.")
+        
+        if(UPDATE_ASSET):
+            await self.update_asset()
+            print("Team's asset has been updated.")
         
         if(CLEAR_LOG):
             await self.clear_log()
+            print("Log has been cleared.")
         else:
             await self.update_log()
+            print("Log has been updated.")
+
+        print()
 
     @commands.command()
     async def test_ui_com(self, ctx: commands.Context):

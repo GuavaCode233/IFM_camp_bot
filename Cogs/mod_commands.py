@@ -13,7 +13,8 @@ class ModCommands(commands.Cog, AccessFile):
 
     @commands.Cog.listener()
     async def on_ready(self): 
-        print("mod_commands Ready!")
+        print("Loaded mod_commands")
+        print()
 
     @commands.command()
     @commands.has_any_role(
