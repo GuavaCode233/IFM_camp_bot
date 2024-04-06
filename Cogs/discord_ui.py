@@ -30,13 +30,20 @@ class ChangeDepositButton(ntd.ui.View):
             title="變更小隊存款",
             type="rich"
         )
+        # embed.add_field(name="功能介紹", value="")
         embed.add_field(
             name="功能介紹",
-            value="➕__增加存款__\n" \
-                  "增加指定小隊的存款額\n" \
-                  "➖__減少存款__\n" \
-                  "減少指定小隊的存款額\n" \
-                  "🔑__更改存款額__\n" \
+            value="➕**增加存款**\n" \
+                  "增加指定小隊的存款額"
+        )
+        embed.add_field(
+            name="",
+            value="➖**減少存款**\n" \
+                  "減少指定小隊的存款額"
+        )
+        embed.add_field(
+            name="",
+            value="🔑**更改存款額**\n" \
                   "直接更改指定小隊的存款額"
         )
         embed.set_footer(
@@ -245,14 +252,16 @@ class ChangeDepositView(ntd.ui.View):
         """確認送出按扭callback。
         """
 
-        if(self.input_check()):
+        if(self.input_check()): # 有效的輸入
+            # 變更第n小隊存款
             asset: AssetsManager = self.bot.get_cog("AssetsManager")
-            asset.update_deposit(
-                team=self.selected_team,  # 變更第n小隊存款
+            asset.update_deposit(   
+                team=self.selected_team,  
                 mode=self.selected_mode,
                 amount=self.amount,
                 user=interaction.user.display_name
             )
+            # 改變成工訊息
             self.clear_items()
             await interaction.response.edit_message(
                 content="**改變成功!!!**",
@@ -260,7 +269,11 @@ class ChangeDepositView(ntd.ui.View):
                 delete_after=5,
                 view=self
             )
+            
+            # 更新小隊資產
             ui: DiscordUI = self.bot.get_cog("DiscordUI")
+            await ui.update_asset(team=self.selected_team)
+            # 發送即時通知
             await ui.update_log(
                 type_="AssetUpdate",
                 team=self.selected_team,
@@ -269,7 +282,7 @@ class ChangeDepositView(ntd.ui.View):
                 user=interaction.user.display_name
             )
             self.stop()
-        else:
+        else:   # 無效的輸入
             await interaction.response.send_message(
                 content="**輸入資料不完整!!!**",
                 delete_after=5,
@@ -346,7 +359,7 @@ class InputAmount(ntd.ui.Modal):
         self.stop()
 
 
-class FormattedLogEmbed(ntd.Embed, AccessFile):
+class LogEmbed(ntd.Embed, AccessFile):
     """收支動態 Embed Message。
     """
 
@@ -380,8 +393,8 @@ class FormattedLogEmbed(ntd.Embed, AccessFile):
         )
 
 
-class FormattedTeamLogEmbed(ntd.Embed, AccessFile):
-    """收支動態 Embed Message。
+class TeamLogEmbed(ntd.Embed, AccessFile):
+    """小隊即時通知 Embed Message。
     """
 
     def __init__(
@@ -416,9 +429,48 @@ class FormattedTeamLogEmbed(ntd.Embed, AccessFile):
         )
 
 
+class TeamAssetEmbed(ntd.Embed, AccessFile):
+    """小隊資產 Embed Message。
+
+    總資產(股票市值+存款)、存款。
+    """
+
+    def __init__(self, team: int):
+        super().__init__(
+            color=0x433274,
+            title=f"第{team}小隊 F-pay帳戶",
+            type="rich"
+        )
+        asset_data = self.acc_team_assets()[f"{team}"]
+        self.add_field( # 要加市值
+            name="",
+            value=f"**總資產: {asset_data["deposit"]}** (股票市值+存款)"
+        )
+        self.add_field(
+            name="",
+            value=f"**存款: {asset_data["deposit"]}**"
+        )
+
+
+class TeamStockEmbed(ntd.Embed, AccessFile):
+    """小隊持股狀況 Embed Message。
+
+    持有股票、股票市值、投入成本、未實現投資損益、已實現投資損益、總收益
+    """
+
+    pass
+
+
 class DiscordUI(commands.Cog, AccessFile):
     """控制Discord端的UI介面
     """
+
+    __slots__ = (
+        "bot",
+        "CONFIG",
+        "CHANNEL_IDS",
+        "MESSAGE_IDS"
+    )
 
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -426,14 +478,6 @@ class DiscordUI(commands.Cog, AccessFile):
         self.CHANNEL_IDS: Dict[str, int] = self.CONFIG["channel_ids"]
         self.MESSAGE_IDS: Dict[str, int] = self.CONFIG["message_ids"]
 
-    # #連結Cog方法
-    # @commands.command()
-    # async def inter_com(self, ctx: commands.Context):
-    #     assets: AssetsManager = self.bot.get_cog("AssetsManager") # return type: <class 'Cogs.main_bot.AssetsManager'>
-    #     print(assets.team_assets[0].deposit)  # 可提示子class方便撰寫
-    # @commands.Cog.listener()
-    # async def on_message(self, message: ntd.Message):
-    #     await self.bot.process_commands(message)
     @commands.Cog.listener()
     async def on_ready(self):
         print("discord_ui Ready!")
@@ -442,6 +486,7 @@ class DiscordUI(commands.Cog, AccessFile):
         CLEAR_LOG: bool = self.CONFIG["CLEAR_LOG"]
         if(RESET_UI):
             await self.reset_all_ui()
+            await self.update_asset()
             print("All ui elements has been reset.")
         
         if(CLEAR_LOG):
@@ -451,11 +496,7 @@ class DiscordUI(commands.Cog, AccessFile):
 
     @commands.command()
     async def test_ui_com(self, ctx: commands.Context):
-        channel = self.bot.get_channel(
-            self.CHANNEL_IDS["ALTERATION_LOG"]
-        )
-        msg = await channel.send("initial log message")
-        print(msg.id)
+        pass
 
     @ntd.slash_command(
             name="test_ui",
@@ -464,7 +505,7 @@ class DiscordUI(commands.Cog, AccessFile):
     )
     async def test_ui(self, interaction: ntd.Interaction):
         # await interaction.response.send_message(
-        #     embed=FormattedLogEmbed()
+        #     embed=LogEmbed()
         # )
         pass
 
@@ -550,6 +591,19 @@ class DiscordUI(commands.Cog, AccessFile):
         更新收支動態，或更新收支並發送即時動態訊息。
         """
 
+        if(isinstance(type_, str)): # 發送即時訊息
+            channel = self.bot.get_channel(
+                self.CHANNEL_IDS[f"team_{team}"]["NOTICE"]
+            )
+            await channel.send(
+                embed=TeamLogEmbed(
+                    type_=type_,
+                    mode=mode,
+                    amount=amount,
+                    user=user
+                )
+            )
+
         channel = self.bot.get_channel(
             self.CHANNEL_IDS["ALTERATION_LOG"]
         )
@@ -558,28 +612,41 @@ class DiscordUI(commands.Cog, AccessFile):
         )
         await message.edit(
             content=None,
-            embed=FormattedLogEmbed()
+            embed=LogEmbed()
         )
-        if(isinstance(type_, str)):
-            channel = self.bot.get_channel(
-                self.CHANNEL_IDS[f"team_{team}"]["NOTICE"]
-            )
-            await channel.send(
-                embed=FormattedTeamLogEmbed(
-                    type_=type_,
-                    mode=mode,
-                    amount=amount,
-                    user=user
-                )
-            )
 
-    async def update_assets(self):
+    async def update_asset(self, team: int | None = None):
         """|coro|
 
-        任一操作改變資產時更新所有小隊資產訊息。
+        任一操作改變資產時更新小隊資產訊息。
         """
-        pass
-
+        
+        if(isinstance(team, int)):  # 更新指定小隊資產訊息
+            channel = self.bot.get_channel(
+                self.CHANNEL_IDS[f"team_{team}"]["ASSET"]
+            )
+            message = await channel.fetch_message(
+                self.MESSAGE_IDS[f"team_{team}"]["msg_1"]
+            )
+            await message.edit(
+                embeds=[
+                    TeamAssetEmbed(team)
+                ]
+            )
+        else:   # 更新所有小隊資產訊息
+            for t in range(1, 9):
+                channel = self.bot.get_channel(
+                    self.CHANNEL_IDS[f"team_{t}"]["ASSET"]
+                )
+                message = await channel.fetch_message(
+                    self.MESSAGE_IDS[f"team_{t}"]["msg_1"]
+                )
+                await message.edit(
+                    content=None,
+                    embeds=[
+                        TeamAssetEmbed(t)
+                    ]
+                )
 
 def setup(bot: commands.Bot):
     bot.add_cog(DiscordUI(bot))
