@@ -1,54 +1,19 @@
-# import json
-# from typing import Dict, Any
+import pandas as pd
+import json
 from pprint import pprint
+from typing import Dict, List, Any
 
-# with open(".\\Test\\test.json", "r", encoding="utf-8") as temp_file:  # access
-#     d: Dict[str, Dict[str, Any]] = json.load(temp_file)
+# 讀取 Excel 檔案並轉換為 DataFrame
+df = pd.read_excel(".\\Test\\test_data.xlsx", sheet_name="Q4")
+# print(df)
+# 將 DataFrame 轉換為 JSON 格式
+json_data: List[Dict[str, Any]] = json.loads(df.to_json(orient="records"))
 
-# d.update({"1":{"cash": 0, "stock_cost": 0, "stocks": [], "revenue": 0}})  
-# d.pop("hello", None)   # remove key from dictionary, default: None
+# pprint(json_data)
+for d in json_data:
+    d["symbol"] = d["symbol"].lstrip("n")
 
 
-# with open(".\\Test\\test.json",
-#           mode="w",
-#           encoding="utf-8",) as json_file:  # dump new data
-#     json.dump(d, json_file, ensure_ascii=False, indent=4)
-    
-d = {
-    "2": [
-        {
-            "type": "AssetUpdate",
-            "time": "05/04 10:54AM",
-            "user": "guava.png",
-            "original": 10000,
-            "serial": 1,
-            "updated": 8500
-        },
-        {
-            "type": "AssetUpdate",
-            "time": "05/04 10:54AM",
-            "user": "guava.png",
-            "serial": 2,
-            "original": 8500,
-            "updated": 68500
-        }
-    ],
-    "8": [
-        {
-            "type": "AssetUpdate",
-            "time": "05/04 10:55AM",
-            "user": "guava.png",
-            "serial": 3,
-            "original": 10000,
-            "updated": 6667
-        }
-    ]
-}
-
-t_list = [] # 輸出的list
-for r in d.values():
-    t_list += r
-
-t_list.sort(key=lambda x: x["serial"])
-
-pprint(t_list)
+# 將 JSON 寫入檔案
+with open(".\\Test\\test_output.json", 'w', encoding="utf-8") as f:
+    json.dump(json_data, f, ensure_ascii=False, indent=4)

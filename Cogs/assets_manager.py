@@ -5,7 +5,6 @@ import nextcord as ntd
 from typing import List, Dict
 from datetime import datetime
 from pprint import pprint
-import asyncio
 
 from .utilities import AccessFile
 
@@ -41,7 +40,7 @@ class TeamAssets:
 
 
 class AssetsManager(commands.Cog, AccessFile):
-    """資產控制
+    """資產控制。
     """
 
     def __init__(self, bot: commands.Bot):
