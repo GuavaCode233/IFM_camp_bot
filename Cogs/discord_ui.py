@@ -264,53 +264,54 @@ class ChangeDepositView(ntd.ui.View, AccessFile):
         """確認送出按扭callback。
         """
         
-        if(self.input_check()): # 有效的輸入
-            # 檢查小隊金額是否足夠
-            self.selected_team_deposit = \
-                self.acc_team_assets()[f"{self.selected_team}"]["deposit"]
-            if(self.selected_mode == "2" and
-               self.selected_team_deposit < self.amount):   # 此小隊金額不足扣繳
-                await interaction.response.send_message(
-                    content=f"**第{self.selected_team}小隊帳戶餘額不足!!!**",
+        if(not self.input_check()): # 檢查資料都填齊
+            await interaction.response.send_message(
+                    content="**輸入資料不完整!!!**",
                     delete_after=5,
                     ephemeral=True
                 )
-                return
-            # 變更第n小隊存款
-            asset: AssetsManager = self.bot.get_cog("AssetsManager")
-            asset.update_deposit(   
-                team=self.selected_team,  
-                mode=self.selected_mode,
-                amount=self.amount,
-                user=interaction.user.display_name
-            )
-            # 改變成工訊息
-            self.clear_items()
-            await interaction.response.edit_message(
-                content="**改變成功!!!**",
-                embed=None,
-                delete_after=5,
-                view=self
-            )
-            
-            # 更新小隊資產
-            ui: DiscordUI = self.bot.get_cog("DiscordUI")
-            await ui.update_asset(team=self.selected_team)
-            # 發送即時通知
-            await ui.update_log(
-                type_="AssetUpdate",
-                team=self.selected_team,
-                mode=self.selected_mode,
-                amount=self.amount,
-                user=interaction.user.display_name
-            )
-            self.stop()
-        else:   # 無效的輸入
+            return
+        
+        # 檢查小隊金額是否足夠
+        self.selected_team_deposit = \
+            self.acc_team_assets()[f"{self.selected_team}"]["deposit"]
+        if(self.selected_mode == "2" and
+            self.selected_team_deposit < self.amount):   # 此小隊金額不足扣繳
             await interaction.response.send_message(
-                content="**輸入資料不完整!!!**",
+                content=f"**第{self.selected_team}小隊帳戶餘額不足!!!**",
                 delete_after=5,
                 ephemeral=True
             )
+            return
+        
+        # 變更第n小隊存款
+        asset: AssetsManager = self.bot.get_cog("AssetsManager")
+        asset.update_deposit(   
+            team=self.selected_team,  
+            mode=self.selected_mode,
+            amount=self.amount,
+            user=interaction.user.display_name
+        )
+        # 改變成工訊息
+        self.clear_items()
+        await interaction.response.edit_message(
+            content="**改變成功!!!**",
+            embed=None,
+            delete_after=5,
+            view=self
+        )
+        # 更新小隊資產
+        ui: DiscordUI = self.bot.get_cog("DiscordUI")
+        await ui.update_asset(team=self.selected_team)
+        # 發送即時通知
+        await ui.update_log(
+            type_="AssetUpdate",
+            team=self.selected_team,
+            mode=self.selected_mode,
+            amount=self.amount,
+            user=interaction.user.display_name
+        )
+        self.stop()
     
     @ntd.ui.button(
         label="取消",
