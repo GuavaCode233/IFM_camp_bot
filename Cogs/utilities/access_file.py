@@ -48,6 +48,7 @@ class AccessFile:
     @classmethod
     def log(
         cls,
+        *,
         type_: str,
         time: datetime,
         user: str,

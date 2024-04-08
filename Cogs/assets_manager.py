@@ -138,6 +138,7 @@ class AssetsManager(commands.Cog, AccessFile):
     
     def update_deposit(
             self,
+            *,
             team: int,
             mode: str,  # "1": deposit, "2": withdraw, "3": change
             amount: int,
