@@ -1,5 +1,4 @@
 from nextcord.ext import commands, application_checks
-from nextcord.interactions import Interaction
 import nextcord as ntd
 
 from typing import List, Dict
@@ -179,7 +178,7 @@ class AssetsManager(commands.Cog, AccessFile):
     )
     async def change_deposit(
         self,
-        interaction: Interaction,
+        interaction: ntd.Interaction,
         team: int = ntd.SlashOption(
             name="小隊",
             description="輸入小隊阿拉伯數字",
