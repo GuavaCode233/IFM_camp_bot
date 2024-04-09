@@ -1,1 +1,472 @@
-[]
+{
+    "initial_data": [
+        {
+            "name": "台雞店",
+            "symbol": "0321",
+            "industry": "科技",
+            "first_open": 30
+        },
+        {
+            "name": "奕為創",
+            "symbol": "0527",
+            "industry": "科技",
+            "first_open": 15
+        },
+        {
+            "name": "綠海",
+            "symbol": "0218",
+            "industry": "科技",
+            "first_open": 10
+        },
+        {
+            "name": "蓮花科",
+            "symbol": "0614",
+            "industry": "科技",
+            "first_open": 25
+        },
+        {
+            "name": "互幫金",
+            "symbol": "0507",
+            "industry": "金融",
+            "first_open": 7
+        },
+        {
+            "name": "躁瘋金",
+            "symbol": "0823",
+            "industry": "金融",
+            "first_open": 5
+        },
+        {
+            "name": "志明金",
+            "symbol": "0613",
+            "industry": "金融",
+            "first_open": 8
+        },
+        {
+            "name": "贖金",
+            "symbol": "0625",
+            "industry": "金融",
+            "first_open": 6
+        },
+        {
+            "name": "遠西",
+            "symbol": "1204",
+            "industry": "傳統",
+            "first_open": 9
+        },
+        {
+            "name": "台椅子馬你",
+            "symbol": "0907",
+            "industry": "傳統",
+            "first_open": 10
+        }
+    ],
+    "Q4": {
+        "0321": {
+            "random_ratio": 1,
+            "eps": 18.0,
+            "eps_qoq": 0.125,
+            "adjust_ratio": 1,
+            "net_revenue": 9000000,
+            "gross_income": 5000000,
+            "income_from_operating": 4100000,
+            "net_income": 3600000
+        },
+        "0527": {
+            "random_ratio": 1,
+            "eps": 7.5,
+            "eps_qoq": 0.0714,
+            "adjust_ratio": 1,
+            "net_revenue": 4000000,
+            "gross_income": 2500000,
+            "income_from_operating": 2000000,
+            "net_income": 1500000
+        },
+        "0218": {
+            "random_ratio": 1,
+            "eps": 5.5,
+            "eps_qoq": 0.1,
+            "adjust_ratio": 1,
+            "net_revenue": 4500000,
+            "gross_income": 2400000,
+            "income_from_operating": 1900000,
+            "net_income": 1100000
+        },
+        "0614": {
+            "random_ratio": 1,
+            "eps": 15.0,
+            "eps_qoq": 0.0714,
+            "adjust_ratio": 1,
+            "net_revenue": 8200000,
+            "gross_income": 6200000,
+            "income_from_operating": 4000000,
+            "net_income": 3000000
+        },
+        "0507": {
+            "random_ratio": 1,
+            "eps": 1.539,
+            "eps_qoq": -0.1211,
+            "adjust_ratio": 1,
+            "net_revenue": 600000,
+            "gross_income": 440000,
+            "income_from_operating": 390000,
+            "net_income": 307800
+        },
+        "0823": {
+            "random_ratio": 1,
+            "eps": 1.35,
+            "eps_qoq": 0.0588,
+            "adjust_ratio": 1,
+            "net_revenue": 500000,
+            "gross_income": 380000,
+            "income_from_operating": 320000,
+            "net_income": 270000
+        },
+        "0613": {
+            "random_ratio": 1,
+            "eps": 1.7,
+            "eps_qoq": -0.1237,
+            "adjust_ratio": 1,
+            "net_revenue": 700000,
+            "gross_income": 500000,
+            "income_from_operating": 400000,
+            "net_income": 340000
+        },
+        "0625": {
+            "random_ratio": 1,
+            "eps": 1.5,
+            "eps_qoq": 0.0345,
+            "adjust_ratio": 1,
+            "net_revenue": 640000,
+            "gross_income": 550000,
+            "income_from_operating": 470000,
+            "net_income": 300000
+        },
+        "1204": {
+            "random_ratio": 1,
+            "eps": 0.6,
+            "eps_qoq": 0.0256,
+            "adjust_ratio": 1,
+            "net_revenue": 800000,
+            "gross_income": 750000,
+            "income_from_operating": 650000,
+            "net_income": 600000
+        },
+        "0907": {
+            "random_ratio": 1,
+            "eps": 0.634,
+            "eps_qoq": 0.0567,
+            "adjust_ratio": 1,
+            "net_revenue": 815000,
+            "gross_income": 770000,
+            "income_from_operating": 685000,
+            "net_income": 634000
+        }
+    },
+    "Q1": {
+        "0321": {
+            "random_ratio": 1,
+            "eps": 21.0,
+            "eps_qoq": 0.1667,
+            "adjust_ratio": 1,
+            "net_revenue": 10000000,
+            "gross_income": 6500000,
+            "income_from_operating": 5000000,
+            "net_income": 4200000
+        },
+        "0527": {
+            "random_ratio": 1,
+            "eps": 9.0,
+            "eps_qoq": 0.2,
+            "adjust_ratio": 1,
+            "net_revenue": 4500000,
+            "gross_income": 3000000,
+            "income_from_operating": 2000000,
+            "net_income": 1800000
+        },
+        "0218": {
+            "random_ratio": 1,
+            "eps": -0.5,
+            "eps_qoq": -1.0909,
+            "adjust_ratio": 1,
+            "net_revenue": 2500000,
+            "gross_income": 1000000,
+            "income_from_operating": 200000,
+            "net_income": -100000
+        },
+        "0614": {
+            "random_ratio": 1,
+            "eps": 19.75,
+            "eps_qoq": 0.3167,
+            "adjust_ratio": 1,
+            "net_revenue": 9500000,
+            "gross_income": 7800000,
+            "income_from_operating": 6350000,
+            "net_income": 3950000
+        },
+        "0507": {
+            "random_ratio": 1,
+            "eps": 1.4,
+            "eps_qoq": -0.0903,
+            "adjust_ratio": 1,
+            "net_revenue": 450000,
+            "gross_income": 390000,
+            "income_from_operating": 320000,
+            "net_income": 280000
+        },
+        "0823": {
+            "random_ratio": 1,
+            "eps": 2.395,
+            "eps_qoq": 0.7741,
+            "adjust_ratio": 1,
+            "net_revenue": 650000,
+            "gross_income": 570000,
+            "income_from_operating": 500000,
+            "net_income": 479000
+        },
+        "0613": {
+            "random_ratio": 1,
+            "eps": 2.475,
+            "eps_qoq": 0.4559,
+            "adjust_ratio": 1,
+            "net_revenue": 1100000,
+            "gross_income": 750000,
+            "income_from_operating": 558000,
+            "net_income": 495000
+        },
+        "0625": {
+            "random_ratio": 1,
+            "eps": -0.065,
+            "eps_qoq": -1.0433,
+            "adjust_ratio": 1,
+            "net_revenue": 470610,
+            "gross_income": 250000,
+            "income_from_operating": 110000,
+            "net_income": -13000
+        },
+        "1204": {
+            "random_ratio": 1,
+            "eps": 0.62,
+            "eps_qoq": 0.0333,
+            "adjust_ratio": 1,
+            "net_revenue": 810000,
+            "gross_income": 740000,
+            "income_from_operating": 660000,
+            "net_income": 620000
+        },
+        "0907": {
+            "random_ratio": 1,
+            "eps": 0.655,
+            "eps_qoq": 0.0331,
+            "adjust_ratio": 1,
+            "net_revenue": 820000,
+            "gross_income": 778000,
+            "income_from_operating": 700000,
+            "net_income": 655000
+        }
+    },
+    "Q2": {
+        "0321": {
+            "random_ratio": 1,
+            "eps": 11.0,
+            "eps_qoq": -0.4762,
+            "adjust_ratio": 1,
+            "net_revenue": 8000000,
+            "gross_income": 4500000,
+            "income_from_operating": 2800000,
+            "net_income": 2200000
+        },
+        "0527": {
+            "random_ratio": 1,
+            "eps": 8.25,
+            "eps_qoq": -0.0833,
+            "adjust_ratio": 1,
+            "net_revenue": 3800000,
+            "gross_income": 2500000,
+            "income_from_operating": 1900000,
+            "net_income": 1650000
+        },
+        "0218": {
+            "random_ratio": 1,
+            "eps": -2.0,
+            "eps_qoq": -3.0,
+            "adjust_ratio": 1,
+            "net_revenue": 2000000,
+            "gross_income": 1250000,
+            "income_from_operating": 150000,
+            "net_income": -400000
+        },
+        "0614": {
+            "random_ratio": 1,
+            "eps": 9.75,
+            "eps_qoq": -0.5063,
+            "adjust_ratio": 1,
+            "net_revenue": 7900000,
+            "gross_income": 4000000,
+            "income_from_operating": 2600000,
+            "net_income": 1950000
+        },
+        "0507": {
+            "random_ratio": 1,
+            "eps": 1.375,
+            "eps_qoq": -0.0179,
+            "adjust_ratio": 1,
+            "net_revenue": 446000,
+            "gross_income": 360000,
+            "income_from_operating": 300000,
+            "net_income": 275000
+        },
+        "0823": {
+            "random_ratio": 1,
+            "eps": 2.0,
+            "eps_qoq": -0.1649,
+            "adjust_ratio": 1,
+            "net_revenue": 620000,
+            "gross_income": 550000,
+            "income_from_operating": 480000,
+            "net_income": 400000
+        },
+        "0613": {
+            "random_ratio": 1,
+            "eps": 2.825,
+            "eps_qoq": 0.1414,
+            "adjust_ratio": 1,
+            "net_revenue": 1250000,
+            "gross_income": 900000,
+            "income_from_operating": 670000,
+            "net_income": 565000
+        },
+        "0625": {
+            "random_ratio": 1,
+            "eps": 0.75,
+            "eps_qoq": 12.5385,
+            "adjust_ratio": 1,
+            "net_revenue": 870610,
+            "gross_income": 400000,
+            "income_from_operating": 269000,
+            "net_income": 150000
+        },
+        "1204": {
+            "random_ratio": 1,
+            "eps": 0.615,
+            "eps_qoq": -0.0081,
+            "adjust_ratio": 1,
+            "net_revenue": 795000,
+            "gross_income": 710000,
+            "income_from_operating": 655000,
+            "net_income": 615000
+        },
+        "0907": {
+            "random_ratio": 1,
+            "eps": 0.678,
+            "eps_qoq": 0.0351,
+            "adjust_ratio": 1,
+            "net_revenue": 829000,
+            "gross_income": 790000,
+            "income_from_operating": 725000,
+            "net_income": 678000
+        }
+    },
+    "Q3": {
+        "0321": {
+            "random_ratio": 1,
+            "eps": 22.0,
+            "eps_qoq": 1.0,
+            "adjust_ratio": 1,
+            "net_revenue": 9800000,
+            "gross_income": 6000000,
+            "income_from_operating": 5000000,
+            "net_income": 4400000
+        },
+        "0527": {
+            "random_ratio": 1,
+            "eps": 11.5,
+            "eps_qoq": 0.3939,
+            "adjust_ratio": 1,
+            "net_revenue": 4800000,
+            "gross_income": 3300000,
+            "income_from_operating": 2990000,
+            "net_income": 2300000
+        },
+        "0218": {
+            "random_ratio": 1,
+            "eps": 10.0,
+            "eps_qoq": 6.0,
+            "adjust_ratio": 1,
+            "net_revenue": 5000000,
+            "gross_income": 4000000,
+            "income_from_operating": 3200000,
+            "net_income": 2000000
+        },
+        "0614": {
+            "random_ratio": 1,
+            "eps": 20.5,
+            "eps_qoq": 1.1026,
+            "adjust_ratio": 1,
+            "net_revenue": 8800000,
+            "gross_income": 5100000,
+            "income_from_operating": 4700000,
+            "net_income": 4100000
+        },
+        "0507": {
+            "random_ratio": 1,
+            "eps": 1.5,
+            "eps_qoq": 0.0909,
+            "adjust_ratio": 1,
+            "net_revenue": 480000,
+            "gross_income": 400000,
+            "income_from_operating": 350000,
+            "net_income": 300000
+        },
+        "0823": {
+            "random_ratio": 1,
+            "eps": 1.975,
+            "eps_qoq": -0.0125,
+            "adjust_ratio": 1,
+            "net_revenue": 600000,
+            "gross_income": 510000,
+            "income_from_operating": 470000,
+            "net_income": 395000
+        },
+        "0613": {
+            "random_ratio": 1,
+            "eps": 3.215,
+            "eps_qoq": 0.1381,
+            "adjust_ratio": 1,
+            "net_revenue": 1400000,
+            "gross_income": 1050000,
+            "income_from_operating": 760000,
+            "net_income": 643000
+        },
+        "0625": {
+            "random_ratio": 1,
+            "eps": 1.89,
+            "eps_qoq": 1.52,
+            "adjust_ratio": 1,
+            "net_revenue": 800000,
+            "gross_income": 610000,
+            "income_from_operating": 432000,
+            "net_income": 378000
+        },
+        "1204": {
+            "random_ratio": 1,
+            "eps": 0.65,
+            "eps_qoq": 0.0569,
+            "adjust_ratio": 1,
+            "net_revenue": 820000,
+            "gross_income": 780000,
+            "income_from_operating": 720000,
+            "net_income": 650000
+        },
+        "0907": {
+            "random_ratio": 1,
+            "eps": 0.69,
+            "eps_qoq": 0.0177,
+            "adjust_ratio": 1,
+            "net_revenue": 831000,
+            "gross_income": 800000,
+            "income_from_operating": 750000,
+            "net_income": 690000
+        }
+    }
+}
