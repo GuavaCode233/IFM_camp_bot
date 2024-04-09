@@ -59,15 +59,10 @@ class StockManager(commands.Cog, AccessFile):
             df: pd.DataFrame = pd.read_excel(
                 ".\\Data\\stock_data.xlsx", f"Q{quarter}"
             )
-            json_data: List[Dict[str, str | int | float]] = json.loads(
+            json_data: List[Dict[str, int | float]] = json.loads(
                 df.to_json(orient="records")
             )   # 將pd.DataFrame轉成json object
-            # 當季公司之財務狀況以股票代碼為key
-            temp_dict = {}
-            for d in json_data:
-                symbol_key: str = d.pop("symbol").lstrip("n")
-                temp_dict[symbol_key] = d
-            dict_[f"Q{quarter}"] = temp_dict
+            dict_[f"Q{quarter}"] = json_data
         
         self.save_to("stock_data", dict_=dict_)
 
