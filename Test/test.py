@@ -9,7 +9,6 @@ df = pd.read_excel(".\\Test\\test_data.xlsx", sheet_name="Q4")
 # 將 DataFrame 轉換為 JSON 格式
 json_data: List[Dict[str, Any]] = json.loads(df.to_json(orient="records"))
 
-# pprint(json_data)
 for d in json_data:
     d["symbol"] = d["symbol"].lstrip("n")
 

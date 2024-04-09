@@ -41,6 +41,12 @@ class TeamAssets:
 class AssetsManager(commands.Cog, AccessFile):
     """資產控制。
     """
+    
+    __slots__ = (
+        "bot",
+        "CONFIG",
+        "team_assets"
+    )
 
     def __init__(self, bot: commands.Bot):
         self.bot = bot
