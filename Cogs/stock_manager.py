@@ -48,7 +48,7 @@ class StockManager(commands.Cog, AccessFile):
         df: pd.DataFrame = pd.read_excel(   # 初始欄位資料
             ".\\Data\\stock_data.xlsx", "initial_data"
         )
-        json_data: List[Dict[str, str | int]] = json.loads(
+        json_data: Dict[str, List[Dict[str, str | int | float]]] = json.loads(
             df.to_json(orient="records")
         )   # 將pd.DataFrame轉成json object
         for d in json_data: # 將股票代碼前面的"n"刪除
@@ -59,7 +59,7 @@ class StockManager(commands.Cog, AccessFile):
             df: pd.DataFrame = pd.read_excel(
                 ".\\Data\\stock_data.xlsx", f"Q{quarter}"
             )
-            json_data: List[Dict[str, int | float]] = json.loads(
+            json_data: Dict[str, List[Dict[str, str | int | float]]] = json.loads(
                 df.to_json(orient="records")
             )   # 將pd.DataFrame轉成json object
             dict_[f"Q{quarter}"] = json_data
