@@ -8,23 +8,23 @@ class AccessFile:
     """存取檔案用之母類別。
     """
 
-    @classmethod
-    def acc_game_config(cls) -> Dict[str, Any]:
+    @staticmethod
+    def acc_game_config() -> Dict[str, Any]:
         with open(".\\Data\\game_config.json", "r") as temp_file:
             return json.load(temp_file)
 
-    @classmethod
-    def acc_team_assets(cls) -> Dict[str, Dict[str, Any]]:
+    @staticmethod
+    def acc_team_assets() -> Dict[str, Dict[str, Any]]:
         with open(".\\Data\\team_assets.json", "r") as temp_file:
             return json.load(temp_file)
         
-    @classmethod
-    def acc_log(cls) -> Dict[str, List[Dict[str, Any]]]:
+    @staticmethod
+    def acc_log() -> Dict[str, List[Dict[str, Any]]]:
         with open(".\\Data\\alteration_log.json", "r") as temp_file:
             return json.load(temp_file)
 
-    @classmethod
-    def save_to(cls, file_name: str, dict_: Dict):
+    @staticmethod
+    def save_to(file_name: str, dict_: Dict):
         """開啟指定檔名的檔案並將dict_寫入。
 
         如果未找到檔案則 raise `FileNotFoundError`。
@@ -45,9 +45,8 @@ class AccessFile:
                 indent=4
             )
     
-    @classmethod
+    @staticmethod
     def log(
-        cls,
         *,
         type_: str,
         time: datetime,
@@ -100,8 +99,8 @@ class AccessFile:
                 indent=4
             )
     
-    @classmethod
-    def clear_log_data(cls):
+    @staticmethod
+    def clear_log_data():
         """清除log。
         """
 
