@@ -20,7 +20,7 @@ class StockManager(commands.Cog, AccessFile):
 
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-        self.CONFIG = self.acc_game_config()
+        self.CONFIG: Dict[str, Any] = self.read_file("game_config")
         self.quarters:List[str] = ["4", "1", "2", "3"]
         self.stocks: List[Stock] = None
 

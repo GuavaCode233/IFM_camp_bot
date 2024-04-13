@@ -182,7 +182,7 @@ class ChangeDepositView(ntd.ui.View, AccessFile):
         self.selected_team = int(select.values[0])
         self.embed_title = f"變更第{select.values[0]}小隊存款"
         self.selected_team_deposit = \
-            self.acc_team_assets()[select.values[0]]["deposit"]
+            self.read_file("team_assets")[select.values[0]]["deposit"]
         self.embed_description = \
             f"第{select.values[0]}小隊目前存款: " \
             f"{self.selected_team_deposit:,}"
@@ -274,7 +274,7 @@ class ChangeDepositView(ntd.ui.View, AccessFile):
         
         # 檢查小隊金額是否足夠
         self.selected_team_deposit = \
-            self.acc_team_assets()[f"{self.selected_team}"]["deposit"]
+            self.read_file("team_assets")[f"{self.selected_team}"]["deposit"]
         if(self.selected_mode == "2" and
             self.selected_team_deposit < self.amount):   # 此小隊金額不足扣繳
             await interaction.response.send_message(
@@ -395,7 +395,7 @@ class LogEmbed(ntd.Embed, AccessFile):
             description="小隊存款金額的變動紀錄以及\n買賣股票紀錄"
         )
 
-        log: Dict[str, List[Dict[str, Any]]] = self.acc_log().copy()
+        log: Dict[str, List[Dict[str, Any]]] = self.read_file("alteration_log").copy()
         log.pop("serial")
         # 將所有字典展開唯一list並按照serial排序
         record_list: List[Dict[str, Any]] = sorted(
@@ -465,7 +465,7 @@ class TeamAssetEmbed(ntd.Embed, AccessFile):
             title=f"第{team}小隊 F-pay帳戶",
             type="rich"
         )
-        asset_data = self.acc_team_assets()[f"{team}"]
+        asset_data: Dict[str, Dict[str, Any]] = self.read_file("team_assets")[f"{team}"]
         self.add_field( # 要加市值
             name="",
             value=f"**總資產: {asset_data["deposit"]:,}** (股票市值+存款)"
@@ -498,7 +498,7 @@ class DiscordUI(commands.Cog, AccessFile):
 
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-        self.CONFIG = self.acc_game_config()
+        self.CONFIG: Dict[str, Any] = self.read_file("game_config")
         self.CHANNEL_IDS: Dict[str, int] = self.CONFIG["channel_ids"]
         self.MESSAGE_IDS: Dict[str, int] = self.CONFIG["message_ids"]
 
@@ -592,7 +592,7 @@ class DiscordUI(commands.Cog, AccessFile):
         清除已發送的小隊即時訊息以及清除收支動態，並清除log資料。
         """
 
-        log = self.acc_log()
+        log: Dict[str, List[Dict[str, Any]]] = self.read_file("alteration_log")
 
         # 清除各小隊即時訊息
         for t in range(1, 9):

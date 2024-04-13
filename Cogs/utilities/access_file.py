@@ -7,22 +7,23 @@ import os
 class AccessFile:
     """存取檔案用之母類別。
     """
-
+    
     @staticmethod
-    def acc_game_config() -> Dict[str, Any]:
-        with open(".\\Data\\game_config.json", "r") as temp_file:
-            return json.load(temp_file)
+    def read_file(file_name: str) -> Any:
+        """讀取指定檔名的檔案
+        """
 
-    @staticmethod
-    def acc_team_assets() -> Dict[str, Dict[str, Any]]:
-        with open(".\\Data\\team_assets.json", "r") as temp_file:
-            return json.load(temp_file)
+        file_path = f".\\Data\\{file_name}.json"
+        if(not os.path.exists(file_path)):
+            raise FileNotFoundError(f"File: '{file_name}' not found.")
         
-    @staticmethod
-    def acc_log() -> Dict[str, List[Dict[str, Any]]]:
-        with open(".\\Data\\alteration_log.json", "r") as temp_file:
-            return json.load(temp_file)
-
+        with open(
+            file_path,
+            mode="r",
+            encoding="utf-8"
+        ) as json_file:
+            return json.load(json_file)
+            
     @staticmethod
     def save_to(file_name: str, dict_: Dict):
         """開啟指定檔名的檔案並將dict_寫入。

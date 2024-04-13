@@ -1,7 +1,7 @@
 from nextcord.ext import commands, application_checks
 import nextcord as ntd
 
-from typing import List, Dict
+from typing import List, Dict, Any
 from datetime import datetime
 from pprint import pprint
 
@@ -50,7 +50,7 @@ class AssetsManager(commands.Cog, AccessFile):
 
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-        self.CONFIG = self.acc_game_config()
+        self.CONFIG: Dict[str, Any] = self.read_file("game_config")
         self.team_assets: List[TeamAssets] = None    # 儲存各小隊資產
 
     @commands.Cog.listener()
@@ -94,7 +94,7 @@ class AssetsManager(commands.Cog, AccessFile):
         """從team_assets.json中抓取資料並初始化TeamAssets。
         """
 
-        asset = self.acc_team_assets()
+        asset: Dict[str, Dict[str, Any]] = self.read_file("team_assets")
         self.team_assets = [
             TeamAssets(
                 team_number=str(t),
@@ -124,7 +124,7 @@ class AssetsManager(commands.Cog, AccessFile):
                     }
                 )
         else:   #　儲存指定小隊資料
-            d = self.acc_team_assets()
+            d: Dict[str, Dict[str, Any]] = self.read_file("team_assets")
             asset = self.team_assets[int(team_number)-1]
             d.update(
                 {
