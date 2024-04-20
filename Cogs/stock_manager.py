@@ -11,7 +11,29 @@ from .utilities import AccessFile
 class Stock:
     """儲存個股資料。
     """
-    pass
+    
+    __slots__ = (
+        "name",
+        "symbol",
+        "eps_qoq",
+        "adjust_ratio",
+        "random_ratio",
+        "price"
+    )
+
+    def __init__(
+            self,
+            *,
+            name: str,
+            symbol: str,
+    ):
+        self.name = name
+        self.symbol = symbol
+
+        self.eps_qoq: float | None = None
+        self.adjust_ratio: float | None = None
+        self.random_ratio: float | None = None
+        self.price: float | None = None
 
 
 class StockManager(commands.Cog, AccessFile):
