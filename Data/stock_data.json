@@ -3,61 +3,61 @@
         {
             "name": "台雞店",
             "symbol": "0321",
-            "industry": "科技",
+            "sector": "科技",
             "first_open": 30
         },
         {
             "name": "奕為創",
             "symbol": "0527",
-            "industry": "科技",
+            "sector": "科技",
             "first_open": 15
         },
         {
             "name": "綠海",
             "symbol": "0218",
-            "industry": "科技",
+            "sector": "科技",
             "first_open": 10
         },
         {
             "name": "蓮花科",
             "symbol": "0614",
-            "industry": "科技",
+            "sector": "科技",
             "first_open": 25
         },
         {
             "name": "互幫金",
             "symbol": "0507",
-            "industry": "金融",
+            "sector": "金融",
             "first_open": 7
         },
         {
             "name": "躁瘋金",
             "symbol": "0823",
-            "industry": "金融",
+            "sector": "金融",
             "first_open": 5
         },
         {
             "name": "志明金",
             "symbol": "0613",
-            "industry": "金融",
+            "sector": "金融",
             "first_open": 8
         },
         {
             "name": "贖金",
             "symbol": "0625",
-            "industry": "金融",
+            "sector": "金融",
             "first_open": 6
         },
         {
             "name": "遠西",
             "symbol": "1204",
-            "industry": "傳統",
+            "sector": "傳統",
             "first_open": 9
         },
         {
             "name": "台椅子馬你",
             "symbol": "0907",
-            "industry": "傳統",
+            "sector": "傳統",
             "first_open": 10
         }
     ],

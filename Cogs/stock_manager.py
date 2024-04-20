@@ -1,4 +1,4 @@
-from nextcord.ext import commands
+from nextcord.ext import tasks, commands
 import nextcord as ntd
 import pandas as pd
 
@@ -21,7 +21,8 @@ class StockManager(commands.Cog, AccessFile):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         self.CONFIG: Dict[str, Any] = self.read_file("game_config")
-        self.quarters:List[str] = ["4", "1", "2", "3"]
+
+        self.quarters:Dict[int, str] = {1: "Q4", 2: "Q1", 3: "Q2", 4: "Q3"} # round: "quarter"
         self.stocks: List[Stock] = None
 
     @commands.Cog.listener()
@@ -37,7 +38,6 @@ class StockManager(commands.Cog, AccessFile):
         
         if(NEW_GAME):
             pass
-
 
     def convert_raw_stock_data(self):
         """將Excel資料轉到stock_data.json。
@@ -55,14 +55,14 @@ class StockManager(commands.Cog, AccessFile):
             d["symbol"] = d["symbol"].lstrip("n")
         dict_["initial_data"] = json_data
 
-        for quarter in self.quarters:   # 1-4季資料
+        for quarter in self.quarters.values():   # 1-4季資料
             df: pd.DataFrame = pd.read_excel(
-                ".\\Data\\stock_data.xlsx", f"Q{quarter}"
+                ".\\Data\\stock_data.xlsx", f"{quarter}"
             )
             json_data: Dict[str, List[Dict[str, str | int | float]]] = json.loads(
                 df.to_json(orient="records")
             )   # 將pd.DataFrame轉成json object
-            dict_[f"Q{quarter}"] = json_data
+            dict_[f"{quarter}"] = json_data
         
         self.save_to("stock_data", dict_=dict_)
 
