@@ -22,6 +22,7 @@ class StockManager(commands.Cog, AccessFile):
         self.bot = bot
         self.CONFIG: Dict[str, Any] = self.read_file("game_config")
 
+        self.round: int = 0   # 標記目前回合
         self.quarters:Dict[int, str] = {1: "Q4", 2: "Q1", 3: "Q2", 4: "Q3"} # round: "quarter"
         self.stocks: List[Stock] = None
 
@@ -57,14 +58,14 @@ class StockManager(commands.Cog, AccessFile):
 
         for quarter in self.quarters.values():   # 1-4季資料
             df: pd.DataFrame = pd.read_excel(
-                ".\\Data\\stock_data.xlsx", f"{quarter}"
+                ".\\Data\\raw_stock_data.xlsx", f"{quarter}"
             )
             json_data: Dict[str, List[Dict[str, str | int | float]]] = json.loads(
                 df.to_json(orient="records")
             )   # 將pd.DataFrame轉成json object
             dict_[f"{quarter}"] = json_data
         
-        self.save_to("stock_data", dict_=dict_)
+        self.save_to("raw_stock_data", dict_=dict_)
 
 
 def setup(bot: commands.Bot):
