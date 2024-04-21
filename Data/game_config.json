@@ -1,8 +1,8 @@
 {
     "NEW_GAME": true,
-    "RESET_UI": false,
-    "CLEAR_LOG": false,
-    "UPDATE_ASSET": false,
+    "RESET_UI": true,
+    "CLEAR_LOG": true,
+    "UPDATE_ASSET": true,
     "CONVERT_RAW_STOCK_DATA": false,
     "STARTER_CASH": 10000,
     "channel_ids": {

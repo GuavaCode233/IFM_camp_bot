@@ -3,37 +3,23 @@ import nextcord as ntd
 import pandas as pd
 
 from typing import List, Dict, Any
+from dataclasses import dataclass
 import json
 
 from .utilities import AccessFile
 
 
+@dataclass(slots=True)
 class Stock:
     """儲存個股資料。
     """
     
-    __slots__ = (
-        "name",
-        "symbol",
-        "eps_qoq",
-        "adjust_ratio",
-        "random_ratio",
-        "price"
-    )
-
-    def __init__(
-            self,
-            *,
-            name: str,
-            symbol: str,
-    ):
-        self.name = name
-        self.symbol = symbol
-
-        self.eps_qoq: float | None = None
-        self.adjust_ratio: float | None = None
-        self.random_ratio: float | None = None
-        self.price: float | None = None
+    name: str
+    symbol: str
+    eps_qoq: float = 0.0
+    adjust_ratio: float = 0.0
+    random_ratio: float = 0.0
+    price: float = 0.0
 
 
 class StockManager(commands.Cog, AccessFile):

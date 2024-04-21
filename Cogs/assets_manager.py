@@ -1,6 +1,7 @@
 from nextcord.ext import commands, application_checks
 import nextcord as ntd
 
+from dataclasses import dataclass, field
 from typing import List, Dict, Any
 from datetime import datetime
 from pprint import pprint
@@ -8,34 +9,17 @@ from pprint import pprint
 from .utilities import AccessFile
 
 
+@dataclass(slots=True)
 class TeamAssets:
     """儲存小隊資產。
     包括「小隊編號」、「資產總額」、「存款總額」。
     """
 
-    __slots__ = (
-        "team_number",
-        "deposit",
-        "stock_cost",
-        "stocks",
-        "revenue",
-        "total_asset"
-    )
-
-    def __init__(
-            self,
-            team_number: str,
-            deposit: int,
-            stock_cost: int = None,
-            stocks: Dict[str, int] = None,
-            revenue: int = 0,
-    ):
-        self.team_number = team_number
-        self.deposit = deposit
-        self.stock_cost = stock_cost
-        self.stocks = stocks
-        self.revenue = revenue
-        self.total_asset = deposit
+    team_number: str
+    deposit: int
+    stock_cost: int
+    stocks: Dict[str, str] = field(default_factory=dict)
+    revenue: int = 0
 
 
 class AssetsManager(commands.Cog, AccessFile):
