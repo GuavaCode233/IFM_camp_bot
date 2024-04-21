@@ -1,4 +1,4 @@
-from nextcord.ext import tasks, commands
+from nextcord.ext import tasks, commands, application_checks
 import nextcord as ntd
 import pandas as pd
 
@@ -9,7 +9,7 @@ import json
 from .utilities import AccessFile
 
 
-@dataclass(slots=True)
+@dataclass(kw_only=True, slots=True)
 class Stock:
     """儲存個股資料。
     """
@@ -32,7 +32,7 @@ class StockManager(commands.Cog, AccessFile):
 
         self.round: int = 0   # 標記目前回合
         self.quarters:Dict[int, str] = {1: "Q4", 2: "Q1", 3: "Q2", 4: "Q3"} # round: "quarter"
-        self.stocks: List[Stock] = None
+        self.stocks: List[Stock] = []
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -74,6 +74,39 @@ class StockManager(commands.Cog, AccessFile):
             dict_[f"{quarter}"] = json_data
         
         self.save_to("raw_stock_data", dict_=dict_)
+
+    @ntd.slash_command(
+        name="open_round",
+        description="開始下一回合(回合未關閉無法使用)"
+    )
+    @application_checks.is_owner()
+    async def open_round(self):
+        """下一回合(開盤)。
+        """
+
+        # TODO: Check if round is open, if it's open then return.
+        # 讀取股票資料存至 self.stocks的每個 Stock內
+        # 讀取新聞資料 未設計
+        # 開始新聞計時 未設計
+        # 開始 price_change_loop
+        # 開啟交易功能
+
+        raise NotImplementedError("Function not implimented.")
+    
+    @ntd.slash_command(
+        name="close_round",
+        description="結束(回合未開啟無法使用)"
+    )
+    @application_checks.is_owner()
+    async def close_round(self):
+        """結束本回合(收盤)。
+        """
+
+        # TODO: Check if round is closed, if it's closed then return.
+        # 停止 price_change_loop
+        # 關閉交易功能
+
+        raise NotImplementedError("Function not implimented.")
 
 
 def setup(bot: commands.Bot):
