@@ -35,7 +35,7 @@ class AssetsManager(commands.Cog, AccessFile):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         self.CONFIG: Dict[str, Any] = self.read_file("game_config")
-        self.team_assets: List[TeamAssets] = None    # 儲存各小隊資產
+        self.team_assets: List[TeamAssets] = []    # 儲存各小隊資產
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -49,7 +49,7 @@ class AssetsManager(commands.Cog, AccessFile):
         NEW_GAME: bool = self.CONFIG["NEW_GAME"]
         if(NEW_GAME):   # 開新遊戲
             self.reset_asset_data()
-        elif(self.team_assets is None): # 資料不對等
+        elif(not self.team_assets): # 資料不對等
             self.fetch_assets()
         
         print("Loaded asset_manager")

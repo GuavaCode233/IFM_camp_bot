@@ -57,6 +57,8 @@ class StockManager(commands.Cog, AccessFile):
         
         if(NEW_GAME):
             self.reset_stock_data()
+        elif(not self.stocks):  # 資料不對等
+            self.fetch_stocks()
 
         print("Loaded stock_manager")
 
@@ -141,8 +143,6 @@ class StockManager(commands.Cog, AccessFile):
                 close=stock["close"]
             ) for stock, init_data in zip(stock_data, self.INITIAL_STOCK_DATA)
         ]
-
-        pprint(self.stocks)
 
     @ntd.slash_command(
         name="open_round",
