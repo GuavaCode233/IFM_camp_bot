@@ -194,3 +194,4 @@ class AssetsManager(commands.Cog, AccessFile):
 
 def setup(bot: commands.Bot):
     bot.add_cog(AssetsManager(bot))
+    

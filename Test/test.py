@@ -17,5 +17,5 @@
 # delta: timedelta = date_now - pass_date
 
 # print(delta.total_seconds())    # 676.0 seconds
-print([] is None)
+print(not [])
 

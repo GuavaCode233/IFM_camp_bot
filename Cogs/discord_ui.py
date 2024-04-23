@@ -689,3 +689,4 @@ class DiscordUI(commands.Cog, AccessFile):
 
 def setup(bot: commands.Bot):
     bot.add_cog(DiscordUI(bot))
+    

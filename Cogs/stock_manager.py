@@ -93,28 +93,41 @@ class StockManager(commands.Cog, AccessFile):
         """清除股票資料並重新抓取資料。
 
         `stock_data.json`
-        用以紀錄每支股票的:
+
+        紀錄回合狀態:
+        
+        round
+        第n回合，0代表準備狀態；5代表遊戲結束。
+
+        is_in_round
+        標記回合是否開始(遊戲過程重啟使用)。
+
+        紀錄每支股票的:
 
         price
-        當前價格
+        當前價格。
 
         close
-        收盤價格
+        收盤價格。
 
         eps_qoq
-        當季EPS季增率(價格變動標準)
+        當季EPS季增率(價格變動標準)。
 
         adjust_ratio
-        EPS QoQ之調整率
+        EPS QoQ之調整率。
 
         random_ratio
-        隨機變動率
+        隨機變動率。
 
         (用索引對照)
         """
 
+        dict_: Dict[str, int | List[Dict[str, float]]] = dict()
+        dict_["round"] = 0  # 第0輪
+        dict_["is_in_round"] = False   # 回合未開始
+
         stock_data = self.RAW_STOCK_DATA[self.quarters[1]]
-        chart: List[Dict[str, float]] = [
+        dict_["market"] = [
             {
                 "price": init_data["first_open"],
                 "close": init_data["first_open"],
@@ -123,15 +136,15 @@ class StockManager(commands.Cog, AccessFile):
                 "random_ratio": stock["random_ratio"]
             } for stock, init_data in zip(stock_data, self.INITIAL_STOCK_DATA)
         ]
-        
-        self.save_to("stock_data", chart)
+
+        self.save_to("stock_data", dict_)
         self.fetch_stocks()
 
     def fetch_stocks(self):
         """從`stock_data.json`中抓取資料並初始化:class:`Stocks`。
         """
 
-        stock_data: List[Dict[str, float]] = self.read_file("stock_data")
+        stock_data: List[Dict[str, float]] = self.read_file("stock_data")["market"]
         self.stocks = [
             Stock(
                 name=init_data["name"],
