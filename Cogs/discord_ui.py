@@ -504,28 +504,34 @@ class DiscordUI(commands.Cog, AccessFile):
 
     @commands.Cog.listener()
     async def on_ready(self):
-        print("Loaded discord_ui")
+        """DiscordUI啟動程序。
 
-        print("UI Status:")
+        `RESET_UI`
+        重製所有ui元素訊息(View、Button)
+
+        `CLEAR_LOG`
+        清除已發送的小隊即時訊息以及清除收支動態，
+        並清除log資料。
+
+        `UPDATE_ASSET`
+        更新各小隊資產狀況訊息。
+        """
+
         RESET_UI: bool = self.CONFIG["RESET_UI"]
         CLEAR_LOG: bool = self.CONFIG["CLEAR_LOG"]
         UPDATE_ASSET: bool = self.CONFIG["UPDATE_ASSET"]
         if(RESET_UI):
             await self.reset_all_ui()
-            print("All ui elements has been reset.")
         
         if(UPDATE_ASSET):
             await self.update_asset()
-            print("Team's asset has been updated.")
         
         if(CLEAR_LOG):
             await self.clear_log()
-            print("Log has been cleared.")
         else:
             await self.update_log()
-            print("Log has been updated.")
 
-        print()
+        print("Loaded discord_ui")
 
     @commands.command()
     async def test_ui_com(self, ctx: commands.Context):
@@ -651,7 +657,7 @@ class DiscordUI(commands.Cog, AccessFile):
     async def update_asset(self, team: int | None = None):
         """|coro|
 
-        任一操作改變資產時更新小隊資產訊息。
+        任一操作改變資產時更新小隊資產狀況訊息。
         """
         
         if(isinstance(team, int)):  # 更新指定小隊資產訊息

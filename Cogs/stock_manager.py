@@ -36,17 +36,22 @@ class StockManager(commands.Cog, AccessFile):
 
     @commands.Cog.listener()
     async def on_ready(self):
-        print("Loaded stock_manager.py")
+        """StockManager啟動程序。
 
-        print("Stock Status:")
+        `NEW_GAME`
+        清除股票資料並重新抓取股票資料，
+        如果資料有遺失，重新抓取股票資料。
+        """
+
         NEW_GAME = self.CONFIG["NEW_GAME"]
         CONVERT_RAW_STOCK_DATA = self.CONFIG["CONVERT_RAW_STOCK_DATA"]
         if(CONVERT_RAW_STOCK_DATA):
             self.convert_raw_stock_data()
-            print("Raw stock data converted.")
         
         if(NEW_GAME):
             pass
+
+        print("Loaded stock_manager.py")
 
     def convert_raw_stock_data(self):
         """將Excel資料轉到stock_data.json。
@@ -80,7 +85,7 @@ class StockManager(commands.Cog, AccessFile):
         description="開始下一回合(回合未關閉無法使用)"
     )
     @application_checks.is_owner()
-    async def open_round(self):
+    async def open_round(self, interaction: ntd.Interaction):
         """下一回合(開盤)。
         """
 
@@ -98,7 +103,7 @@ class StockManager(commands.Cog, AccessFile):
         description="結束(回合未開啟無法使用)"
     )
     @application_checks.is_owner()
-    async def close_round(self):
+    async def close_round(self, interaction: ntd.Interaction):
         """結束本回合(收盤)。
         """
 

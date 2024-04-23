@@ -39,26 +39,22 @@ class AssetsManager(commands.Cog, AccessFile):
 
     @commands.Cog.listener()
     async def on_ready(self):
-        """進行資料檢查。
+        """AssetManager啟動程序。
         
-        如果要開啟新遊戲，重整資料。
-        如果資料有損失，重新抓取資料。
+        `NEW_GAME`
+        清除全部小隊資產資料並重創銀行帳戶，
+        如果資料有遺失，重新抓取資產資料。
         """
 
-        print("Loaded asset_manager")
-
-        print("Asset Status:")
         NEW_GAME: bool = self.CONFIG["NEW_GAME"]
         if(NEW_GAME):   # 開新遊戲
-            self.reset_all_assets()
-            print("All assets has been reset.")
+            self.reset_asset_data()
         elif(self.team_assets is None): # 資料不對等
             self.fetch_assets()
-            print("Assets restored.")
         
-        print()
+        print("Loaded asset_manager")
         
-    def reset_all_assets(self):
+    def reset_asset_data(self):
         """清除所有資產資料，重創銀行帳戶。
         """
         
