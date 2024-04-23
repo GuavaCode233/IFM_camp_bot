@@ -21,6 +21,7 @@ class Stock:
     adjust_ratio: float = 0.0
     random_ratio: float = 0.0
     price: float = 0.0
+    close: float = 0.0
 
 
 class StockManager(commands.Cog, AccessFile):
@@ -31,6 +32,7 @@ class StockManager(commands.Cog, AccessFile):
         self.bot = bot
         self.CONFIG: Dict[str, Any] = self.read_file("game_config")
         self.RAW_STOCK_DATA: Dict[str, List[Dict[str, Any]]] = self.read_file("raw_stock_data")
+        self.INITIAL_STOCK_DATA: List[Dict[str, str | float]] = self.RAW_STOCK_DATA["initial_data"]
 
         self.round: int = 0   # 標記目前回合
         self.quarters:Dict[int, str] = {1: "Q4", 2: "Q1", 3: "Q2", 4: "Q3"} # round: "quarter"
@@ -94,6 +96,9 @@ class StockManager(commands.Cog, AccessFile):
         price
         當前價格
 
+        close
+        收盤價格
+
         eps_qoq
         當季EPS季增率(價格變動標準)
 
@@ -107,17 +112,37 @@ class StockManager(commands.Cog, AccessFile):
         """
 
         stock_data = self.RAW_STOCK_DATA[self.quarters[1]]
-        initial_data = self.RAW_STOCK_DATA["initial_data"]
         chart: List[Dict[str, float]] = [
             {
-                "price": init["first_open"],
+                "price": init_data["first_open"],
+                "close": init_data["first_open"],
                 "eps_qoq": stock["eps_qoq"],
                 "adjust_ratio": stock["adjust_ratio"],
                 "random_ratio": stock["random_ratio"]
-            } for stock, init in zip(stock_data, initial_data)
+            } for stock, init_data in zip(stock_data, self.INITIAL_STOCK_DATA)
         ]
         
         self.save_to("stock_data", chart)
+        self.fetch_stocks()
+
+    def fetch_stocks(self):
+        """從`stock_data.json`中抓取資料並初始化:class:`Stocks`。
+        """
+
+        stock_data: List[Dict[str, float]] = self.read_file("stock_data")
+        self.stocks = [
+            Stock(
+                name=init_data["name"],
+                symbol=init_data["symbol"],
+                eps_qoq=stock["eps_qoq"],
+                adjust_ratio=stock["adjust_ratio"],
+                random_ratio=stock["random_ratio"],
+                price=stock["price"],
+                close=stock["close"]
+            ) for stock, init_data in zip(stock_data, self.INITIAL_STOCK_DATA)
+        ]
+
+        pprint(self.stocks)
 
     @ntd.slash_command(
         name="open_round",

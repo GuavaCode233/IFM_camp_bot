@@ -10,7 +10,7 @@ class AccessFile:
     
     @staticmethod
     def read_file(file_name: str) -> Any:
-        """讀取指定檔名的檔案
+        """讀取指定檔名的檔案。
         """
 
         file_path = f".\\Data\\{file_name}.json"

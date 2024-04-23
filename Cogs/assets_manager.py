@@ -71,7 +71,7 @@ class AssetsManager(commands.Cog, AccessFile):
         self.fetch_assets()
         
     def fetch_assets(self):
-        """從team_assets.json中抓取資料並初始化TeamAssets。
+        """從`team_assets.json`中抓取資料並初始化:class:`TeamAssets`。
         """
 
         asset: Dict[str, Dict[str, Any]] = self.read_file("team_assets")
