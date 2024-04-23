@@ -1,1 +1,62 @@
-{}
+[
+    {
+        "price": 30,
+        "eps_qoq": 0.125,
+        "adjust_ratio": 1,
+        "random_ratio": 1
+    },
+    {
+        "price": 15,
+        "eps_qoq": 0.0714,
+        "adjust_ratio": 1,
+        "random_ratio": 1
+    },
+    {
+        "price": 10,
+        "eps_qoq": 0.1,
+        "adjust_ratio": 1,
+        "random_ratio": 1
+    },
+    {
+        "price": 25,
+        "eps_qoq": 0.0714,
+        "adjust_ratio": 1,
+        "random_ratio": 1
+    },
+    {
+        "price": 7,
+        "eps_qoq": -0.1211,
+        "adjust_ratio": 1,
+        "random_ratio": 1
+    },
+    {
+        "price": 5,
+        "eps_qoq": 0.0588,
+        "adjust_ratio": 1,
+        "random_ratio": 1
+    },
+    {
+        "price": 8,
+        "eps_qoq": -0.1237,
+        "adjust_ratio": 1,
+        "random_ratio": 1
+    },
+    {
+        "price": 6,
+        "eps_qoq": 0.0345,
+        "adjust_ratio": 1,
+        "random_ratio": 1
+    },
+    {
+        "price": 9,
+        "eps_qoq": 0.0256,
+        "adjust_ratio": 1,
+        "random_ratio": 1
+    },
+    {
+        "price": 10,
+        "eps_qoq": 0.0567,
+        "adjust_ratio": 1,
+        "random_ratio": 1
+    }
+]

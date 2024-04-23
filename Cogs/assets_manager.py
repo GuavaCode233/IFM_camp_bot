@@ -58,7 +58,7 @@ class AssetsManager(commands.Cog, AccessFile):
         """清除所有資產資料，重創銀行帳戶。
         """
         
-        d = {
+        dict_ = {
             str(t): {
                 "deposit": self.CONFIG["STARTER_CASH"],
                 "stock_cost": 0,
@@ -67,7 +67,7 @@ class AssetsManager(commands.Cog, AccessFile):
             }
             for t in range(1, 9)
         }
-        self.save_to("team_assets", d)
+        self.save_to("team_assets", dict_)
         self.fetch_assets()
         
     def fetch_assets(self):
@@ -91,9 +91,9 @@ class AssetsManager(commands.Cog, AccessFile):
         """
 
         if(team_number is None):    # 儲存所有小隊資料
-            d = {}
+            dict_ = {}
             for t, asset in enumerate(self.team_assets, start=1):
-                d.update(
+                dict_.update(
                     {
                         str(t):{
                             "deposit": asset.deposit,
@@ -104,9 +104,9 @@ class AssetsManager(commands.Cog, AccessFile):
                     }
                 )
         else:   #　儲存指定小隊資料
-            d: Dict[str, Dict[str, Any]] = self.read_file("team_assets")
+            dict_: Dict[str, Dict[str, Any]] = self.read_file("team_assets")
             asset = self.team_assets[int(team_number)-1]
-            d.update(
+            dict_.update(
                 {
                     str(team_number):{
                         "deposit": asset.deposit,
@@ -117,8 +117,8 @@ class AssetsManager(commands.Cog, AccessFile):
                 }
             )
 
-        self.save_to("team_assets", d)
-        pprint(d)
+        self.save_to("team_assets", dict_)
+        pprint(dict_)
         print()
     
     def update_deposit(

@@ -1,22 +1,20 @@
-import pandas as pd
-import json
-from pprint import pprint
-from typing import Dict, List, Any
+from datetime import datetime, timedelta
 
-# 讀取 Excel 檔案並轉換為 DataFrame
-df = pd.read_excel(".\\Data\\stock_data.xlsx", sheet_name="Q4")
-# print(df)
-# 將 DataFrame 轉換為 JSON 格式
-json_data: List[Dict[str, Any]] = json.loads(df.to_json(orient="records"))
+date_string: str = datetime.now().strftime(
+    "%Y/%m/%d %H:%M:%S"
+)
 
+# String converted date
+date_now: datetime = datetime.strptime(
+    date_string, "%Y/%m/%d %H:%M:%S"
+)
 
-temp_dict = {}
-for d in json_data:
-    d["symbol"] = d["symbol"].lstrip("n")
-    symbol_key: str = d.pop("symbol")
-    temp_dict[symbol_key] = d
+pass_date: datetime = datetime.strptime(
+    "2024/04/23 18:05:00", "%Y/%m/%d %H:%M:%S"
+)
 
+# Calculate time difference
+delta: timedelta = date_now - pass_date
 
-# 將 JSON 寫入檔案
-with open(".\\Test\\test_output.json", 'w', encoding="utf-8") as f:
-    json.dump(temp_dict, f, ensure_ascii=False, indent=4)
+print(delta.total_seconds())    # 676.0 seconds
+

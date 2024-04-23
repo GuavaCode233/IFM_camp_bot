@@ -4,6 +4,7 @@ import pandas as pd
 
 from typing import List, Dict, Any
 from dataclasses import dataclass
+from pprint import pprint
 import json
 
 from .utilities import AccessFile
@@ -29,6 +30,7 @@ class StockManager(commands.Cog, AccessFile):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         self.CONFIG: Dict[str, Any] = self.read_file("game_config")
+        self.RAW_STOCK_DATA: Dict[str, List[Dict[str, Any]]] = self.read_file("raw_stock_data")
 
         self.round: int = 0   # 標記目前回合
         self.quarters:Dict[int, str] = {1: "Q4", 2: "Q1", 3: "Q2", 4: "Q3"} # round: "quarter"
@@ -37,6 +39,9 @@ class StockManager(commands.Cog, AccessFile):
     @commands.Cog.listener()
     async def on_ready(self):
         """StockManager啟動程序。
+
+        `CONVERT_RAW_STOCK_DATA`
+        將Excel原始股票資料轉換為JSON檔案。
 
         `NEW_GAME`
         清除股票資料並重新抓取股票資料，
@@ -49,9 +54,9 @@ class StockManager(commands.Cog, AccessFile):
             self.convert_raw_stock_data()
         
         if(NEW_GAME):
-            pass
+            self.reset_stock_data()
 
-        print("Loaded stock_manager.py")
+        print("Loaded stock_manager")
 
     def convert_raw_stock_data(self):
         """將Excel資料轉到stock_data.json。
@@ -78,7 +83,41 @@ class StockManager(commands.Cog, AccessFile):
             )   # 將pd.DataFrame轉成json object
             dict_[f"{quarter}"] = json_data
         
-        self.save_to("raw_stock_data", dict_=dict_)
+        self.save_to("raw_stock_data", data=dict_)
+
+    def reset_stock_data(self):
+        """清除股票資料並重新抓取資料。
+
+        `stock_data.json`
+        用以紀錄每支股票的:
+
+        price
+        當前價格
+
+        eps_qoq
+        當季EPS季增率(價格變動標準)
+
+        adjust_ratio
+        EPS QoQ之調整率
+
+        random_ratio
+        隨機變動率
+
+        (用索引對照)
+        """
+
+        stock_data = self.RAW_STOCK_DATA[self.quarters[1]]
+        initial_data = self.RAW_STOCK_DATA["initial_data"]
+        chart: List[Dict[str, float]] = [
+            {
+                "price": init["first_open"],
+                "eps_qoq": stock["eps_qoq"],
+                "adjust_ratio": stock["adjust_ratio"],
+                "random_ratio": stock["random_ratio"]
+            } for stock, init in zip(stock_data, initial_data)
+        ]
+        
+        self.save_to("stock_data", chart)
 
     @ntd.slash_command(
         name="open_round",

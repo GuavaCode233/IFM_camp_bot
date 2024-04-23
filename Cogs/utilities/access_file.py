@@ -25,7 +25,7 @@ class AccessFile:
             return json.load(json_file)
             
     @staticmethod
-    def save_to(file_name: str, dict_: Dict):
+    def save_to(file_name: str, data: dict | list):
         """開啟指定檔名的檔案並將dict_寫入。
 
         如果未找到檔案則 raise `FileNotFoundError`。
@@ -41,7 +41,7 @@ class AccessFile:
             encoding="utf-8"
         ) as json_file:
             json.dump(
-                dict_, json_file,
+                data, json_file,
                 ensure_ascii=False,
                 indent=4
             )
