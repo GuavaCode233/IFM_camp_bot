@@ -5,6 +5,7 @@ import pandas as pd
 from typing import List, Dict, Any
 from dataclasses import dataclass
 from pprint import pprint
+import asyncio
 import random
 import json
 
@@ -31,14 +32,18 @@ class Stock:
         delta P = EPS QoQ * Adjust Ratio + Random * Random Ratio * Rise/Fall
         """
 
-        # 控制隨機變動數的正負
-        rise_fall_factor: int = 1
-        if(random.random() <= 0.3): # 跌價機率是否模組化?
-            rise_fall_factor = -1
+        # # 有隨機機制
+        # # 控制隨機變動數的正負
+        # rise_fall_factor: int = 1
+        # if(random.random() <= 0.3): # 跌價機率是否模組化?
+        #     rise_fall_factor = -1
         
-        self.price += (self.eps_qoq * self.adjust_ratio
-                       + random.random() * self.random_ratio
-                       * rise_fall_factor)
+        # self.price += (self.eps_qoq * self.adjust_ratio
+        #                + random.random() * self.random_ratio
+        #                * rise_fall_factor)
+        
+        # 無隨機機制
+        self.price += (self.eps_qoq * self.adjust_ratio)
         
     def get_price(self) -> str:
         return f"{self.name:7}{self.symbol:5} 收盤: {self.close:4.2f} 價格: {self.price:4.2f} 漲跌: {self.price - self.close:4.2f}"
@@ -55,8 +60,7 @@ class StockManager(commands.Cog, AccessFile):
         "INITIAL_STOCK_DATA",
     )
     # 設定股價變動頻率(秒)
-    PRICE_CHANGE_FREQUENCY: float = \
-        AccessFile.read_file("game_config")["PRICE_CHANGE_FREQUENCY"]
+    PRICE_CHANGE_FREQUENCY: float = 20.0
 
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -203,6 +207,12 @@ class StockManager(commands.Cog, AccessFile):
             print(stock.get_price())
         print()
 
+    @classmethod
+    @price_change_loop.before_loop
+    async def before_price_change_loop(cls):
+        # 開盤後先等待
+        await asyncio.sleep(cls.PRICE_CHANGE_FREQUENCY)
+
     @ntd.slash_command(
         name="open_round",
         description="開始下一回合(回合未關閉無法使用)"
@@ -212,12 +222,21 @@ class StockManager(commands.Cog, AccessFile):
         """下一回合(開盤)。
         """
 
-        # TODO: Check if round is open, if it's open then return.
+        # TODO: Check if round is open, if it's open then handle error
         # 讀取股票資料存至 self.stocks的每個 Stock內
         # 讀取新聞資料 未設計
         # 開始新聞計時 未設計
         # 開始 price_change_loop
         # 開啟交易功能
+     
+        # 回合已開始
+        if(self.price_change_loop.is_running()):
+            await interaction.response.send_message(
+                "**回合已開始!**",
+                delete_after=3,
+                ephemeral=True
+            )
+            return
 
         self.price_change_loop.start()
         await interaction.response.send_message(
@@ -240,6 +259,15 @@ class StockManager(commands.Cog, AccessFile):
         # TODO: Check if round is closed, if it's closed then return.
         # 停止 price_change_loop
         # 關閉交易功能
+
+        # 回合未開啟
+        if(not self.price_change_loop.is_running()):
+            await interaction.response.send_message(
+                "**回合未開啟!**",
+                delete_after=3,
+                ephemeral=True
+            )
+            return
 
         self.price_change_loop.stop()
         await interaction.response.send_message(
