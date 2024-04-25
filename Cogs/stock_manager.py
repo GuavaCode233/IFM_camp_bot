@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from pprint import pprint
 import asyncio
 import random
+import math
 import json
 
 from .utilities import AccessFile
@@ -43,7 +44,8 @@ class Stock:
         #                * rise_fall_factor)
         
         # 無隨機機制
-        self.price += (self.eps_qoq * self.adjust_ratio)
+        self.price += self.eps_qoq * self.adjust_ratio
+        # 改變價格量不用round，會顯得有規律，扣款時用round就好
         
     def get_price(self) -> str:
         return f"{self.name:7}{self.symbol:5} 收盤: {self.close:4.2f} 價格: {self.price:4.2f} 漲跌: {self.price - self.close:4.2f}"
@@ -103,7 +105,7 @@ class StockManager(commands.Cog, AccessFile):
         dict_ = {}
 
         df: pd.DataFrame = pd.read_excel(   # 初始欄位資料
-            ".\\Data\\stock_data.xlsx", "initial_data"
+            ".\\Data\\raw_stock_data.xlsx", "initial_data"
         )
         json_data: Dict[str, List[Dict[str, str | int | float]]] = json.loads(
             df.to_json(orient="records")
