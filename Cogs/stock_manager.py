@@ -5,6 +5,7 @@ import pandas as pd
 from typing import List, Dict, Any
 from dataclasses import dataclass
 from pprint import pprint
+import random
 import json
 
 from .utilities import AccessFile
@@ -23,17 +24,46 @@ class Stock:
     price: float = 0.0
     close: float = 0.0
 
+    def delta_price(self):
+        """股價變動量。
+
+        股價變動
+        delta P = EPS QoQ * Adjust Ratio + Random * Random Ratio * Rise/Fall
+        """
+
+        # 控制隨機變動數的正負
+        rise_fall_factor: int = 1
+        if(random.random() <= 0.3): # 跌價機率是否模組化?
+            rise_fall_factor = -1
+        
+        self.price += (self.eps_qoq * self.adjust_ratio
+                       + random.random() * self.random_ratio
+                       * rise_fall_factor)
+        
+    def get_price(self) -> str:
+        return f"{self.name:7}{self.symbol:5} 收盤: {self.close:4.2f} 價格: {self.price:4.2f} 漲跌: {self.price - self.close:4.2f}"
+
 
 class StockManager(commands.Cog, AccessFile):
     """控制股票。
     """
+
+    __slots__ = (
+        "bot",
+        "CONFIG",
+        "RAW_STOCK_DATA",
+        "INITIAL_STOCK_DATA",
+    )
+    # 設定股價變動頻率(秒)
+    PRICE_CHANGE_FREQUENCY: float = \
+        AccessFile.read_file("game_config")["PRICE_CHANGE_FREQUENCY"]
 
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         self.CONFIG: Dict[str, Any] = self.read_file("game_config")
         self.RAW_STOCK_DATA: Dict[str, List[Dict[str, Any]]] = self.read_file("raw_stock_data")
         self.INITIAL_STOCK_DATA: List[Dict[str, str | float]] = self.RAW_STOCK_DATA["initial_data"]
-
+        
         self.round: int = 0   # 標記目前回合
         self.quarters:Dict[int, str] = {1: "Q4", 2: "Q1", 3: "Q2", 4: "Q3"} # round: "quarter"
         self.stocks: List[Stock] = []
@@ -157,6 +187,22 @@ class StockManager(commands.Cog, AccessFile):
             ) for stock, init_data in zip(stock_data, self.INITIAL_STOCK_DATA)
         ]
 
+    @tasks.loop(seconds=PRICE_CHANGE_FREQUENCY)
+    async def price_change_loop(self):
+        """每過一段時間更改股價。
+
+        `PRICE_CHANGE_FREQUENCY`
+        股價變動頻率(秒)。
+        """
+
+        if(not self.stocks):    # 防止資料遺失
+            self.fetch_stocks()
+        
+        for stock in self.stocks:
+            stock.delta_price()
+            print(stock.get_price())
+        print()
+
     @ntd.slash_command(
         name="open_round",
         description="開始下一回合(回合未關閉無法使用)"
@@ -173,7 +219,14 @@ class StockManager(commands.Cog, AccessFile):
         # 開始 price_change_loop
         # 開啟交易功能
 
-        raise NotImplementedError("Function not implimented.")
+        self.price_change_loop.start()
+        await interaction.response.send_message(
+            "price_change_loop started",
+            delete_after=3,
+            ephemeral=True
+        )
+
+        # raise NotImplementedError("Function not implimented.")
     
     @ntd.slash_command(
         name="close_round",
@@ -188,7 +241,13 @@ class StockManager(commands.Cog, AccessFile):
         # 停止 price_change_loop
         # 關閉交易功能
 
-        raise NotImplementedError("Function not implimented.")
+        self.price_change_loop.stop()
+        await interaction.response.send_message(
+            "price_change_loop stopped",
+            delete_after=3,
+            ephemeral=True
+        )
+        # raise NotImplementedError("Function not implimented.")
 
 
 def setup(bot: commands.Bot):
