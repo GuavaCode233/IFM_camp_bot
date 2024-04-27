@@ -17,5 +17,10 @@
 # delta: timedelta = date_now - pass_date
 
 # print(delta.total_seconds())    # 676.0 seconds
-print(not [])
 
+list_dict = [{f"{n}": 0} for n in range(1, 11)]
+
+for num, dict_ in enumerate(list_dict, start=1):
+    dict_.update({f"{num}": 1})
+
+print(list_dict)

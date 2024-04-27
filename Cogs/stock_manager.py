@@ -7,7 +7,6 @@ from dataclasses import dataclass
 from pprint import pprint
 import asyncio
 import random
-import math
 import json
 
 from .utilities import AccessFile
@@ -45,7 +44,8 @@ class Stock:
         
         # 無隨機機制
         self.price += self.eps_qoq * self.adjust_ratio
-        # 改變價格量不用round，會顯得有規律，扣款時用round就好
+        self.price = round(self.price, 6)
+        # 會顯得有規律，可能要隨機，扣款時用round(price, 2)
         
     def get_price(self) -> str:
         return f"{self.name:7}{self.symbol:5} 收盤: {self.close:4.2f} 價格: {self.price:4.2f} 漲跌: {self.price - self.close:4.2f}"
@@ -62,7 +62,7 @@ class StockManager(commands.Cog, AccessFile):
         "INITIAL_STOCK_DATA",
     )
     # 設定股價變動頻率(秒)
-    PRICE_CHANGE_FREQUENCY: float = 20.0
+    PRICE_CHANGE_FREQUENCY: float = 5.0
 
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -71,7 +71,7 @@ class StockManager(commands.Cog, AccessFile):
         self.INITIAL_STOCK_DATA: List[Dict[str, str | float]] = self.RAW_STOCK_DATA["initial_data"]
         
         self.round: int = 0   # 標記目前回合
-        self.quarters:Dict[int, str] = {1: "Q4", 2: "Q1", 3: "Q2", 4: "Q3"} # round: "quarter"
+        self.quarters: Dict[int, str] = {1: "Q4", 2: "Q1", 3: "Q2", 4: "Q3"} # round: "quarter"
         self.stocks: List[Stock] = []
 
     @commands.Cog.listener()
@@ -195,7 +195,7 @@ class StockManager(commands.Cog, AccessFile):
 
     @tasks.loop(seconds=PRICE_CHANGE_FREQUENCY)
     async def price_change_loop(self):
-        """每過一段時間更改股價。
+        """每過一段時間更改股價，並將當前股市資料儲存至`stock_data.json`。
 
         `PRICE_CHANGE_FREQUENCY`
         股價變動頻率(秒)。
@@ -204,10 +204,20 @@ class StockManager(commands.Cog, AccessFile):
         if(not self.stocks):    # 防止資料遺失
             self.fetch_stocks()
         
-        for stock in self.stocks:
+        stock_data: Dict[str, Any] = self.read_file("stock_data")
+        stock_data_list: List[Dict[str, float]] = stock_data["market"]
+
+        print(f"Iteration: {self.price_change_loop.current_loop}")
+        for stock, stock_dict in zip(self.stocks, stock_data_list):
+            # 改變該股股價
             stock.delta_price()
             print(stock.get_price())
+            # 儲存股價
+            stock_dict.update({"price": stock.price})
         print()
+
+        stock_data.update({"market": stock_data_list})
+        self.save_to("stock_data", stock_data)  # 儲存所有變動後資料
 
     @classmethod
     @price_change_loop.before_loop

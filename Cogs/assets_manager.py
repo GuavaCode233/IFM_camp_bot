@@ -86,8 +86,8 @@ class AssetsManager(commands.Cog, AccessFile):
             for t in range(1, 9)
         ]
         
-    def save_asset(self, team_number: str | int | None = None):
-        """儲存所有或指定小隊資產資料至json。
+    def save_assets(self, team_number: str | int | None = None):
+        """儲存所有或指定小隊資產資料至`team_assets.json`。
         """
 
         if(team_number is None):    # 儲存所有小隊資料
@@ -151,7 +151,7 @@ class AssetsManager(commands.Cog, AccessFile):
             updated=self.team_assets[team-1].deposit
         )
         # 儲存資料
-        self.save_asset(team)
+        self.save_assets(team)
         
 
     @ntd.slash_command(
