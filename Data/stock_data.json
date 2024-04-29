@@ -3,70 +3,70 @@
     "is_in_round": false,
     "market": [
         {
-            "price": 31.875,
+            "price": 30,
             "close": 30,
             "eps_qoq": 0.125,
             "adjust_ratio": 1.0,
             "random_ratio": 1
         },
         {
-            "price": 16.07100000000001,
+            "price": 15,
             "close": 15,
             "eps_qoq": 0.0714,
             "adjust_ratio": 1.0,
             "random_ratio": 1
         },
         {
-            "price": 11.499999999999995,
+            "price": 10,
             "close": 10,
             "eps_qoq": 0.1,
             "adjust_ratio": 1.0,
             "random_ratio": 1
         },
         {
-            "price": 26.07100000000001,
+            "price": 25,
             "close": 25,
             "eps_qoq": 0.0714,
             "adjust_ratio": 1.0,
             "random_ratio": 1
         },
         {
-            "price": 6.273399999999996,
+            "price": 7,
             "close": 7,
             "eps_qoq": -0.1211,
             "adjust_ratio": 0.4,
             "random_ratio": 1
         },
         {
-            "price": 5.881999999999996,
+            "price": 5,
             "close": 5,
             "eps_qoq": 0.0588,
             "adjust_ratio": 1.0,
             "random_ratio": 1
         },
         {
-            "price": 7.1650249999999955,
+            "price": 8,
             "close": 8,
             "eps_qoq": -0.1237,
             "adjust_ratio": 0.45,
             "random_ratio": 1
         },
         {
-            "price": 6.517500000000006,
+            "price": 6,
             "close": 6,
             "eps_qoq": 0.0345,
             "adjust_ratio": 1.0,
             "random_ratio": 1
         },
         {
-            "price": 9.384000000000011,
+            "price": 9,
             "close": 9,
             "eps_qoq": 0.0256,
             "adjust_ratio": 1.0,
             "random_ratio": 1
         },
         {
-            "price": 10.85049999999999,
+            "price": 10,
             "close": 10,
             "eps_qoq": 0.0567,
             "adjust_ratio": 1.0,

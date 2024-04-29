@@ -412,7 +412,7 @@
             "random_ratio": 1,
             "eps": 1.5,
             "eps_qoq": 0.0909,
-            "adjust_ratio": 1.0,
+            "adjust_ratio": 1.6,
             "net_revenue": 480000,
             "gross_income": 400000,
             "income_from_operating": 350000,
