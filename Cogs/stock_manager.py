@@ -61,8 +61,10 @@ class StockManager(commands.Cog, AccessFile):
         "RAW_STOCK_DATA",
         "INITIAL_STOCK_DATA",
     )
-    # 設定股價變動頻率(秒)
+    # 股價變動頻率(秒)
     PRICE_CHANGE_FREQUENCY: float = 5.0
+    # 發送新聞間隔(秒)
+    TIME_BETWEEN_NEWS: float = 120.0
 
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -72,6 +74,7 @@ class StockManager(commands.Cog, AccessFile):
         
         self.round: int = 0   # 標記目前回合
         self.quarters: Dict[int, str] = {1: "Q4", 2: "Q1", 3: "Q2", 4: "Q3"} # round: "quarter"
+        self.news_per_round: Dict[int, int] = {1: 2, 2: 3, 3: 3, 2: 2}  # round: news_count
         self.stocks: List[Stock] = []
 
     @commands.Cog.listener()
@@ -222,8 +225,28 @@ class StockManager(commands.Cog, AccessFile):
     @classmethod
     @price_change_loop.before_loop
     async def before_price_change_loop(cls):
-        # 開盤後先等待
+        """在`price_change_loop`開始之前先等待。
+        """
+
         await asyncio.sleep(cls.PRICE_CHANGE_FREQUENCY)
+
+    @tasks.loop(seconds=TIME_BETWEEN_NEWS)
+    async def news_loop(self):
+        """當回合開始時每過一段時間發送當回合新聞。
+        """
+
+        # TODO: 將擷取的當回合新聞發送到頻道(用 Discord_ui.py)
+
+        raise NotImplementedError
+    
+    @price_change_loop.before_loop
+    async def before_news_loop(self):
+        """在`news_loop`開始之前擷取本局新聞。
+        """
+
+        # TODO: 擷取本局新聞
+        
+        raise NotImplementedError
 
     @ntd.slash_command(
         name="open_round",
