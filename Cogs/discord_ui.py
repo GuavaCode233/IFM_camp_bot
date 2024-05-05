@@ -4,7 +4,7 @@ import nextcord as ntd
 from datetime import datetime
 from typing import Dict, List, Any
 
-from .utilities import AccessFile
+from .utilities import access_file
 from .assets_manager import AssetsManager
 
 
@@ -75,7 +75,7 @@ class ChangeDepositButton(ntd.ui.View):
         )
         
 
-class ChangeDepositView(ntd.ui.View, AccessFile):
+class ChangeDepositView(ntd.ui.View):
     """變更小隊存款更能View。
     """
 
@@ -182,7 +182,7 @@ class ChangeDepositView(ntd.ui.View, AccessFile):
         self.selected_team = int(select.values[0])
         self.embed_title = f"變更第{select.values[0]}小隊存款"
         self.selected_team_deposit = \
-            self.read_file("team_assets")[select.values[0]]["deposit"]
+            access_file.read_file("team_assets")[select.values[0]]["deposit"]
         self.embed_description = \
             f"第{select.values[0]}小隊目前存款: " \
             f"{self.selected_team_deposit:,}"
@@ -274,7 +274,7 @@ class ChangeDepositView(ntd.ui.View, AccessFile):
         
         # 檢查小隊金額是否足夠
         self.selected_team_deposit = \
-            self.read_file("team_assets")[f"{self.selected_team}"]["deposit"]
+            access_file.read_file("team_assets")[f"{self.selected_team}"]["deposit"]
         if(self.selected_mode == "2" and
             self.selected_team_deposit < self.amount):   # 此小隊金額不足扣繳
             await interaction.response.send_message(
@@ -383,7 +383,7 @@ class InputAmount(ntd.ui.Modal):
         self.stop()
 
 
-class LogEmbed(ntd.Embed, AccessFile):
+class LogEmbed(ntd.Embed):
     """收支動態 Embed Message。
     """
 
@@ -395,7 +395,7 @@ class LogEmbed(ntd.Embed, AccessFile):
             description="小隊存款金額的變動紀錄以及\n買賣股票紀錄"
         )
 
-        log: Dict[str, List[Dict[str, Any]]] = self.read_file("alteration_log").copy()
+        log: Dict[str, List[Dict[str, Any]]] = access_file.read_file("alteration_log").copy()
         log.pop("serial")
         # 將所有字典展開唯一list並按照serial排序
         record_list: List[Dict[str, Any]] = sorted(
@@ -417,7 +417,7 @@ class LogEmbed(ntd.Embed, AccessFile):
         )
 
 
-class TeamLogEmbed(ntd.Embed, AccessFile):
+class TeamLogEmbed(ntd.Embed):
     """小隊即時通知 Embed Message。
     """
 
@@ -453,7 +453,7 @@ class TeamLogEmbed(ntd.Embed, AccessFile):
         )
 
 
-class TeamAssetEmbed(ntd.Embed, AccessFile):
+class TeamAssetEmbed(ntd.Embed):
     """小隊資產 Embed Message。
 
     總資產(股票市值+存款)、存款。
@@ -465,7 +465,7 @@ class TeamAssetEmbed(ntd.Embed, AccessFile):
             title=f"第{team}小隊 F-pay帳戶",
             type="rich"
         )
-        asset_data: Dict[str, Dict[str, Any]] = self.read_file("team_assets")[f"{team}"]
+        asset_data: Dict[str, Dict[str, Any]] = access_file.read_file("team_assets")[f"{team}"]
         self.add_field( # 要加市值
             name="",
             value=f"**總資產: {asset_data["deposit"]:,}** (股票市值+存款)"
@@ -476,7 +476,7 @@ class TeamAssetEmbed(ntd.Embed, AccessFile):
         )
 
 
-class TeamStockEmbed(ntd.Embed, AccessFile):
+class TeamStockEmbed(ntd.Embed):
     """小隊持股狀況 Embed Message。
 
     持有股票、股票市值、投入成本、未實現投資損益、已實現投資損益、總收益
@@ -485,7 +485,7 @@ class TeamStockEmbed(ntd.Embed, AccessFile):
     pass
 
 
-class DiscordUI(commands.Cog, AccessFile):
+class DiscordUI(commands.Cog):
     """控制Discord端的UI介面
     """
 
@@ -498,7 +498,7 @@ class DiscordUI(commands.Cog, AccessFile):
 
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-        self.CONFIG: Dict[str, Any] = self.read_file("game_config")
+        self.CONFIG: Dict[str, Any] = access_file.read_file("game_config")
         self.CHANNEL_IDS: Dict[str, int] = self.CONFIG["channel_ids"]
         self.MESSAGE_IDS: Dict[str, int] = self.CONFIG["message_ids"]
 
@@ -598,7 +598,7 @@ class DiscordUI(commands.Cog, AccessFile):
         清除已發送的小隊即時訊息以及清除收支動態，並清除log資料。
         """
 
-        log: Dict[str, List[Dict[str, Any]]] = self.read_file("alteration_log")
+        log: Dict[str, List[Dict[str, Any]]] = access_file.read_file("alteration_log")
 
         # 清除各小隊即時訊息
         for t in range(1, 9):
@@ -613,7 +613,7 @@ class DiscordUI(commands.Cog, AccessFile):
             await channel.purge(limit=msg_count)
         
         # 清除log資料
-        self.clear_log_data()
+        access_file.clear_log_data()
         # 更新log
         await self.update_log()
             

@@ -9,7 +9,7 @@ import asyncio
 import random
 import json
 
-from .utilities import AccessFile
+from .utilities import access_file
 
 
 @dataclass(kw_only=True, slots=True)
@@ -51,7 +51,7 @@ class Stock:
         return f"{self.name:7}{self.symbol:5} 收盤: {self.close:4.2f} 價格: {self.price:4.2f} 漲跌: {self.price - self.close:4.2f}"
 
 
-class StockManager(commands.Cog, AccessFile):
+class StockManager(commands.Cog):
     """控制股票。
     """
 
@@ -68,8 +68,8 @@ class StockManager(commands.Cog, AccessFile):
 
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-        self.CONFIG: Dict[str, Any] = self.read_file("game_config")
-        self.RAW_STOCK_DATA: Dict[str, List[Dict[str, Any]]] = self.read_file("raw_stock_data")
+        self.CONFIG: Dict[str, Any] = access_file.read_file("game_config")
+        self.RAW_STOCK_DATA: Dict[str, List[Dict[str, Any]]] = access_file.read_file("raw_stock_data")
         self.INITIAL_STOCK_DATA: List[Dict[str, str | float]] = self.RAW_STOCK_DATA["initial_data"]
         
         # 標記目前回合
@@ -130,7 +130,7 @@ class StockManager(commands.Cog, AccessFile):
             )   # 將pd.DataFrame轉成json object
             dict_[f"{quarter}"] = json_data
         
-        self.save_to("raw_stock_data", data=dict_)
+        access_file.save_to("raw_stock_data", data=dict_)
 
     def reset_stock_data(self):
         """清除股票資料並重新抓取資料。
@@ -184,14 +184,14 @@ class StockManager(commands.Cog, AccessFile):
             } for stock, init_data in zip(stock_data, self.INITIAL_STOCK_DATA)
         ]
 
-        self.save_to("stock_data", dict_)
+        access_file.save_to("stock_data", dict_)
         self.fetch_stocks()
 
     def fetch_stocks(self):
         """從`stock_data.json`中抓取資料並初始化:class:`Stocks`。
         """
 
-        stock_data: List[Dict[str, float]] = self.read_file("stock_data")["market"]
+        stock_data: List[Dict[str, float]] = access_file.read_file("stock_data")["market"]
         self.stocks = [
             Stock(
                 name=init_data["name"],
@@ -215,7 +215,7 @@ class StockManager(commands.Cog, AccessFile):
         if(not self.stocks):    # 防止資料遺失
             self.fetch_stocks()
         
-        stock_data: Dict[str, Any] = self.read_file("stock_data")
+        stock_data: Dict[str, Any] = access_file.read_file("stock_data")
         stock_data_list: List[Dict[str, float]] = stock_data["market"]
 
         print(f"Iteration: {self.price_change_loop.current_loop}")
@@ -228,7 +228,7 @@ class StockManager(commands.Cog, AccessFile):
         print()
 
         stock_data.update({"market": stock_data_list})
-        self.save_to("stock_data", stock_data)  # 儲存所有變動後資料
+        access_file.save_to("stock_data", stock_data)  # 儲存所有變動後資料
 
     @classmethod
     @price_change_loop.before_loop
