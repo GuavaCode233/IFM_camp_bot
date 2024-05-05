@@ -6,7 +6,7 @@ from typing import List, Dict, Any
 from datetime import datetime
 from pprint import pprint
 
-from .utilities import AccessFile
+from .utilities import access_file
 
 
 @dataclass(kw_only=True, slots=True)
@@ -22,7 +22,7 @@ class TeamAssets:
     revenue: int = 0
 
 
-class AssetsManager(commands.Cog, AccessFile):
+class AssetsManager(commands.Cog):
     """資產控制。
     """
     
@@ -34,7 +34,7 @@ class AssetsManager(commands.Cog, AccessFile):
 
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-        self.CONFIG: Dict[str, Any] = self.read_file("game_config")
+        self.CONFIG: Dict[str, Any] = access_file.read_file("game_config")
         self.team_assets: List[TeamAssets] = []    # 儲存各小隊資產
 
     @commands.Cog.listener()
@@ -67,14 +67,14 @@ class AssetsManager(commands.Cog, AccessFile):
             }
             for t in range(1, 9)
         }
-        self.save_to("team_assets", dict_)
+        access_file.save_to("team_assets", dict_)
         self.fetch_assets()
         
     def fetch_assets(self):
         """從`team_assets.json`中抓取資料並初始化:class:`TeamAssets`。
         """
 
-        asset: Dict[str, Dict[str, Any]] = self.read_file("team_assets")
+        asset: Dict[str, Dict[str, Any]] = access_file.read_file("team_assets")
         self.team_assets = [
             TeamAssets(
                 team_number=str(t),
@@ -104,7 +104,7 @@ class AssetsManager(commands.Cog, AccessFile):
                     }
                 )
         else:   #　儲存指定小隊資料
-            dict_: Dict[str, Dict[str, Any]] = self.read_file("team_assets")
+            dict_: Dict[str, Dict[str, Any]] = access_file.read_file("team_assets")
             asset = self.team_assets[int(team_number)-1]
             dict_.update(
                 {
@@ -117,7 +117,7 @@ class AssetsManager(commands.Cog, AccessFile):
                 }
             )
 
-        self.save_to("team_assets", dict_)
+        access_file.save_to("team_assets", dict_)
         pprint(dict_)
         print()
     
@@ -142,7 +142,7 @@ class AssetsManager(commands.Cog, AccessFile):
             self.team_assets[team-1].deposit = amount
         
         # 儲存紀錄
-        self.log(
+        access_file.log(
             type_="AssetUpdate",
             time=datetime.now(),
             user=user,
