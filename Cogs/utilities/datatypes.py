@@ -98,3 +98,124 @@ class AlterationLog(TypedDict):
     serial: int
     __root__ = List[LogData]
 
+
+class InitialStockData(TypedDict):
+    """股票開頭資料。
+
+    name: `str`
+        股票名稱。
+    symbol: `str`
+        股票代號。
+    sector: `str`
+        所屬產業。
+    first_open: `float`
+        首次開盤價格。
+    """
+
+    name: str
+    symbol: str
+    sector: str
+    first_open: float
+
+
+class FinancialStatement(TypedDict):
+    """公司財務報表(財務狀況)。
+
+    random_ratio: `float`
+        隨機變動值調整率。
+    eps: `float`
+        EPS。
+    eps_qoq: `float`
+        EPS季增率。
+    adjust_ratio: `float`
+        EPS QoQ調整率。
+    net_revenue: `int`
+        銷貨淨額。
+    gross_income: `int`
+        銷貨毛額。
+    income_from_operating: `int`
+        營業收入。
+    net_income: `int`
+        本期損益。
+    """
+
+    random_ratio: float
+    eps: float
+    eps_qoq: float
+    adjust_ratio: float
+    net_revenue: int
+    gross_income: int
+    income_from_operating: int
+    net_income: int
+
+
+class RawStockData(TypedDict):
+    """原始股票資料。
+    """
+
+    initial_data: List[InitialStockData]
+    __root__: List[FinancialStatement]
+
+
+class StockDict(TypedDict):
+    """個股市場資料。
+
+    price: `float`
+        當前價格。
+    close: `float`
+        上季收盤價格。
+    eps_qoq: `float`
+        上季EPS季增率。
+    adjust_ratio: `float`
+        EPS QoQ調整率。
+    random_ratio: `float`
+        隨機變動值調整率。
+    """
+
+    price: float
+    close: float
+    eps_qoq: float
+    adjust_ratio: float
+    random_ratio: float
+
+
+StockData = TypedDict(
+    "StockData",
+    {
+        "round": int,
+        "released_news_count": Dict[str, int],
+        "is_in_round": bool,
+        "market": List[StockDict]
+    },
+    total=True
+)
+"""回合資料。
+
+round: `int`
+    第n回合，0代表準備狀態；5代表遊戲結束。
+released_news_count: `Dict[str, int]`
+    每回合已發送新聞數量。
+is_in_round: `bool`
+    標記回合是否開始(遊戲過程重啟使用)。
+market: `Market`
+    個股市場資料。
+"""
+
+
+class News(TypedDict):
+    """個別新聞資料。
+
+    title: `str`
+        新聞標題。
+    content: `str`
+        新聞內容。
+    """
+
+    title: str
+    content: str
+
+
+class RawNews(TypedDict):
+    """原始新聞資料(所有新聞)。
+    """
+    __root__: List[News]

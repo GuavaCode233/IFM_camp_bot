@@ -467,7 +467,7 @@ class TeamAssetEmbed(ntd.Embed):
             title=f"第{team}小隊 F-pay帳戶",
             type="rich"
         )
-        asset_data: TeamAssetsDict = access_file.read_file("team_assets")[f"{team}"]
+        asset_data: AssetDict = access_file.read_file("team_assets")[f"{team}"]
         self.add_field( # 要加市值
             name="",
             value=f"**總資產: {asset_data["deposit"]:,}** (股票市值+存款)"

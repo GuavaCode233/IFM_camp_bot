@@ -1,3 +1,14 @@
 {
-    "serial": 0
+    "serial": 1,
+    "2": [
+        {
+            "type": "AssetUpdate",
+            "time": "05/05 03:23PM",
+            "user": "guava.png",
+            "serial": 0,
+            "team": "2",
+            "original": 10000,
+            "updated": 9345
+        }
+    ]
 }

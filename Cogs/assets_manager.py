@@ -7,7 +7,7 @@ from datetime import datetime
 from pprint import pprint
 
 from .utilities import access_file
-from .utilities.datatypes import Config
+from .utilities.datatypes import Config, AssetsData
 
 
 @dataclass(kw_only=True, slots=True)
@@ -18,8 +18,7 @@ class TeamAssets:
 
     team_number: str
     deposit: int
-    stock_cost: int
-    stocks: Dict[str, str] = field(default_factory=dict)
+    stock_cost: Dict[str, List[int]] = field(default_factory=dict)
     revenue: int = 0
 
 
@@ -62,8 +61,7 @@ class AssetsManager(commands.Cog):
         dict_ = {
             str(t): {
                 "deposit": self.CONFIG["STARTER_CASH"],
-                "stock_cost": 0,
-                "stocks": None,
+                "stock_cost": None,
                 "revenue": 0
             }
             for t in range(1, 9)
@@ -75,13 +73,12 @@ class AssetsManager(commands.Cog):
         """從`team_assets.json`中抓取資料並初始化:class:`TeamAssets`。
         """
 
-        asset: Dict[str, Dict[str, Any]] = access_file.read_file("team_assets")
+        asset: AssetsData = access_file.read_file("team_assets")
         self.team_assets = [
             TeamAssets(
                 team_number=str(t),
                 deposit=asset[str(t)]["deposit"],
                 stock_cost=asset[str(t)]["stock_cost"],
-                stocks=asset[str(t)]["stocks"],
                 revenue=asset[str(t)]["revenue"]
             )
             for t in range(1, 9)
@@ -99,20 +96,18 @@ class AssetsManager(commands.Cog):
                         str(t):{
                             "deposit": asset.deposit,
                             "stock_cost": asset.stock_cost,
-                            "stocks": asset.stocks,
                             "revenue": asset.revenue
                         }
                     }
                 )
         else:   #　儲存指定小隊資料
-            dict_: Dict[str, Dict[str, Any]] = access_file.read_file("team_assets")
+            dict_: AssetsData = access_file.read_file("team_assets")
             asset = self.team_assets[int(team_number)-1]
             dict_.update(
                 {
                     str(team_number):{
                         "deposit": asset.deposit,
                         "stock_cost": asset.stock_cost,
-                        "stocks": asset.stocks,
                         "revenue": asset.revenue
                     }
                 }

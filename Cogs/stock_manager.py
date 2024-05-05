@@ -2,7 +2,7 @@ from nextcord.ext import tasks, commands, application_checks
 import nextcord as ntd
 import pandas as pd
 
-from typing import List, Dict, Any
+from typing import List, Dict
 from dataclasses import dataclass
 from pprint import pprint
 import asyncio
@@ -10,7 +10,7 @@ import random
 import json
 
 from .utilities import access_file
-from .utilities.datatypes import Config
+from .utilities.datatypes import Config, RawStockData, InitialStockData, StockData, StockDict, News
 
 
 @dataclass(kw_only=True, slots=True)
@@ -70,8 +70,8 @@ class StockManager(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         self.CONFIG: Config = access_file.read_file("game_config")
-        self.RAW_STOCK_DATA: Dict[str, List[Dict[str, Any]]] = access_file.read_file("raw_stock_data")
-        self.INITIAL_STOCK_DATA: List[Dict[str, str | float]] = self.RAW_STOCK_DATA["initial_data"]
+        self.RAW_STOCK_DATA: RawStockData = access_file.read_file("raw_stock_data")
+        self.INITIAL_STOCK_DATA: List[InitialStockData] = self.RAW_STOCK_DATA["initial_data"]
         
         # 標記目前回合
         self.round: int = 0
@@ -135,38 +135,9 @@ class StockManager(commands.Cog):
 
     def reset_stock_data(self):
         """清除股票資料並重新抓取資料。
-
-        `stock_data.json`
-
-        紀錄回合狀態:
-        
-        round
-        第n回合，0代表準備狀態；5代表遊戲結束。
-
-        is_in_round
-        標記回合是否開始(遊戲過程重啟使用)。
-
-        紀錄每支股票的:
-
-        price
-        當前價格。
-
-        close
-        收盤價格。
-
-        eps_qoq
-        當季EPS季增率(價格變動標準)。
-
-        adjust_ratio
-        EPS QoQ之調整率。
-
-        random_ratio
-        隨機變動率。
-
-        (用索引對照)
         """
 
-        dict_: Dict[str, int | List[Dict[str, float]]] = {}
+        dict_: StockData = {}
         # 目前回合
         dict_["round"] = 0
         # 每回合已發送新聞數量
@@ -192,7 +163,7 @@ class StockManager(commands.Cog):
         """從`stock_data.json`中抓取資料並初始化:class:`Stocks`。
         """
 
-        stock_data: List[Dict[str, float]] = access_file.read_file("stock_data")["market"]
+        stock_data: StockData = access_file.read_file("stock_data")["market"]
         self.stocks = [
             Stock(
                 name=init_data["name"],
@@ -216,8 +187,8 @@ class StockManager(commands.Cog):
         if(not self.stocks):    # 防止資料遺失
             self.fetch_stocks()
         
-        stock_data: Dict[str, Any] = access_file.read_file("stock_data")
-        stock_data_list: List[Dict[str, float]] = stock_data["market"]
+        stock_data: StockData = access_file.read_file("stock_data")
+        stock_data_list: List[StockDict] = stock_data["market"]
 
         print(f"Iteration: {self.price_change_loop.current_loop}")
         for stock, stock_dict in zip(self.stocks, stock_data_list):
