@@ -12,8 +12,11 @@ class ChannelIDs(TypedDict):
     __root__: TeamChannelIDs
 
 
-class TeamMessageIDs(TypedDict):
-    __root__: int
+TeamMessageIDs = Dict[str, int]
+"""該隊「資產」頻道內之資產訊息ID。
+
+`"msg_n"`: `int`
+"""
 
 
 class MessageIDs(TypedDict):
@@ -215,7 +218,8 @@ class News(TypedDict):
     content: str
 
 
-class RawNews(TypedDict):
-    """原始新聞資料(所有新聞)。
-    """
-    __root__: List[News]
+RawNews = Dict[str, List[News]]
+"""原始新聞資料(全部資料)。
+
+`"quarter"`: `List[News]`
+"""
