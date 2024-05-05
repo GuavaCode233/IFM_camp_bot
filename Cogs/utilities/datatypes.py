@@ -58,7 +58,7 @@ class Config(TypedDict):
     message_ids: MessageIDs
 
 
-class TeamAssetsDict(TypedDict):
+class AssetDict(TypedDict):
     """小隊資產資料。
 
     資料說明
@@ -75,8 +75,10 @@ class TeamAssetsDict(TypedDict):
     stock_cost: Dict[str, List[int]]
     revenue: int
 
+
 class AssetsData(TypedDict):
-    __root__: TeamAssetsDict
+    __root__: AssetDict
+
 
 LogData = TypedDict(
     "LogData",

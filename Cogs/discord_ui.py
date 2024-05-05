@@ -5,7 +5,7 @@ from datetime import datetime
 from typing import Dict, List, Any
 
 from .utilities import access_file
-from .utilities.datatypes import Config, ChannelIDs, MessageIDs, TeamAssetsDict, AlterationLog, LogData
+from .utilities.datatypes import Config, ChannelIDs, MessageIDs, AssetDict, AlterationLog, LogData
 from .assets_manager import AssetsManager
 
 
