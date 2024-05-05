@@ -72,9 +72,13 @@ class StockManager(commands.Cog, AccessFile):
         self.RAW_STOCK_DATA: Dict[str, List[Dict[str, Any]]] = self.read_file("raw_stock_data")
         self.INITIAL_STOCK_DATA: List[Dict[str, str | float]] = self.RAW_STOCK_DATA["initial_data"]
         
-        self.round: int = 0   # 標記目前回合
-        self.quarters: Dict[int, str] = {1: "Q4", 2: "Q1", 3: "Q2", 4: "Q3"} # round: "quarter"
-        self.news_per_round: Dict[int, int] = {1: 2, 2: 3, 3: 3, 2: 2}  # round: news_count
+        # 標記目前回合
+        self.round: int = 0
+        # 回合、季對照表(round: "quarter")
+        self.QUARTERS: Dict[int, str] = {1: "Q4", 2: "Q1", 3: "Q2", 4: "Q3"}
+        # 每回合已發送新聞數量(round: released_news_count)
+        self.news_per_round: Dict[str, int] = {}
+        # 儲存即時股票資料
         self.stocks: List[Stock] = []
 
     @commands.Cog.listener()
@@ -102,7 +106,7 @@ class StockManager(commands.Cog, AccessFile):
         print("Loaded stock_manager")
 
     def convert_raw_stock_data(self):
-        """將Excel資料轉到stock_data.json。
+        """將Excel資料轉到`stock_data.json`。
         """
         
         dict_ = {}
@@ -117,7 +121,7 @@ class StockManager(commands.Cog, AccessFile):
             d["symbol"] = d["symbol"].lstrip("n")
         dict_["initial_data"] = json_data
 
-        for quarter in self.quarters.values():   # 1-4季資料
+        for quarter in self.QUARTERS.values():   # 1-4季資料
             df: pd.DataFrame = pd.read_excel(
                 ".\\Data\\raw_stock_data.xlsx", f"{quarter}"
             )
@@ -161,11 +165,15 @@ class StockManager(commands.Cog, AccessFile):
         (用索引對照)
         """
 
-        dict_: Dict[str, int | List[Dict[str, float]]] = dict()
-        dict_["round"] = 0  # 第0輪
-        dict_["is_in_round"] = False   # 回合未開始
-
-        stock_data = self.RAW_STOCK_DATA[self.quarters[1]]
+        dict_: Dict[str, int | List[Dict[str, float]]] = {}
+        # 目前回合
+        dict_["round"] = 0
+        # 每回合已發送新聞數量
+        dict_["released_news_count"] = {str(r): 0 for r in range(1, 5)}
+        # 回合狀態布林(是否在進行回合)
+        dict_["is_in_round"] = False
+        # 股票即時資訊
+        stock_data = self.RAW_STOCK_DATA[self.QUARTERS[1]]
         dict_["market"] = [
             {
                 "price": init_data["first_open"],
