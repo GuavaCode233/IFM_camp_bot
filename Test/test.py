@@ -1,26 +1,21 @@
-# from datetime import datetime, timedelta
+from typing import TypedDict, List, Union
 
-# date_string: str = datetime.now().strftime(
-#     "%Y/%m/%d %H:%M:%S"
-# )
+class Data(TypedDict):
+    type: str
+    time: str
+    user: str
+    serial: int
+    team: str
+    original: int
+    updated: int
 
-# # String converted date
-# date_now: datetime = datetime.strptime(
-#     date_string, "%Y/%m/%d %H:%M:%S"
-# )
+class Log(TypedDict):
+    serial: int
+    # 使用動態鍵，並將其值定義為 AssetUpdate 的列表
+    # 這樣就可以接受任意流水號的資料
+    __root__: List[Data]
 
-# pass_date: datetime = datetime.strptime(
-#     "2024/04/23 18:05:00", "%Y/%m/%d %H:%M:%S"
-# )
+# 使用 DynamicSerialDict 作為資料型態提示
+data: Log = {}
+a = data["1"]
 
-# # Calculate time difference
-# delta: timedelta = date_now - pass_date
-
-# print(delta.total_seconds())    # 676.0 seconds
-
-list_dict = [{f"{n}": 0} for n in range(1, 11)]
-
-for num, dict_ in enumerate(list_dict, start=1):
-    dict_.update({f"{num}": 1})
-
-print(list_dict)

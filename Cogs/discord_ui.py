@@ -5,6 +5,7 @@ from datetime import datetime
 from typing import Dict, List, Any
 
 from .utilities import access_file
+from .utilities.datatypes import Config, ChannelIDs, MessageIDs, TeamAssetsDict, AlterationLog, LogData
 from .assets_manager import AssetsManager
 
 
@@ -395,8 +396,9 @@ class LogEmbed(ntd.Embed):
             description="小隊存款金額的變動紀錄以及\n買賣股票紀錄"
         )
 
-        log: Dict[str, List[Dict[str, Any]]] = access_file.read_file("alteration_log").copy()
+        log: AlterationLog = access_file.read_file("alteration_log").copy()
         log.pop("serial")
+        log: LogData
         # 將所有字典展開唯一list並按照serial排序
         record_list: List[Dict[str, Any]] = sorted(
             [item for sublist in log.values() for item in sublist],
@@ -465,7 +467,7 @@ class TeamAssetEmbed(ntd.Embed):
             title=f"第{team}小隊 F-pay帳戶",
             type="rich"
         )
-        asset_data: Dict[str, Dict[str, Any]] = access_file.read_file("team_assets")[f"{team}"]
+        asset_data: TeamAssetsDict = access_file.read_file("team_assets")[f"{team}"]
         self.add_field( # 要加市值
             name="",
             value=f"**總資產: {asset_data["deposit"]:,}** (股票市值+存款)"
@@ -498,9 +500,9 @@ class DiscordUI(commands.Cog):
 
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-        self.CONFIG: Dict[str, Any] = access_file.read_file("game_config")
-        self.CHANNEL_IDS: Dict[str, int] = self.CONFIG["channel_ids"]
-        self.MESSAGE_IDS: Dict[str, int] = self.CONFIG["message_ids"]
+        self.CONFIG: Config = access_file.read_file("game_config")
+        self.CHANNEL_IDS: ChannelIDs = self.CONFIG["channel_ids"]
+        self.MESSAGE_IDS: MessageIDs = self.CONFIG["message_ids"]
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -556,7 +558,7 @@ class DiscordUI(commands.Cog):
         """
 
         dict_ = self.CONFIG
-        message_ids: Dict[str: Dict[str: int]] = dict_["message_ids"]
+        message_ids: MessageIDs = dict_["message_ids"]
         
         for t in range(1, 9):
             channel = self.bot.get_channel(
@@ -598,7 +600,7 @@ class DiscordUI(commands.Cog):
         清除已發送的小隊即時訊息以及清除收支動態，並清除log資料。
         """
 
-        log: Dict[str, List[Dict[str, Any]]] = access_file.read_file("alteration_log")
+        log: AlterationLog = access_file.read_file("alteration_log")
 
         # 清除各小隊即時訊息
         for t in range(1, 9):

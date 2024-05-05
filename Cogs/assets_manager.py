@@ -7,6 +7,7 @@ from datetime import datetime
 from pprint import pprint
 
 from .utilities import access_file
+from .utilities.datatypes import Config
 
 
 @dataclass(kw_only=True, slots=True)
@@ -34,7 +35,7 @@ class AssetsManager(commands.Cog):
 
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-        self.CONFIG: Dict[str, Any] = access_file.read_file("game_config")
+        self.CONFIG: Config = access_file.read_file("game_config")
         self.team_assets: List[TeamAssets] = []    # 儲存各小隊資產
 
     @commands.Cog.listener()

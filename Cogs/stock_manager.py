@@ -10,6 +10,7 @@ import random
 import json
 
 from .utilities import access_file
+from .utilities.datatypes import Config
 
 
 @dataclass(kw_only=True, slots=True)
@@ -68,7 +69,7 @@ class StockManager(commands.Cog):
 
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-        self.CONFIG: Dict[str, Any] = access_file.read_file("game_config")
+        self.CONFIG: Config = access_file.read_file("game_config")
         self.RAW_STOCK_DATA: Dict[str, List[Dict[str, Any]]] = access_file.read_file("raw_stock_data")
         self.INITIAL_STOCK_DATA: List[Dict[str, str | float]] = self.RAW_STOCK_DATA["initial_data"]
         
