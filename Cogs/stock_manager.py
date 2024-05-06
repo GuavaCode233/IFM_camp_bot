@@ -12,12 +12,13 @@ import json
 from .utilities import access_file
 from .utilities.datatypes import (
     Config,
+    FinancialStatement,
     RawStockData,
     InitialStockData,
-    StockData,
-    StockDict,
+    MarketData,
     RawNews,
-    News
+    News,
+    GameState
 )
 
 
@@ -81,8 +82,8 @@ class StockManager(commands.Cog):
         self.RAW_STOCK_DATA: RawStockData = access_file.read_file("raw_stock_data")
         self.INITIAL_STOCK_DATA: List[InitialStockData] = self.RAW_STOCK_DATA["initial_data"]
         
-        # 標記目前回合
-        self.round: int = 0
+        # 遊戲狀態
+        self.game_state: GameState = None
         # 回合、季對照表(round: "quarter")
         self.QUARTERS: Dict[int, str] = {1: "Q4", 2: "Q1", 3: "Q2", 4: "Q3"}
         # 每回合已發送新聞數量(round: released_news_count)
@@ -111,13 +112,39 @@ class StockManager(commands.Cog):
         
         if(CONVERT_RAW_NEWS_DATA):
             self.convert_news_data()
-        
+
         if(NEW_GAME):
-            self.reset_stock_data()
+            self.reset_market_data()
+            self.reset_game_state()
         elif(not self.stocks):  # 資料不對等
             self.fetch_stocks()
+            self.fetch_game_state()
 
         print("Loaded stock_manager")
+
+    def reset_game_state(self):
+        """重製遊戲狀態資料(股票與新聞控制資料)。
+        """
+        
+        self.fetch_game_state()
+
+        self.game_state["round"] = 0
+        self.game_state["is_in_round"] = False
+        self.game_state["released_news_count"] = {str(r): 0 for r in range(1, 5)}
+
+        self.save_game_state()
+
+    def save_game_state(self):
+        """儲存遊戲狀態。
+        """
+
+        access_file.save_to("game_state", self.game_state)
+
+    def fetch_game_state(self):
+        """抓取遊戲狀態self.game_state: `GameState`。
+        """
+
+        self.game_state: GameState = access_file.read_file("game_state")
 
     def convert_raw_stock_data(self):
         """將股票原始Excel資料轉到`stock_data.json`。
@@ -146,20 +173,12 @@ class StockManager(commands.Cog):
         
         access_file.save_to("raw_stock_data", data=dict_)
 
-    def reset_stock_data(self):
-        """清除股票資料並重新抓取資料。
+    def reset_market_data(self):
+        """清除市場資料並重新抓取 :class:`Stock`資料。
         """
 
-        dict_: StockData = {}
-        # 目前回合
-        dict_["round"] = 0
-        # 每回合已發送新聞數量
-        dict_["released_news_count"] = {str(r): 0 for r in range(1, 5)}
-        # 回合狀態布林(是否在進行回合)
-        dict_["is_in_round"] = False
-        # 股票即時資訊
-        stock_data = self.RAW_STOCK_DATA[self.QUARTERS[1]]
-        dict_["market"] = [
+        stock_data: List[FinancialStatement] = self.RAW_STOCK_DATA[self.QUARTERS[1]]
+        list_: MarketData = [
             {
                 "price": init_data["first_open"],
                 "close": init_data["first_open"],
@@ -169,14 +188,14 @@ class StockManager(commands.Cog):
             } for stock, init_data in zip(stock_data, self.INITIAL_STOCK_DATA)
         ]
 
-        access_file.save_to("stock_data", dict_)
+        access_file.save_to("market_data", list_)
         self.fetch_stocks()
 
     def fetch_stocks(self):
         """從`stock_data.json`中抓取資料並初始化:class:`Stocks`。
         """
 
-        stock_data: StockData = access_file.read_file("stock_data")["market"]
+        stock_data: MarketData = access_file.read_file("market_data")
         self.stocks = [
             Stock(
                 name=init_data["name"],
@@ -200,11 +219,10 @@ class StockManager(commands.Cog):
         if(not self.stocks):    # 防止資料遺失
             self.fetch_stocks()
         
-        stock_data: StockData = access_file.read_file("stock_data")
-        stock_data_list: List[StockDict] = stock_data["market"]
+        stock_data: MarketData = access_file.read_file("market_data")
 
         print(f"Iteration: {self.price_change_loop.current_loop}")
-        for stock, stock_dict in zip(self.stocks, stock_data_list):
+        for stock, stock_dict in zip(self.stocks, stock_data):
             # 改變該股股價
             stock.delta_price()
             print(stock.get_price())
@@ -212,8 +230,7 @@ class StockManager(commands.Cog):
             stock_dict.update({"price": stock.price})
         print()
 
-        stock_data.update({"market": stock_data_list})
-        access_file.save_to("stock_data", stock_data)  # 儲存所有變動後資料
+        access_file.save_to("market_data", stock_data)  # 儲存所有變動後資料
 
     @classmethod
     @price_change_loop.before_loop
@@ -267,11 +284,11 @@ class StockManager(commands.Cog):
         """下一回合(開盤)。
         """
 
-        # TODO: Check if round is open, if it's open then handle error
-        # 讀取股票資料存至 self.stocks的每個 Stock內
+        # TODO: Check if round is open, if it's open then handle error (done)
+        # 更新遊戲狀態 (done)
         # 讀取新聞資料 未設計
         # 開始新聞計時 未設計
-        # 開始 price_change_loop
+        # 開始 price_change_loop (done)
         # 開啟交易功能
      
         # 回合已開始
@@ -283,14 +300,22 @@ class StockManager(commands.Cog):
             )
             return
 
+        if(self.game_state["round"]+1 == 5):
+            pass # 遊戲結束
+            return
+        
+        self.game_state["round"] += 1
+        self.game_state["is_in_round"] = True
+        self.save_game_state()
+
         self.price_change_loop.start()
+        # self.news_loop.start()
+
         await interaction.response.send_message(
-            "price_change_loop started",
+            f"回合{self.game_state['round']}開始!",
             delete_after=3,
             ephemeral=True
         )
-
-        # raise NotImplementedError("Function not implimented.")
     
     @ntd.slash_command(
         name="close_round",
@@ -313,10 +338,14 @@ class StockManager(commands.Cog):
                 ephemeral=True
             )
             return
+        
+        self.game_state["is_in_round"] = False
+        self.save_game_state()
 
         self.price_change_loop.stop()
+
         await interaction.response.send_message(
-            "price_change_loop stopped",
+            f"回合{self.game_state['round']}結束!",
             delete_after=3,
             ephemeral=True
         )

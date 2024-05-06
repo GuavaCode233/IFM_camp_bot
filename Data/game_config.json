@@ -3,8 +3,8 @@
     "RESET_UI": true,
     "CLEAR_LOG": false,
     "UPDATE_ASSET": false,
-    "CONVERT_RAW_STOCK_DATA": true,
-    "CONVERT_RAW_NEWS_DATA": true,
+    "CONVERT_RAW_STOCK_DATA": false,
+    "CONVERT_RAW_NEWS_DATA": false,
     "STARTER_CASH": 10000,
     "channel_ids": {
         "CHANGE_DEPOSIT": 1218186135264821298,

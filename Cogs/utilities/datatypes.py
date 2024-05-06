@@ -185,26 +185,8 @@ class StockDict(TypedDict):
     random_ratio: float
 
 
-StockData = TypedDict(
-    "StockData",
-    {
-        "round": int,
-        "released_news_count": Dict[str, int],
-        "is_in_round": bool,
-        "market": List[StockDict]
-    },
-    total=True
-)
-"""回合資料。
-
-round: `int`
-    第n回合，0代表準備狀態；5代表遊戲結束。
-released_news_count: `Dict[str, int]`
-    每回合已發送新聞數量。
-is_in_round: `bool`
-    標記回合是否開始(遊戲過程重啟使用)。
-market: `Market`
-    個股市場資料。
+MarketData = List[StockDict]
+"""每支股票的市場資料。
 """
 
 
@@ -225,4 +207,24 @@ RawNews = Dict[str, List[News]]
 """原始新聞資料(全部資料)。
 
 `"quarter"`: `List[News]`
+"""
+
+
+GameState = TypedDict(
+    "GameState",
+    {
+        "round": int,
+        "released_news_count": Dict[str, int],
+        "is_in_round": bool,
+    },
+    total=True
+)
+"""遊戲狀態資料。
+
+round: `int`
+    第n回合，0代表準備狀態；5代表遊戲結束。
+released_news_count: `Dict[str, int]`
+    每回合已發送新聞數量。
+is_in_round: `bool`
+    標記回合是否開始(遊戲過程重啟使用)。
 """
