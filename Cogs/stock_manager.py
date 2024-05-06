@@ -2,7 +2,7 @@ from nextcord.ext import tasks, commands, application_checks
 import nextcord as ntd
 import pandas as pd
 
-from typing import List, Dict
+from typing import List, Dict, ClassVar
 from dataclasses import dataclass
 from pprint import pprint
 import asyncio
@@ -72,9 +72,9 @@ class StockManager(commands.Cog):
         "INITIAL_STOCK_DATA",
     )
     # 股價變動頻率(秒)
-    PRICE_CHANGE_FREQUENCY: float = 5.0
+    PRICE_CHANGE_FREQUENCY: ClassVar[float] = 5.0
     # 發送新聞間隔(秒)
-    TIME_BETWEEN_NEWS: float = 120.0
+    TIME_BETWEEN_NEWS: ClassVar[float] = 120.0
 
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -86,10 +86,10 @@ class StockManager(commands.Cog):
         self.game_state: GameState = None
         # 回合、季對照表(round: "quarter")
         self.QUARTERS: Dict[int, str] = {1: "Q4", 2: "Q1", 3: "Q2", 4: "Q3"}
-        # 每回合已發送新聞數量(round: released_news_count)
-        self.news_per_round: Dict[str, int] = {}
         # 儲存即時股票資料
         self.stocks: List[Stock] = []
+        # 當回合預發新聞
+        self.pending_news: List[News] = []
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -246,16 +246,24 @@ class StockManager(commands.Cog):
 
         dict_: RawNews = {}
 
-        for quarter in self.QUARTERS.values():
+        for round_, quarter in self.QUARTERS.items():
             df: pd.DataFrame = pd.read_excel(
                 ".\\Data\\raw_news.xlsx", f"{quarter}"
             )
             json_data: List[News] = json.loads(
                 df.to_json(orient="records")
             )
-            dict_[f"{quarter}"] = json_data
+            dict_[f"{round_}"] = json_data
         
         access_file.save_to("raw_news", dict_)
+
+    def fetch_round_news(self):
+        """抓取本回合預發新聞，如果回合中斷則從未發過的新聞開始抓取。
+        """
+
+        news: RawNews = access_file.read_file("raw_news")
+        released_news_count: int = self.game_state["released_news_count"][str(self.game_state["round"])]
+        self.pending_news: List[News] = news[str(self.game_state["round"])][released_news_count:]
 
     @tasks.loop(seconds=TIME_BETWEEN_NEWS)
     async def news_loop(self):
@@ -264,17 +272,19 @@ class StockManager(commands.Cog):
 
         # TODO: 將擷取的當回合新聞發送到頻道(用 Discord_ui.py)
 
-        raise NotImplementedError
+        if(not self.pending_news):
+            self.fetch_round_news()
+
+        # raise NotImplementedError
+        pass
     
     @news_loop.before_loop
     async def before_news_loop(self):
         """在`news_loop`開始之前擷取本局新聞。
         """
 
-        # TODO: 擷取本局新聞
+        self.fetch_round_news()
         
-        raise NotImplementedError
-
     @ntd.slash_command(
         name="open_round",
         description="開始下一回合(回合未關閉無法使用)"
@@ -309,7 +319,7 @@ class StockManager(commands.Cog):
         self.save_game_state()
 
         self.price_change_loop.start()
-        # self.news_loop.start()
+        self.news_loop.start()
 
         await interaction.response.send_message(
             f"回合{self.game_state['round']}開始!",
@@ -343,6 +353,7 @@ class StockManager(commands.Cog):
         self.save_game_state()
 
         self.price_change_loop.stop()
+        self.news_loop.stop()
 
         await interaction.response.send_message(
             f"回合{self.game_state['round']}結束!",

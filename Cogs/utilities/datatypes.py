@@ -206,7 +206,7 @@ class News(TypedDict):
 RawNews = Dict[str, List[News]]
 """原始新聞資料(全部資料)。
 
-`"quarter"`: `List[News]`
+`"round"`: `List[News]`
 """
 
 
