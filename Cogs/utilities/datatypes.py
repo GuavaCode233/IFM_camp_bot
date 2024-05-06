@@ -40,6 +40,8 @@ class Config(TypedDict):
         更新各小隊資產狀況訊息。
     CONVERT_RAW_STOCK_DATA: `bool`
         將Excel原始股票資料轉換為JSON檔案。
+    CONVERT_RAW_NEWS_DATA: `bool`
+        將Excel原始新聞資料轉換為JSON檔案。
     STARTER_CASH: `int`
         遊戲開始時各小隊的初始資產額。
     
@@ -56,6 +58,7 @@ class Config(TypedDict):
     CLEAR_LOG: bool
     UPDATE_ASSET: bool
     CONVERT_RAW_STOCK_DATA: bool
+    CONVERT_RAW_NEWS_DATA: bool
     STARTER_CASH: int
     channel_ids: ChannelIDs
     message_ids: MessageIDs

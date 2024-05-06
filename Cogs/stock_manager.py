@@ -10,7 +10,15 @@ import random
 import json
 
 from .utilities import access_file
-from .utilities.datatypes import Config, RawStockData, InitialStockData, StockData, StockDict, News
+from .utilities.datatypes import (
+    Config,
+    RawStockData,
+    InitialStockData,
+    StockData,
+    StockDict,
+    RawNews,
+    News
+)
 
 
 @dataclass(kw_only=True, slots=True)
@@ -53,7 +61,7 @@ class Stock:
 
 
 class StockManager(commands.Cog):
-    """控制股票。
+    """控制股票及新聞。
     """
 
     __slots__ = (
@@ -96,8 +104,13 @@ class StockManager(commands.Cog):
 
         NEW_GAME = self.CONFIG["NEW_GAME"]
         CONVERT_RAW_STOCK_DATA = self.CONFIG["CONVERT_RAW_STOCK_DATA"]
+        CONVERT_RAW_NEWS_DATA = self.CONFIG["CONVERT_RAW_NEWS_DATA"]
+
         if(CONVERT_RAW_STOCK_DATA):
             self.convert_raw_stock_data()
+        
+        if(CONVERT_RAW_NEWS_DATA):
+            self.convert_news_data()
         
         if(NEW_GAME):
             self.reset_stock_data()
@@ -107,10 +120,10 @@ class StockManager(commands.Cog):
         print("Loaded stock_manager")
 
     def convert_raw_stock_data(self):
-        """將Excel資料轉到`stock_data.json`。
+        """將股票原始Excel資料轉到`stock_data.json`。
         """
         
-        dict_ = {}
+        dict_: RawStockData = {}
 
         df: pd.DataFrame = pd.read_excel(   # 初始欄位資料
             ".\\Data\\raw_stock_data.xlsx", "initial_data"
@@ -126,7 +139,7 @@ class StockManager(commands.Cog):
             df: pd.DataFrame = pd.read_excel(
                 ".\\Data\\raw_stock_data.xlsx", f"{quarter}"
             )
-            json_data: Dict[str, List[Dict[str, str | int | float]]] = json.loads(
+            json_data: InitialStockData = json.loads(
                 df.to_json(orient="records")
             )   # 將pd.DataFrame轉成json object
             dict_[f"{quarter}"] = json_data
@@ -210,6 +223,23 @@ class StockManager(commands.Cog):
 
         await asyncio.sleep(cls.PRICE_CHANGE_FREQUENCY)
 
+    def convert_news_data(self):
+        """將新聞原始Excel資料轉到`raw_news.json`。
+        """
+
+        dict_: RawNews = {}
+
+        for quarter in self.QUARTERS.values():
+            df: pd.DataFrame = pd.read_excel(
+                ".\\Data\\raw_news.xlsx", f"{quarter}"
+            )
+            json_data: List[News] = json.loads(
+                df.to_json(orient="records")
+            )
+            dict_[f"{quarter}"] = json_data
+        
+        access_file.save_to("raw_news", dict_)
+
     @tasks.loop(seconds=TIME_BETWEEN_NEWS)
     async def news_loop(self):
         """當回合開始時每過一段時間發送當回合新聞。
@@ -219,7 +249,7 @@ class StockManager(commands.Cog):
 
         raise NotImplementedError
     
-    @price_change_loop.before_loop
+    @news_loop.before_loop
     async def before_news_loop(self):
         """在`news_loop`開始之前擷取本局新聞。
         """

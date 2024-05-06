@@ -9,6 +9,9 @@ from .utilities.datatypes import Config, ChannelIDs, MessageIDs, AssetDict, Alte
 from .assets_manager import AssetsManager
 
 
+PURPLE = 0x433274   # Embed color: purple
+
+
 class ChangeDepositButton(ntd.ui.View):
     """變更小隊存款按鈕。
     """
@@ -27,7 +30,7 @@ class ChangeDepositButton(ntd.ui.View):
         time = time.strftime("%m/%d %I:%M%p")
 
         embed = ntd.Embed(
-            color=0x433274,
+            color=PURPLE,
             title="變更小隊存款",
             type="rich"
         )
@@ -122,7 +125,7 @@ class ChangeDepositView(ntd.ui.View):
         time = time.strftime("%I:%M%p")
 
         embed = ntd.Embed(
-            colour=0x433274,
+            colour=PURPLE,
             title=self.embed_title,
             type="rich",
             description=self.embed_description
@@ -390,7 +393,7 @@ class LogEmbed(ntd.Embed):
 
     def __init__(self):
         super().__init__(
-            color=0x433274,
+            color=PURPLE,
             title="小隊收支",
             type="rich",
             description="小隊存款金額的變動紀錄以及\n買賣股票紀錄"
@@ -445,7 +448,7 @@ class TeamLogEmbed(ntd.Embed):
             pass
         
         super().__init__(
-            color=0x433274,
+            color=PURPLE,
             title=title,
             type="rich",
             description=description
@@ -463,7 +466,7 @@ class TeamAssetEmbed(ntd.Embed):
 
     def __init__(self, team: int):
         super().__init__(
-            color=0x433274,
+            color=PURPLE,
             title=f"第{team}小隊 F-pay帳戶",
             type="rich"
         )
