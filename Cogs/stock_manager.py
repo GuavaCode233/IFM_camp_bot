@@ -9,6 +9,7 @@ import asyncio
 import random
 import json
 
+from .discord_ui import DiscordUI
 from .utilities import access_file
 from .utilities.datatypes import (
     Config,
@@ -74,7 +75,7 @@ class StockManager(commands.Cog):
     # 股價變動頻率(秒)
     PRICE_CHANGE_FREQUENCY: ClassVar[float] = 5.0
     # 發送新聞間隔(秒)
-    TIME_BETWEEN_NEWS: ClassVar[float] = 120.0
+    TIME_BETWEEN_NEWS: ClassVar[float] = 10.0
 
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -115,6 +116,8 @@ class StockManager(commands.Cog):
 
         if(NEW_GAME):
             self.reset_market_data()
+            ui: DiscordUI = self.bot.get_cog("DiscordUI")
+            await ui.clear_news()
             self.reset_game_state()
         elif(not self.stocks):  # 資料不對等
             self.fetch_stocks()
@@ -216,8 +219,8 @@ class StockManager(commands.Cog):
         股價變動頻率(秒)。
         """
 
-        if(not self.stocks):    # 防止資料遺失
-            self.fetch_stocks()
+        # if(not self.stocks):    # 防止資料遺失
+        #     self.fetch_stocks()
         
         stock_data: MarketData = access_file.read_file("market_data")
 
@@ -273,10 +276,21 @@ class StockManager(commands.Cog):
         # TODO: 將擷取的當回合新聞發送到頻道(用 Discord_ui.py)
 
         if(not self.pending_news):
-            self.fetch_round_news()
+            if(self.game_state["is_in_round"]): # 發完新聞
+                self.news_loop.cancel()    
+            else:   # 資料遺失    
+                self.fetch_round_news()
 
-        # raise NotImplementedError
-        pass
+        news = self.pending_news.pop(0)
+
+        ui: DiscordUI = self.bot.get_cog("DiscordUI")
+        await ui.release_news(
+            title=news["title"],
+            content=news["content"]
+        )
+        # 當回合已發送新聞數量+1
+        self.game_state["released_news_count"][str(self.game_state["round"])] += 1
+        self.save_game_state()
     
     @news_loop.before_loop
     async def before_news_loop(self):
@@ -353,7 +367,7 @@ class StockManager(commands.Cog):
         self.save_game_state()
 
         self.price_change_loop.stop()
-        self.news_loop.stop()
+        self.news_loop.cancel()
 
         await interaction.response.send_message(
             f"回合{self.game_state['round']}結束!",

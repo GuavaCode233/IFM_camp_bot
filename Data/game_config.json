@@ -7,6 +7,7 @@
     "CONVERT_RAW_NEWS_DATA": true,
     "STARTER_CASH": 10000,
     "channel_ids": {
+        "NEWS_FEED": 1218189251716452452,
         "CHANGE_DEPOSIT": 1218186135264821298,
         "ALTERATION_LOG": 1218186923747577998,
         "team_1": {

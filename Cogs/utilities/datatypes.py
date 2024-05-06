@@ -7,6 +7,17 @@ class TeamChannelIDs(TypedDict):
 
 
 class ChannelIDs(TypedDict):
+    """頻道ID。
+
+    NEWS_FEED: `int`
+        「地球新聞台」頻道ID。
+    CHANGE_DEPOSIT: `int`
+        「小隊收支」頻道ID。
+    ALTERATION_LOG: `int`
+        「收支動態」頻道ID。
+    """
+
+    NEWS_FEED: int
     CHANGE_DEPOSIT: int
     ALTERATION_LOG: int
     __root__: TeamChannelIDs
@@ -48,7 +59,7 @@ class Config(TypedDict):
     頻道及訊息ID
     -----------
     channel_ids: `ChannelIDs`
-        存放「小隊收支」、「收支動態」以及各小隊「資產」與「即時通知」頻道ID。
+        存放「地球新聞台」、「小隊收支」、「收支動態」以及各小隊「資產」與「即時通知」頻道ID。
     message_ids: `MessageIDs`
         存放「小隊收支」、「收支動態」以及各小隊「資產」與「即時通知」訊息ID。
     """

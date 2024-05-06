@@ -4,12 +4,20 @@ import nextcord as ntd
 from datetime import datetime
 from typing import Dict, List, Any
 
-from .utilities import access_file
-from .utilities.datatypes import Config, ChannelIDs, MessageIDs, AssetDict, AlterationLog, LogData
 from .assets_manager import AssetsManager
+from .utilities import access_file
+from .utilities.datatypes import (
+    Config,
+    ChannelIDs,
+    MessageIDs,
+    AssetDict,
+    AlterationLog,
+    LogData,
+    GameState
+)
 
 
-PURPLE = 0x433274   # Embed color: purple
+PURPLE: int = 0x433274   # Embed color: purple
 
 
 class ChangeDepositButton(ntd.ui.View):
@@ -490,6 +498,20 @@ class TeamStockEmbed(ntd.Embed):
     pass
 
 
+class NewsEmbed(ntd.Embed):
+    """新聞 Embed Message。
+    """
+
+    def __init__(self, title: str, content: str):
+        super().__init__(
+            colour=PURPLE,
+            title=title,
+            type="rich",
+            description=content,
+            timestamp=datetime.now()
+        )
+
+
 class DiscordUI(commands.Cog):
     """控制Discord端的UI介面
     """
@@ -506,6 +528,9 @@ class DiscordUI(commands.Cog):
         self.CONFIG: Config = access_file.read_file("game_config")
         self.CHANNEL_IDS: ChannelIDs = self.CONFIG["channel_ids"]
         self.MESSAGE_IDS: MessageIDs = self.CONFIG["message_ids"]
+        
+        self.ALTERATION_LOG_MESSAGE: ntd.Message = None
+        self.NEWS_FEED_CHANNEL: ntd.TextChannel = None
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -535,6 +560,8 @@ class DiscordUI(commands.Cog):
             await self.clear_log()
         else:
             await self.update_log()
+
+        await self.fetch_alteration_log_message()
 
         print("Loaded discord_ui")
 
@@ -596,7 +623,7 @@ class DiscordUI(commands.Cog):
             embed=view.embed_message(),
             view=view
         )
-    
+
     async def clear_log(self):
         """|coro|
         
@@ -621,7 +648,18 @@ class DiscordUI(commands.Cog):
         access_file.clear_log_data()
         # 更新log
         await self.update_log()
-            
+
+    async def fetch_alteration_log_message(self):
+        """抓取ALTERATION_LOG_MESSAGE。
+        """
+
+        channel = self.bot.get_channel(
+            self.CHANNEL_IDS["ALTERATION_LOG"]
+        )
+        self.ALTERATION_LOG_MESSAGE = await channel.fetch_message(
+            self.MESSAGE_IDS["ALTERATION_LOG"]
+        )
+       
     async def update_log(
             self,
             type_: str | None = None,
@@ -648,13 +686,10 @@ class DiscordUI(commands.Cog):
                 )
             )
 
-        channel = self.bot.get_channel(
-            self.CHANNEL_IDS["ALTERATION_LOG"]
-        )
-        message = await channel.fetch_message(
-            self.MESSAGE_IDS["ALTERATION_LOG"]
-        )
-        await message.edit(
+        if(self.ALTERATION_LOG_MESSAGE is None):  # 防止資料遺失
+            await self.fetch_alteration_log_message()
+
+        await self.ALTERATION_LOG_MESSAGE.edit(
             content=None,
             embed=LogEmbed()
         )
@@ -691,6 +726,45 @@ class DiscordUI(commands.Cog):
                         TeamAssetEmbed(t)
                     ]
                 )
+    
+    async def fetch_news_feed_channel(self):
+        """|coro|
+        """
+
+        self.NEWS_FEED_CHANNEL = self.bot.get_channel(
+            self.CHANNEL_IDS["NEWS_FEED"]
+        )
+
+
+    async def clear_news(self):
+        """|coro|
+
+        清除「地球新聞台」所有新聞。
+        """
+        
+        if(self.NEWS_FEED_CHANNEL is None):
+            await self.fetch_news_feed_channel()
+        
+        game_state: GameState = access_file.read_file("game_state")
+        released_news_count = game_state["released_news_count"]
+        news_count: int = sum(released_news_count.values())
+
+        if(news_count):
+            await self.NEWS_FEED_CHANNEL.purge(limit=news_count)
+
+    async def release_news(self, *, title: str, content: str):
+        """|coro|
+
+        發送新聞至「地球新聞台」頻道。
+        """
+
+        if(self.NEWS_FEED_CHANNEL is None):
+            await self.fetch_news_feed_channel()
+
+        await self.NEWS_FEED_CHANNEL.send(
+            embed=NewsEmbed(title=title, content=content)
+        )
+
 
 def setup(bot: commands.Bot):
     bot.add_cog(DiscordUI(bot))
