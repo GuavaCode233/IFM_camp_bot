@@ -127,15 +127,17 @@ class TradeView(ntd.ui.View):
         self.team = USER_ID_TO_TEAM[user_id]
         # embed message
         self.embed_title: str = "股票交易"
-        # self.embed_description: str = "請選則交易別"
+        self.deposit: int = access_file.read_file(  # 該小隊存款額
+            "team_assets"
+        )[f"{self.team}"]["deposit"]
         self.trade_field_name: str = "請選擇交易別"   # 買進: 商品；賣出: 目前庫存
         self.trade_field_value: str = "請選擇商品"    # 買進: name symbol；賣出: 庫存內容
+        self.quantity_field_name: str = "張數"      # 買進 or 賣出 張數
         self.quantity_field_value: str | int = "請輸入張數" # quantity
         # select status
         self.trade: Literal["買進", "賣出"] = None
         self.stock_select: StockSelect = None # 紀錄股票選取下拉選單
         self.stock: int = None
-        self.quantity: int = None
     
     def status_embed(self) -> ntd.Embed:
         """用於編排嵌入訊息。
@@ -146,23 +148,34 @@ class TradeView(ntd.ui.View):
 
         embed = ntd.Embed(
             colour=PURPLE,
-            title=self.embed_title,
+            title=f"第{self.team}小隊 {self.embed_title}",
             type="rich",
-            # description=self.embed_description
+            description=f"目前存款: {self.deposit:,}"
         )
         embed.add_field(
             name=self.trade_field_name,
             value=self.trade_field_value
         )
         embed.add_field(
-            name="張數",
-            value=self.quantity_field_value
+            name=self.quantity_field_name,
+            value=f"{self.quantity_field_value}\n*(1張 = 1000股)*"
         )
         embed.set_footer(
             text=f"{self.user_name} | Today at {time}",
             icon_url=self.user_avatar
         )
         return embed
+    
+    def input_check(self) -> bool:
+        """檢查輸入資料是否完整。
+        """
+
+        if(self.trade is None or
+           self.stock is None or
+           isinstance(self.quantity_field_value, str)):
+            return False
+        else:
+            return True
         
     @ntd.ui.select(
         placeholder="選擇買賣別",
@@ -175,7 +188,8 @@ class TradeView(ntd.ui.View):
                 label="賣出",
                 description="賣出指定的股票"
             )
-        ]
+        ],
+        row=1
     )
     async def trade_select_callback(
         self,
@@ -186,18 +200,22 @@ class TradeView(ntd.ui.View):
         """
         
         self.trade = select.values[0]
-        
+        # 刪除舊的股票選單再發新的
+        self.remove_item(self.stock_select)
+
         if(self.trade == "買進"):   # 看有沒有更好的解決方式
+            self.embed_title = "買進 股票交易"
             self.trade_field_name = "商品"
             self.trade_field_value = "請選擇商品"
-            if(self.stock_select):
-                self.remove_item(self.stock_select)
+            self.quantity_field_name = "買進張數"
+            
             self.stock_select = StockSelect(self)
             self.add_item(self.stock_select)
         elif(self.trade == "賣出"):
+            self.embed_title = "賣出 股票交易"
             self.trade_field_name = "目前庫存"
-            if(self.stock_select):
-                    self.remove_item(self.stock_select)
+            self.quantity_field_name = "賣出張數"
+
             if(fetch_stock_inventory(self.team) is None):
                 self.trade_field_value = "無股票庫存"
             else:
@@ -212,16 +230,83 @@ class TradeView(ntd.ui.View):
             view=self
         )
 
+    @ntd.ui.button(
+        label="輸入張數",
+        style=ntd.ButtonStyle.blurple,
+        emoji="📃",
+        row=3
+    )
+    async def input_quantity_button_callback(
+        self,
+        button: ntd.ui.Button,
+        interaction: ntd.Interaction
+    ):
+        """輸入張數按鈕callback。
+        """
+
+        await interaction.response.send_modal(InputQuantity(self))
+
+    @ntd.ui.button(
+        label="確認交易",
+        style=ntd.ButtonStyle.green,
+        emoji="✅",
+        row=4
+    )
+    async def confirm_button_callback(
+        self,
+        button: ntd.ui.Button,
+        interaction: ntd.Interaction
+    ):
+        """確認送出按扭callback。
+        """
+
+        if(not self.input_check()): # 檢查資料都填齊
+            await interaction.response.send_message(
+                    content="**輸入資料不完整!!!**",
+                    delete_after=5,
+                    ephemeral=True
+                )
+            return
+        
+        # 檢查帳戶餘額是否足夠
+        # change_stock, update_log
+    
+    @ntd.ui.button(
+        label="取消交易",
+        style=ntd.ButtonStyle.red,
+        emoji="✖️",
+        row=4
+    )
+    async def cancel_button_callback(
+        self,
+        button: ntd.ui.button,
+        interaction: ntd.Interaction
+    ):
+        """取消按鈕callback。
+        """
+
+        self.clear_items()
+        await interaction.response.edit_message(
+            content="**已取消交易**",
+            embed=None,
+            delete_after=5,
+            view=self
+        )
+        self.stop()
+
 
 class StockSelect(ntd.ui.StringSelect):
-    """選取商品。
+    """選取買賣別後選取商品。
     """
+
+    __slots__ = ("original_view", "stock_cost")
 
     def __init__(
             self,
             original_view: TradeView
     ):
         self.original_view = original_view
+        self.stock_cost = fetch_stock_inventory(original_view.team)
         if(original_view.trade == "買進"):
             super().__init__(
                 custom_id="buy",
@@ -235,7 +320,6 @@ class StockSelect(ntd.ui.StringSelect):
                 row=2
             )
         elif(original_view.trade == "賣出"):
-            stock_cost = fetch_stock_inventory(original_view.team)
             super().__init__(
                 custom_id="sell",
                 placeholder="選擇庫存",
@@ -243,17 +327,21 @@ class StockSelect(ntd.ui.StringSelect):
                     ntd.SelectOption(
                         label=fetch_stock_name_symbol(int(i)),
                         value=i
-                    ) for i in stock_cost.keys()
+                    ) for i in self.stock_cost.keys()
                 ],
                 row=2
             )
     
     async def callback(self, interaction: ntd.Interaction):    
         self.original_view.stock = int(self.values[0])
-
-        self.original_view.trade_field_value = fetch_stock_name_symbol(
-            self.original_view.stock
-        )
+        if(self.original_view.trade == "買進"):
+            self.original_view.trade_field_value = fetch_stock_name_symbol(
+                self.original_view.stock
+            )
+        elif(self.original_view.trade == "賣出"):
+            self.original_view.trade_field_value = inventory_to_string(
+                self.stock_cost, self.values[0]
+            )
         await interaction.response.edit_message(
             view=self.original_view,
             embed=self.original_view.status_embed()
@@ -263,7 +351,43 @@ class StockSelect(ntd.ui.StringSelect):
 class InputQuantity(ntd.ui.Modal):
     """按下「設定張數」按鈕後彈出的文字輸入視窗。
     """
-    ...
+    
+    __slots__ = ("original_view", "quantity")
+
+    def __init__(self, original_view: TradeView):
+        super().__init__(title="請輸入交易張數")
+
+        self.original_view = original_view
+
+        self.quantity = ntd.ui.TextInput(
+            label="請輸入張數",
+            style=ntd.TextInputStyle.short,
+            min_length=1,
+            max_length=3,
+            required=True,
+            default_value=1,
+            placeholder="輸入張數"
+        )
+        self.add_item(self.quantity)
+    
+    async def callback(self, interaction: ntd.Interaction):
+        try:
+            self.original_view.quantity_field_value = int(self.quantity.value)
+
+            if(self.original_view.quantity_field_value < 0):
+                raise ValueError
+            
+            await interaction.response.edit_message(
+                embed=self.original_view.status_embed(),
+                view=self.original_view
+            )
+        except ValueError:  # 防呆(輸入文字或負數)
+            await interaction.response.send_message(
+                content="**張數請輸入正整數!!!**",
+                delete_after=5,
+                ephemeral=True
+            )
+        self.stop()
 
 
 class ChangeDepositButton(ntd.ui.View):
@@ -406,7 +530,7 @@ class ChangeDepositView(ntd.ui.View):
         return embed
 
     def input_check(self) -> bool:
-        """檢查資料都有填齊。
+        """檢查輸入資料是否完整。
         """
 
         if(self.selected_team is None or
@@ -514,7 +638,7 @@ class ChangeDepositView(ntd.ui.View):
     )
     async def comfirm_button_callback(
         self,
-        button: ntd.ui.button,
+        button: ntd.ui.Button,
         interaction: ntd.Interaction
     ):
         """確認送出按扭callback。
@@ -627,8 +751,8 @@ class InputAmount(ntd.ui.Modal):
                 raise ValueError
             
             await interaction.response.edit_message(
-                view=self.original_view,
-                embed=self.original_view.status_embed()
+                embed=self.original_view.status_embed(),
+                view=self.original_view
             )
         except ValueError:  # 防呆(輸入文字或負數)
             await interaction.response.send_message(
