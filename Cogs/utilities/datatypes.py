@@ -107,6 +107,7 @@ LogData = TypedDict(
         "team": str,
         "original": NotRequired[int],
         "updated": NotRequired[int],
+        "trade": NotRequired[str],
         "stock": NotRequired[str],
         "quantity": NotRequired[str]
     }

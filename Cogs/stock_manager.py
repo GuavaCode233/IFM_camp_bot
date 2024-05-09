@@ -308,7 +308,7 @@ class StockManager(commands.Cog):
         """下一回合(開盤)。
         """
 
-        # TODO: Check if round is open, if it's open then handle error (done)
+        # TODO: Check if round is open, if it"s open then handle error (done)
         # 更新遊戲狀態 (done)
         # 讀取新聞資料 未設計
         # 開始新聞計時 未設計
@@ -336,7 +336,7 @@ class StockManager(commands.Cog):
         self.news_loop.start()
 
         await interaction.response.send_message(
-            f"回合{self.game_state['round']}開始!",
+            f"回合{self.game_state["round"]}開始!",
             delete_after=3,
             ephemeral=True
         )
@@ -350,7 +350,7 @@ class StockManager(commands.Cog):
         """結束本回合(收盤)。
         """
 
-        # TODO: Check if round is closed, if it's closed then return.
+        # TODO: Check if round is closed, if it"s closed then return.
         # 停止 price_change_loop
         # 關閉交易功能
 
@@ -370,7 +370,7 @@ class StockManager(commands.Cog):
         self.news_loop.cancel()
 
         await interaction.response.send_message(
-            f"回合{self.game_state['round']}結束!",
+            f"回合{self.game_state["round"]}結束!",
             delete_after=3,
             ephemeral=True
         )

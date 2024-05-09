@@ -409,9 +409,8 @@ class LogEmbed(ntd.Embed):
 
         log: AlterationLog = access_file.read_file("alteration_log").copy()
         log.pop("serial")
-        log: LogData
         # 將所有字典展開唯一list並按照serial排序
-        record_list: List[Dict[str, Any]] = sorted(
+        record_list: List[LogData] = sorted(
             [item for sublist in log.values() for item in sublist],
             key=lambda x: x["serial"]
         )
@@ -422,8 +421,12 @@ class LogEmbed(ntd.Embed):
                          f"變更第{record["team"]}小隊存款",
                     value=f"{record["original"]:,} {u"\u2192"} {record["updated"]:,}"
                 )
-            else:
-                pass
+            elif(record["type"] == "StockChange"):
+                self.add_field(
+                    name=f"{record["user"]} 在 {record["time"]}\n" \
+                         f"{record["trade"]} 第{record["team"]}小隊股票",
+                    value=f"商品: {record["stock"]} 張數: {record["quantity"]}"
+                )
         
         self.set_footer(
             text=f"資料更新時間: {datetime.now().strftime("%m/%d %I:%M%p")}"
@@ -702,7 +705,10 @@ class DiscordUI(commands.Cog):
             team: int | None = None,
             mode: str | None = None,
             amount: int | None = None,
-            user: str | None = None
+            user: str | None = None,
+            trade: Literal["買進", "賣出"] | None = None,
+            stock: str | None = None,
+            value: int | None = None
     ):
         """|coro|
 
@@ -723,7 +729,12 @@ class DiscordUI(commands.Cog):
                 )
             elif(type_ == "StockChange"):
                 await channel.send(
-                    
+                    embed=TeamStockChangeLogEmbed(
+                        user=user,
+                        trade=trade,
+                        stock=stock,
+                        value=value
+                    )
                 )
                 
         if(self.ALTERATION_LOG_MESSAGE is None):  # 防止資料遺失

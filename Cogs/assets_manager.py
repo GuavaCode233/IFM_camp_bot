@@ -6,8 +6,9 @@ from typing import List, Dict, Any
 from datetime import datetime
 from pprint import pprint
 
+from .discord_ui import DiscordUI
 from .utilities import access_file
-from .utilities.datatypes import Config, AssetsData, StockDict
+from .utilities.datatypes import Config, AssetsData, StockDict, InitialStockData
 
 
 @dataclass(kw_only=True, slots=True)
@@ -191,13 +192,15 @@ class AssetsManager(commands.Cog):
             self.team_assets[team-1].stock_cost[f"{stock}"] = stock_cost[f"{stock}"][quantity:]
             self.team_assets[team-1].deposit += value * quantity
 
+        initail_stock_data: InitialStockData = access_file.read_file("raw_stock_data")["initial_data"][stock]
+        stock_symbol_name = f"{initail_stock_data['symbol']} {initail_stock_data['name']}"
         access_file.log(
             type_="StockChange",
             time=datetime.now(),
             user=user,
             team=str(team),
             trade=trade,
-            stock=stock,
+            stock=stock_symbol_name,
             quantity=quantity
         )
         self.save_assets(team)

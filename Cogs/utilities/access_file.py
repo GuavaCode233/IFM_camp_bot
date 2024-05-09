@@ -55,7 +55,7 @@ def log(
     original: int | None = None,
     updated: int | None = None,
     trade: str | None = None,
-    stock: int | None = None,
+    stock: str | None = None,
     quantity: int | None = None
 ):
     """紀錄收支動態(各小隊)。
@@ -84,8 +84,6 @@ def log(
             }            
         )
     elif(type_ == "StockChange"):
-        initail_stock_data: InitialStockData = read_file("raw_stock_data")["initial_data"][stock]
-        stock_symbol_name = f"{initail_stock_data['symbol']} {initail_stock_data['name']}"
         dict_[team].append(
             {
                 "type": type_,
@@ -94,7 +92,7 @@ def log(
                 "serial": dict_["serial"],
                 "team": team,
                 "trade": trade,
-                "stock": stock_symbol_name,
+                "stock": stock,
                 "quantity": quantity
             }
         )
