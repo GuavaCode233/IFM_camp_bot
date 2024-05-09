@@ -2,7 +2,7 @@ from nextcord.ext import commands
 import nextcord as ntd
 
 from datetime import datetime
-from typing import Dict, List, Any
+from typing import Dict, List, Any, Literal
 
 from .assets_manager import AssetsManager
 from .utilities import access_file
@@ -430,31 +430,59 @@ class LogEmbed(ntd.Embed):
         )
 
 
-class TeamLogEmbed(ntd.Embed):
-    """小隊即時通知 Embed Message。
+class TeamAssetChangeLogEmbed(ntd.Embed):
+    """小隊資產變更即時通知 Embed Message。
     """
 
     def __init__(
             self,
-            type_: str,
             mode: str,
             amount: int,
             user: str
     ):
-        if(type_ == "AssetUpdate"):
-            title = {
-                "1": "🔔即時入帳通知🔔",
-                "2": "💸F-pay消費通知💸",
-                "3": "🔑帳戶額變更通知🔑"
-            }[mode]
-            description = {
-                "1": f"關主: {user} 已將 **FP${amount:,}** 匯入帳戶!",
-                "2": f"關主: {user} 已將 **FP${amount:,}** 從帳戶中扣除!",
-                "3": f"關主: {user} 已改變帳戶餘額為 **$FP{amount:,}** !"
-            }[mode]
-        else:
-            pass
-        
+
+        title = {
+            "1": "🔔即時入帳通知🔔",
+            "2": "💸F-pay消費通知💸",
+            "3": "🔑帳戶額變更通知🔑"
+        }[mode]
+        description = {
+            "1": f"關主: {user} 已將 **FP${amount:,}** 匯入帳戶!",
+            "2": f"關主: {user} 已將 **FP${amount:,}** 從帳戶中扣除!",
+            "3": f"關主: {user} 已改變帳戶餘額為 **$FP{amount:,}** !"
+        }[mode]
+
+        super().__init__(
+            color=PURPLE,
+            title=title,
+            type="rich",
+            description=description
+        )
+        self.set_footer(
+            text=f"{datetime.now().strftime("%m/%d %I:%M%p")}"
+        )
+
+
+class TeamStockChangeLogEmbed(ntd.Embed):
+    """小隊股票庫存變更即時通知 Embed Message。
+    """
+
+    def __init__(
+            self,
+            user: str,
+            trade: Literal["買進", "賣出"],
+            stock: str,
+            quantity: int,
+            value: int
+    ):
+        title = "📊股票成交通知📊"
+        description = {
+            "買進": f"隊輔: {user} 成功買入**{stock} {quantity}張!**\n" \
+                    f"投資成本: **$FP{value * quantity:,}**",
+            "賣出": f"隊輔: {user} 成功賣出**{stock} {quantity}張!**\n" \
+                    "總投資損益: " + ("**__利益__**" if value >= 0 else "**__損失__**") + f" **$FP{value:,}**"
+        }[trade]
+
         super().__init__(
             color=PURPLE,
             title=title,
@@ -575,9 +603,16 @@ class DiscordUI(commands.Cog):
             guild_ids=[1218130958536937492]
     )
     async def test_ui(self, interaction: ntd.Interaction):
-        # await interaction.response.send_message(
-        #     embed=LogEmbed()
-        # )
+        await interaction.response.send_message(
+            embed=TeamStockChangeLogEmbed(
+                user=interaction.user.display_name,
+                trade="賣出",
+                stock="0321 台雞店",
+                quantity=3,
+                value=10121564
+            )
+        )
+
         pass
 
     @commands.command()
@@ -662,7 +697,8 @@ class DiscordUI(commands.Cog):
        
     async def update_log(
             self,
-            type_: str | None = None,
+            *,
+            type_: Literal["AssetUpdate", "StockChange"] | None = None,
             team: int | None = None,
             mode: str | None = None,
             amount: int | None = None,
@@ -677,15 +713,19 @@ class DiscordUI(commands.Cog):
             channel = self.bot.get_channel(
                 self.CHANNEL_IDS[f"team_{team}"]["NOTICE"]
             )
-            await channel.send(
-                embed=TeamLogEmbed(
-                    type_=type_,
-                    mode=mode,
-                    amount=amount,
-                    user=user
+            if(type_ == "AssetUpdate"):
+                await channel.send(
+                    embed=TeamAssetChangeLogEmbed(
+                        mode=mode,
+                        amount=amount,
+                        user=user
+                    )
                 )
-            )
-
+            elif(type_ == "StockChange"):
+                await channel.send(
+                    
+                )
+                
         if(self.ALTERATION_LOG_MESSAGE is None):  # 防止資料遺失
             await self.fetch_alteration_log_message()
 

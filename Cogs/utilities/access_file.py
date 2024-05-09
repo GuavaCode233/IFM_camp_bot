@@ -1,9 +1,11 @@
 """存取檔案用。
 """
-from typing import Dict, List, Any
+from typing import Dict, List, Any, Literal
 from datetime import datetime
 import json
 import os
+
+from .datatypes import LogData, InitialStockData
 
 
 def read_file(file_name: str) -> Any:
@@ -46,23 +48,25 @@ def save_to(file_name: str, data: dict | list):
 
 def log(
     *,
-    type_: str,
+    type_: Literal["AssetUpdate", "StockChange"],
     time: datetime,
     user: str,
     team: str,
     original: int | None = None,
     updated: int | None = None,
-    change_type: str | None = None,
-    stock_name_symbol: str | None = None
+    trade: str | None = None,
+    stock: int | None = None,
+    quantity: int | None = None
 ):
     """紀錄收支動態(各小隊)。
     """
+
     with open(
         ".\\Data\\alteration_log.json",
         mode="r",
         encoding="utf-8"
     ) as json_file:
-        dict_: Dict[str, int | List[Dict[str, Any]]] = json.load(json_file)
+        dict_: Dict[str, int | List[LogData]] = json.load(json_file)
 
     if(dict_.get(team, None) is None):
         dict_[team] = []
@@ -80,9 +84,20 @@ def log(
             }            
         )
     elif(type_ == "StockChange"):
-        raise NotImplementedError("StockChange log not implemented .")
-    else:
-        raise Exception(f"log type: {type_} not found.")
+        initail_stock_data: InitialStockData = read_file("raw_stock_data")["initial_data"][stock]
+        stock_symbol_name = f"{initail_stock_data['symbol']} {initail_stock_data['name']}"
+        dict_[team].append(
+            {
+                "type": type_,
+                "time": time.strftime("%m/%d %I:%M%p"),
+                "user": user,
+                "serial": dict_["serial"],
+                "team": team,
+                "trade": trade,
+                "stock": stock_symbol_name,
+                "quantity": quantity
+            }
+        )
 
     dict_["serial"] += 1
 

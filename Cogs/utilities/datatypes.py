@@ -1,4 +1,4 @@
-from typing import TypedDict, List, Dict
+from typing import TypedDict, List, Dict, Literal, NotRequired
 
 
 class TeamChannelIDs(TypedDict):
@@ -100,15 +100,16 @@ class AssetsData(TypedDict):
 LogData = TypedDict(
     "LogData",
     {
-        "type": str,
+        "type": Literal["AssetUpdate", "StockChange"],
         "time": str,
         "user": str,
         "serial": int,
         "team": str,
-        "original": int,
-        "updated": int
-    },
-    total=True
+        "original": NotRequired[int],
+        "updated": NotRequired[int],
+        "stock": NotRequired[str],
+        "quantity": NotRequired[str]
+    }
 )
 
 class AlterationLog(TypedDict):

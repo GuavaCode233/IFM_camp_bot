@@ -156,9 +156,9 @@ class AssetsManager(commands.Cog):
             trade: str,
             stock: int, 
             quantity: int,
-
+            user: str = "Anonymous" # Placeholder
     ):
-        """買賣股票處理。
+        """買賣股票處理，紀錄log。
 
         Parameters
         ----------
@@ -178,7 +178,7 @@ class AssetsManager(commands.Cog):
         value: int = int(round(stock_dict["price"], 2) * 1000) # 該股當前成本價
         # 該小隊持有股票及原始成本
         stock_cost = self.team_assets[team-1].stock_cost
-        if(trade == "buy"):
+        if(trade == "買進"):
             # 新增股票index為key
             if(stock_cost.get(f"{stock}") is None):
                 stock_cost[f"{stock}"] = []
@@ -186,11 +186,20 @@ class AssetsManager(commands.Cog):
             stock_cost[f"{stock}"].extend([value] * quantity)
             # 扣錢
             self.team_assets[team-1].deposit -= value * quantity
-        elif(trade == "sell"):
+        elif(trade == "賣出"):
             # 以股票當前市場價歸還此小隊，從先買的股票賣。
             self.team_assets[team-1].stock_cost[f"{stock}"] = stock_cost[f"{stock}"][quantity:]
             self.team_assets[team-1].deposit += value * quantity
 
+        access_file.log(
+            type_="StockChange",
+            time=datetime.now(),
+            user=user,
+            team=str(team),
+            trade=trade,
+            stock=stock,
+            quantity=quantity
+        )
         self.save_assets(team)
 
     @ntd.slash_command(
@@ -198,10 +207,7 @@ class AssetsManager(commands.Cog):
         description="🛅針對指定小隊改變存款額。",
         guild_ids=[1218130958536937492]
     )
-    @application_checks.has_any_role(
-        1218179373522358313,    # 最強大腦活動組
-        1218184965435691019     # 大神等級幹部組
-    )
+    @application_checks.is_owner()
     async def change_deposit(
         self,
         interaction: ntd.Interaction,
@@ -236,10 +242,7 @@ class AssetsManager(commands.Cog):
         description="🛅針對指定小隊改變股票庫存。",
         guild_ids=[1218130958536937492]
     )
-    @application_checks.has_any_role(
-        1218179373522358313,    # 最強大腦活動組
-        1218184965435691019     # 大神等級幹部組
-    )
+    @application_checks.is_owner()
     async def change_stock(
         self,
         interaction: ntd.Interaction,
@@ -251,7 +254,7 @@ class AssetsManager(commands.Cog):
         trade: str = ntd.SlashOption(
             name="交易別",
             description="選擇交易別",
-            choices={"買入": "buy", "賣出": "sell"}
+            choices=["買入", "賣出"]
         ),
         stock: int = ntd.SlashOption(
             name="股票index",
