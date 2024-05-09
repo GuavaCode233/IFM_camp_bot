@@ -6,7 +6,6 @@ from typing import List, Dict, Any
 from datetime import datetime
 from pprint import pprint
 
-from .discord_ui import DiscordUI
 from .utilities import access_file
 from .utilities.datatypes import Config, AssetsData, StockDict, InitialStockData
 

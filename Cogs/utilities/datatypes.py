@@ -20,6 +20,7 @@ class ChannelIDs(TypedDict):
     NEWS_FEED: int
     CHANGE_DEPOSIT: int
     ALTERATION_LOG: int
+    STOCK_MARKET: int
     __root__: TeamChannelIDs
 
 
@@ -33,6 +34,8 @@ TeamMessageIDs = Dict[str, int]
 class MessageIDs(TypedDict):
     CHANGE_DEPOSIT: int
     ALTERATION_LOG: int
+    STOCK_MARKET: int
+    TRADE_VIEW: int
     __root__: TeamMessageIDs
 
 

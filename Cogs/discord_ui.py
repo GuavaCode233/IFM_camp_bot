@@ -2,7 +2,7 @@ from nextcord.ext import commands
 import nextcord as ntd
 
 from datetime import datetime
-from typing import Dict, List, Any, Literal
+from typing import Dict, List, Any, Literal, ClassVar
 
 from .assets_manager import AssetsManager
 from .utilities import access_file
@@ -18,6 +18,109 @@ from .utilities.datatypes import (
 
 
 PURPLE: int = 0x433274   # Embed color: purple
+
+
+class StockMarketEmbed(ntd.Embed):
+    """市場動態 Embed Message。
+    """
+    ...
+
+
+class TradeButton(ntd.ui.View):
+    """交易功能按鈕
+    """
+
+    __slots__ = ("bot")
+
+    def __init__(self, bot: commands.Bot):
+        super().__init__(timeout=None)
+        self.bot = bot
+    
+    @ntd.ui.button(
+        label="股票交易",
+        style=ntd.ButtonStyle.gray,
+        emoji="📊"
+    )
+    async def trade_button_callback(
+        self,
+        button: ntd.ui.Button,
+        interaction: ntd.Interaction
+    ):
+        await interaction.response.send_message(
+            view=TradeView(
+                user=interaction.user.display_name,
+                user_avatar=interaction.user.display_avatar,
+                user_id=interaction.user.id
+            ),
+            delete_after=180,
+            ephemeral=True
+        )
+
+
+class TradeView(ntd.ui.View):
+    """交易功能 View。
+    """
+    
+    __slots__ = (
+        "user",
+        "user_avatar",
+        "trade",
+        "stock",
+        "quantity"
+    )
+    # 隊輔跟
+    user_id_to_team: ClassVar[Dict[int, int]] = {
+        601014917746786335: 1
+    }
+
+    def __init__(
+            self,
+            *,
+            user: str,
+            user_avatar,
+            user_id: int
+        ):
+        self.user = user
+        self.user_avatar = user_avatar
+        self.team = TradeView.user_id_to_team[user_id]
+        # embed message
+        self.embed_title: str = "股票交易"
+        self.embed_description: str = "請選則交易別"
+        # self.trade_field_name: str = "請選擇商品"   # 商品
+        self.trade_field_value: str = "請選擇商品"    # 買入: symbol name 賣出: 目前庫存
+        self.quantity_field_value: str | int = "請輸入張數" # quantity
+        # select status
+        self.trade: Literal["買進", "賣出"] = None
+        self.stock: int = None
+        self.quantity: int = None
+
+    def fetch_stock(self, team: int) -> str:
+        """擷取小隊股票庫存
+        """
+
+    def status_embed(self) -> ntd.Embed:
+        """用於編排嵌入訊息。
+        """
+
+        time = datetime.now()
+        time = time.strftime("%I:%M%p")
+
+        embed = ntd.Embed(
+            colour=PURPLE,
+            title=self.embed_title,
+            type="rich",
+            description=self.embed_description
+        )
+        embed.add_field(
+            name="商品",
+            value=self.trade_field_value
+        )
+
+
+class InputQuantity(ntd.ui.Modal):
+    """按下「設定張數」按鈕後彈出的文字輸入視窗。
+    """
+    ...
 
 
 class ChangeDepositButton(ntd.ui.View):
@@ -350,7 +453,7 @@ class ChangeDepositView(ntd.ui.View):
 
 
 class InputAmount(ntd.ui.Modal):
-    """按下「輸入存款」按鈕後彈出的視窗。
+    """按下「輸入存款」按鈕後彈出的文字輸入視窗。
     """
 
     __slots__ = ("original_view", "amount")
@@ -650,6 +753,7 @@ class DiscordUI(commands.Cog):
         `ChangeDepositButton`: 變更小隊存款按鈕；
         """
         
+        # ChangeDepositButton
         channel = self.bot.get_channel(
             self.CHANNEL_IDS["CHANGE_DEPOSIT"]
         )
@@ -661,6 +765,7 @@ class DiscordUI(commands.Cog):
             embed=view.embed_message(),
             view=view
         )
+        # TradeButton
 
     async def clear_log(self):
         """|coro|
