@@ -54,7 +54,7 @@ def log(
     team: str,
     original: int | None = None,
     updated: int | None = None,
-    trade: str | None = None,
+    trade_type: Literal["買進", "賣出"] | None = None,
     stock: str | None = None,
     quantity: int | None = None
 ):
@@ -91,7 +91,7 @@ def log(
                 "user": user,
                 "serial": dict_["serial"],
                 "team": team,
-                "trade": trade,
+                "trade_type": trade_type,
                 "stock": stock,
                 "quantity": quantity
             }

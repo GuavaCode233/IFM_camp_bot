@@ -149,14 +149,14 @@ class AssetsManager(commands.Cog):
         # 儲存資料
         self.save_assets(team)
         
-    def stock_trade(
+    async def stock_trade(
             self,
             *,
             team: int,
-            trade: str,
+            trade_type: str,
             stock: int, 
             quantity: int,
-            user: str = "Anonymous" # Placeholder
+            user: str
     ):
         """買賣股票處理，紀錄log。
 
@@ -164,7 +164,7 @@ class AssetsManager(commands.Cog):
         ----------
         team: `int`
             小隊編號。
-        trade: `str`
+        trade_type: `str`
             交易別 "buy" or "sell"。
         stock: `int`
             所選擇股票的 index
@@ -178,7 +178,7 @@ class AssetsManager(commands.Cog):
         value: int = int(round(stock_dict["price"], 2) * 1000) # 該股當前成本價
         # 該小隊持有股票及原始成本
         stock_cost = self.team_assets[team-1].stock_cost
-        if(trade == "買進"):
+        if(trade_type == "買進"):
             # 新增股票index為key
             if(stock_cost.get(f"{stock}") is None):
                 stock_cost[f"{stock}"] = []
@@ -186,11 +186,15 @@ class AssetsManager(commands.Cog):
             stock_cost[f"{stock}"].extend([value] * quantity)
             # 扣錢
             self.team_assets[team-1].deposit -= value * quantity
-        elif(trade == "賣出"):
+            # 計算金額 買進->市價*張數 
+            display_value = value * quantity
+        elif(trade_type == "賣出"):
+            # 計算金額 賣出->投資損益
+            display_value = (value * quantity) - sum(stock_cost[f"{stock}"][:quantity])
             # 以股票當前市場價歸還此小隊，從先買的股票賣。
             self.team_assets[team-1].stock_cost[f"{stock}"] = stock_cost[f"{stock}"][quantity:]
             self.team_assets[team-1].deposit += value * quantity
-
+            
         initail_stock_data: InitialStockData = access_file.read_file("raw_stock_data")["initial_data"][stock]
         stock_name_symbol = f"{initail_stock_data["name"]} {initail_stock_data["symbol"]}"
         access_file.log(
@@ -198,10 +202,22 @@ class AssetsManager(commands.Cog):
             time=datetime.now(),
             user=user,
             team=str(team),
-            trade=trade,
+            trade_type=trade_type,
             stock=stock_name_symbol,
             quantity=quantity
         )
+        
+        ui = self.bot.get_cog("DiscordUI")
+        await ui.update_log(
+            type_="StockChange",
+            team=team,
+            user=user,
+            trade_type=trade_type,
+            stock=stock,
+            quantity=quantity,
+            display_value=display_value
+        )
+
         self.save_assets(team)
 
     @ntd.slash_command(
@@ -253,7 +269,7 @@ class AssetsManager(commands.Cog):
             description="輸入小隊阿拉伯數字",
             choices={str(t):t for t in range(1, 9)}
         ),
-        trade: str = ntd.SlashOption(
+        trade_type: str = ntd.SlashOption(
             name="交易別",
             description="選擇交易別",
             choices=["買進", "賣出"]
@@ -268,11 +284,12 @@ class AssetsManager(commands.Cog):
         """用指令改變指定小隊存款額。
         """
         
-        self.stock_trade(
+        await self.stock_trade(
             team=team,
-            trade=trade,
+            trade_type=trade_type,
             stock=stock,
-            quantity=quantity
+            quantity=quantity,
+            user=interaction.user.display_name
         )
         # update_asset_ui 更新資產ui顯示
         await interaction.response.send_message(

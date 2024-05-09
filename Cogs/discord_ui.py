@@ -15,7 +15,8 @@ from .utilities.datatypes import (
     AlterationLog,
     LogData,
     GameState,
-    InitialStockData
+    InitialStockData,
+    StockDict
 )
 
 
@@ -53,6 +54,8 @@ def fetch_stock_inventory(team: int) -> Dict[str, List[int]] | None:
 
 
 def inventory_to_string(stock_cost: Dict[str, List[int]], index_: str | int | None = None) -> str:
+    """將股票庫存資料格式化。
+    """
 
     output: str = ""
     if(index_ is None):
@@ -63,6 +66,17 @@ def inventory_to_string(stock_cost: Dict[str, List[int]], index_: str | int | No
         output = f"{INITIAL_STOCK_DATA[int(index_)]["name"]} {INITIAL_STOCK_DATA[int(index_)]["symbol"]}" \
                  f"\t張數: {len(stock_cost[index_])}\n"
     return output
+
+
+def get_stock_price(index_: int | str) -> float:
+    """擷取指定股票當下的價格。
+    """
+
+    stock_dict: StockDict = access_file.read_file(
+        "market_data"
+    )[int(index_)]
+
+    return stock_dict["price"]
 
 
 class StockMarketEmbed(ntd.Embed):
@@ -91,12 +105,15 @@ class TradeButton(ntd.ui.View):
         button: ntd.ui.Button,
         interaction: ntd.Interaction
     ):
+        view = TradeView(
+            bot=self.bot,
+            user_name=interaction.user.display_name,
+            user_avatar=interaction.user.display_avatar,
+            user_id=interaction.user.id
+        )
         await interaction.response.send_message(
-            view=TradeView(
-                user=interaction.user.display_name,
-                user_avatar=interaction.user.display_avatar,
-                user_id=interaction.user.id
-            ),
+            embed=view.status_embed(),
+            view=view,
             delete_after=180,
             ephemeral=True
         )
@@ -107,21 +124,30 @@ class TradeView(ntd.ui.View):
     """
     
     __slots__ = (
+        "bot",
         "user_name",
         "user_avatar",
-        "trade",
-        "stock",
-        "quantity"
+        "team",
+        "embed_title",
+        "deposit",
+        "trade_field_name",
+        "quantity_field_name",
+        "quantity_field_value",
+        "trade_type",
+        "stock_select",
+        "selected_stock_index"
     )
 
     def __init__(
             self,
             *,
+            bot: commands.Bot,
             user_name: str,
             user_avatar: ntd.Asset,
             user_id: int
         ):
         super().__init__(timeout=180)
+        self.bot = bot
         self.user_name = user_name
         self.user_avatar = user_avatar
         self.team = USER_ID_TO_TEAM[user_id]
@@ -135,9 +161,9 @@ class TradeView(ntd.ui.View):
         self.quantity_field_name: str = "張數"      # 買進 or 賣出 張數
         self.quantity_field_value: str | int = "請輸入張數" # quantity
         # select status
-        self.trade: Literal["買進", "賣出"] = None
+        self.trade_type: Literal["買進", "賣出"] = None
         self.stock_select: StockSelect = None # 紀錄股票選取下拉選單
-        self.stock: int = None
+        self.selected_stock_index: int = None
     
     def status_embed(self) -> ntd.Embed:
         """用於編排嵌入訊息。
@@ -170,8 +196,8 @@ class TradeView(ntd.ui.View):
         """檢查輸入資料是否完整。
         """
 
-        if(self.trade is None or
-           self.stock is None or
+        if(self.trade_type is None or
+           self.selected_stock_index is None or
            isinstance(self.quantity_field_value, str)):
             return False
         else:
@@ -199,11 +225,11 @@ class TradeView(ntd.ui.View):
         """買賣別選取選單callback。
         """
         
-        self.trade = select.values[0]
+        self.trade_type = select.values[0]
         # 刪除舊的股票選單再發新的
         self.remove_item(self.stock_select)
 
-        if(self.trade == "買進"):   # 看有沒有更好的解決方式
+        if(self.trade_type == "買進"):   # 看有沒有更好的解決方式
             self.embed_title = "買進 股票交易"
             self.trade_field_name = "商品"
             self.trade_field_value = "請選擇商品"
@@ -211,7 +237,7 @@ class TradeView(ntd.ui.View):
             
             self.stock_select = StockSelect(self)
             self.add_item(self.stock_select)
-        elif(self.trade == "賣出"):
+        elif(self.trade_type == "賣出"):
             self.embed_title = "賣出 股票交易"
             self.trade_field_name = "目前庫存"
             self.quantity_field_name = "賣出張數"
@@ -268,9 +294,33 @@ class TradeView(ntd.ui.View):
                 )
             return
         
-        # 檢查帳戶餘額是否足夠
-        # change_stock, update_log
-    
+        if(self.trade_type == "買進" and
+            (get_stock_price(self.selected_stock_index)
+            * self.quantity_field_value > self.deposit)):    # 餘額不足
+            await interaction.response.send_message(
+                content="**存款餘額不足**",
+                delete_after=5,
+                ephemeral=True
+            )
+            return
+        # stock_trade, update_log
+        asset: AssetsManager = self.bot.get_cog("AssetsManager")
+        await asset.stock_trade(
+            team=self.team,
+            trade_type=self.trade_type,
+            stock=self.selected_stock_index,
+            quantity=self.quantity_field_value,
+            user=interaction.user.display_name
+        )
+        self.clear_items()
+        await interaction.response.edit_message(
+            content="**改變成功!!!**",
+            embed=None,
+            delete_after=5,
+            view=self
+        )
+        self.stop()
+
     @ntd.ui.button(
         label="取消交易",
         style=ntd.ButtonStyle.red,
@@ -294,7 +344,6 @@ class TradeView(ntd.ui.View):
         )
         self.stop()
 
-
 class StockSelect(ntd.ui.StringSelect):
     """選取買賣別後選取商品。
     """
@@ -307,7 +356,7 @@ class StockSelect(ntd.ui.StringSelect):
     ):
         self.original_view = original_view
         self.stock_cost = fetch_stock_inventory(original_view.team)
-        if(original_view.trade == "買進"):
+        if(original_view.trade_type == "買進"):
             super().__init__(
                 custom_id="buy",
                 placeholder="選擇商品",
@@ -319,7 +368,7 @@ class StockSelect(ntd.ui.StringSelect):
                 ],
                 row=2
             )
-        elif(original_view.trade == "賣出"):
+        elif(original_view.trade_type == "賣出"):
             super().__init__(
                 custom_id="sell",
                 placeholder="選擇庫存",
@@ -333,12 +382,12 @@ class StockSelect(ntd.ui.StringSelect):
             )
     
     async def callback(self, interaction: ntd.Interaction):    
-        self.original_view.stock = int(self.values[0])
-        if(self.original_view.trade == "買進"):
+        self.original_view.selected_stock_index = int(self.values[0])
+        if(self.original_view.trade_type == "買進"):
             self.original_view.trade_field_value = fetch_stock_name_symbol(
-                self.original_view.stock
+                self.original_view.selected_stock_index
             )
-        elif(self.original_view.trade == "賣出"):
+        elif(self.original_view.trade_type == "賣出"):
             self.original_view.trade_field_value = inventory_to_string(
                 self.stock_cost, self.values[0]
             )
@@ -792,7 +841,7 @@ class LogEmbed(ntd.Embed):
             elif(record["type"] == "StockChange"):
                 self.add_field(
                     name=f"{record["user"]} 在 {record["time"]}\n" \
-                         f"{record["trade"]} 第{record["team"]}小隊股票",
+                         f"{record["trade_type"]} 第{record["team"]}小隊股票",
                     value=f"商品: {record["stock"]} 張數: {record["quantity"]}"
                 )
         
@@ -841,18 +890,19 @@ class TeamStockChangeLogEmbed(ntd.Embed):
     def __init__(
             self,
             user: str,
-            trade: Literal["買進", "賣出"],
-            stock: str,
+            trade_type: Literal["買進", "賣出"],
+            stock: int,
             quantity: int,
-            value: int
+            display_value: int
     ):
+        stock = fetch_stock_name_symbol(stock)
         title = "📊股票成交通知📊"
         description = {
             "買進": f"隊輔: {user} 成功買進**{stock} {quantity}張!**\n" \
-                    f"投資成本: **$FP{value * quantity:,}**",
+                    f"投資成本: **$FP{display_value:,}**",
             "賣出": f"隊輔: {user} 成功賣出**{stock} {quantity}張!**\n" \
-                    "總投資損益: " + ("**__利益__**" if value >= 0 else "**__損失__**") + f" **$FP{value:,}**"
-        }[trade]
+                    "總投資損益: " + ("**__利益__**" if display_value >= 0 else "**__損失__**") + f" **$FP{display_value:,}**"
+        }[trade_type]
 
         super().__init__(
             color=PURPLE,
@@ -1032,6 +1082,16 @@ class DiscordUI(commands.Cog):
             view=view
         )
         # TradeButton
+        channel = self.bot.get_channel(
+            self.CHANNEL_IDS["STOCK_MARKET"]
+        )
+        message = await channel.fetch_message(
+            self.MESSAGE_IDS["TRADE_VIEW"]
+        )
+        view = TradeButton(self.bot)
+        await message.edit(
+            view=view
+        )
 
     async def clear_log(self):
         """|coro|
@@ -1077,9 +1137,10 @@ class DiscordUI(commands.Cog):
             mode: str | None = None,
             amount: int | None = None,
             user: str | None = None,
-            trade: Literal["買進", "賣出"] | None = None,
-            stock: str | None = None,
-            value: int | None = None
+            trade_type: Literal["買進", "賣出"] | None = None,
+            stock: int | None = None,
+            quantity: int | None = None,
+            display_value: int | None = None
     ):
         """|coro|
 
@@ -1102,9 +1163,10 @@ class DiscordUI(commands.Cog):
                 await channel.send(
                     embed=TeamStockChangeLogEmbed(
                         user=user,
-                        trade=trade,
+                        trade_type=trade_type,
                         stock=stock,
-                        value=value
+                        quantity=quantity,
+                        display_value=display_value
                     )
                 )
                 
