@@ -192,14 +192,14 @@ class AssetsManager(commands.Cog):
             self.team_assets[team-1].deposit += value * quantity
 
         initail_stock_data: InitialStockData = access_file.read_file("raw_stock_data")["initial_data"][stock]
-        stock_symbol_name = f"{initail_stock_data['symbol']} {initail_stock_data['name']}"
+        stock_name_symbol = f"{initail_stock_data["name"]} {initail_stock_data["symbol"]}"
         access_file.log(
             type_="StockChange",
             time=datetime.now(),
             user=user,
             team=str(team),
             trade=trade,
-            stock=stock_symbol_name,
+            stock=stock_name_symbol,
             quantity=quantity
         )
         self.save_assets(team)
@@ -256,7 +256,7 @@ class AssetsManager(commands.Cog):
         trade: str = ntd.SlashOption(
             name="交易別",
             description="選擇交易別",
-            choices=["買入", "賣出"]
+            choices=["買進", "賣出"]
         ),
         stock: int = ntd.SlashOption(
             name="股票index",

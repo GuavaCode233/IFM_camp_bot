@@ -1,8 +1,9 @@
+from discord import Interaction
 from nextcord.ext import commands
 import nextcord as ntd
 
 from datetime import datetime
-from typing import Dict, List, Any, Literal, ClassVar
+from typing import Coroutine, Dict, List, Any, Literal, ClassVar
 
 from .assets_manager import AssetsManager
 from .utilities import access_file
@@ -13,11 +14,55 @@ from .utilities.datatypes import (
     AssetDict,
     AlterationLog,
     LogData,
-    GameState
+    GameState,
+    InitialStockData
 )
 
 
 PURPLE: int = 0x433274   # Embed color: purple
+# 隊輔id跟小隊對照表
+USER_ID_TO_TEAM: Dict[int, int] = {
+    601014917746786335: 1
+}
+# 股票開頭資料
+INITIAL_STOCK_DATA: List[InitialStockData] = access_file.read_file(
+    "raw_stock_data"
+)["initial_data"]
+
+
+def fetch_stock_name_symbol(index_: int) -> str:
+    """抓取 "股票名 股票代碼" string。
+    """
+
+    name = INITIAL_STOCK_DATA[index_]["name"]
+    symbol = INITIAL_STOCK_DATA[index_]["symbol"]
+    return f"{name} {symbol}"
+
+
+def fetch_stock_inventory(team: int) -> Dict[str, List[int]] | None:
+    """擷取小隊股票庫存。
+    """
+
+    asset: AssetDict = access_file.read_file("team_assets")[f"{team}"]
+    stock_cost: Dict[str, List[int]] = asset["stock_cost"]
+
+    if(not stock_cost):
+        return None
+    else:
+        return stock_cost
+
+
+def inventory_to_string(stock_cost: Dict[str, List[int]], index_: str | int | None = None) -> str:
+
+    output: str = ""
+    if(index_ is None):
+        for index_, stocks in stock_cost.items():
+            output += f"{INITIAL_STOCK_DATA[int(index_)]["name"]} {INITIAL_STOCK_DATA[int(index_)]["symbol"]}" \
+                        f"\t張數: {len(stocks)}\n"
+    else:
+        output = f"{INITIAL_STOCK_DATA[int(index_)]["name"]} {INITIAL_STOCK_DATA[int(index_)]["symbol"]}" \
+                 f"\t張數: {len(stock_cost[index_])}\n"
+    return output
 
 
 class StockMarketEmbed(ntd.Embed):
@@ -62,42 +107,36 @@ class TradeView(ntd.ui.View):
     """
     
     __slots__ = (
-        "user",
+        "user_name",
         "user_avatar",
         "trade",
         "stock",
         "quantity"
     )
-    # 隊輔跟
-    user_id_to_team: ClassVar[Dict[int, int]] = {
-        601014917746786335: 1
-    }
 
     def __init__(
             self,
             *,
-            user: str,
-            user_avatar,
+            user_name: str,
+            user_avatar: ntd.Asset,
             user_id: int
         ):
-        self.user = user
+        super().__init__(timeout=180)
+        self.user_name = user_name
         self.user_avatar = user_avatar
-        self.team = TradeView.user_id_to_team[user_id]
+        self.team = USER_ID_TO_TEAM[user_id]
         # embed message
         self.embed_title: str = "股票交易"
-        self.embed_description: str = "請選則交易別"
-        # self.trade_field_name: str = "請選擇商品"   # 商品
-        self.trade_field_value: str = "請選擇商品"    # 買入: symbol name 賣出: 目前庫存
+        # self.embed_description: str = "請選則交易別"
+        self.trade_field_name: str = "請選擇交易別"   # 買進: 商品；賣出: 目前庫存
+        self.trade_field_value: str = "請選擇商品"    # 買進: name symbol；賣出: 庫存內容
         self.quantity_field_value: str | int = "請輸入張數" # quantity
         # select status
         self.trade: Literal["買進", "賣出"] = None
+        self.stock_select: StockSelect = None # 紀錄股票選取下拉選單
         self.stock: int = None
         self.quantity: int = None
-
-    def fetch_stock(self, team: int) -> str:
-        """擷取小隊股票庫存
-        """
-
+    
     def status_embed(self) -> ntd.Embed:
         """用於編排嵌入訊息。
         """
@@ -109,11 +148,115 @@ class TradeView(ntd.ui.View):
             colour=PURPLE,
             title=self.embed_title,
             type="rich",
-            description=self.embed_description
+            # description=self.embed_description
         )
         embed.add_field(
-            name="商品",
+            name=self.trade_field_name,
             value=self.trade_field_value
+        )
+        embed.add_field(
+            name="張數",
+            value=self.quantity_field_value
+        )
+        embed.set_footer(
+            text=f"{self.user_name} | Today at {time}",
+            icon_url=self.user_avatar
+        )
+        return embed
+        
+    @ntd.ui.select(
+        placeholder="選擇買賣別",
+        options=[
+            ntd.SelectOption(
+                label="買進",
+                description="買進指定的股票"
+            ),
+            ntd.SelectOption(
+                label="賣出",
+                description="賣出指定的股票"
+            )
+        ]
+    )
+    async def trade_select_callback(
+        self,
+        select: ntd.ui.StringSelect,
+        interaction: ntd.Interaction
+    ):
+        """買賣別選取選單callback。
+        """
+        
+        self.trade = select.values[0]
+        
+        if(self.trade == "買進"):   # 看有沒有更好的解決方式
+            self.trade_field_name = "商品"
+            self.trade_field_value = "請選擇商品"
+            if(self.stock_select):
+                self.remove_item(self.stock_select)
+            self.stock_select = StockSelect(self)
+            self.add_item(self.stock_select)
+        elif(self.trade == "賣出"):
+            self.trade_field_name = "目前庫存"
+            if(self.stock_select):
+                    self.remove_item(self.stock_select)
+            if(fetch_stock_inventory(self.team) is None):
+                self.trade_field_value = "無股票庫存"
+            else:
+                self.trade_field_value = inventory_to_string(
+                    fetch_stock_inventory(self.team)
+                )
+                self.stock_select = StockSelect(self)
+                self.add_item(self.stock_select)
+            
+        await interaction.response.edit_message(
+            embed=self.status_embed(),
+            view=self
+        )
+
+
+class StockSelect(ntd.ui.StringSelect):
+    """選取商品。
+    """
+
+    def __init__(
+            self,
+            original_view: TradeView
+    ):
+        self.original_view = original_view
+        if(original_view.trade == "買進"):
+            super().__init__(
+                custom_id="buy",
+                placeholder="選擇商品",
+                options=[
+                    ntd.SelectOption(
+                        label=fetch_stock_name_symbol(i),
+                        value=str(i)
+                    ) for i in range(10)
+                ],
+                row=2
+            )
+        elif(original_view.trade == "賣出"):
+            stock_cost = fetch_stock_inventory(original_view.team)
+            super().__init__(
+                custom_id="sell",
+                placeholder="選擇庫存",
+                options=[
+                    ntd.SelectOption(
+                        label=fetch_stock_name_symbol(int(i)),
+                        value=i
+                    ) for i in stock_cost.keys()
+                ],
+                row=2
+            )
+    
+    async def callback(self, interaction: ntd.Interaction):    
+        self.original_view.stock = int(self.values[0])
+
+        self.original_view.trade_field_value = fetch_stock_name_symbol(
+            self.original_view.stock
+        )
+        await interaction.response.edit_message(
+            view=self.original_view,
+            embed=self.original_view.status_embed()
         )
 
 
@@ -199,8 +342,8 @@ class ChangeDepositView(ntd.ui.View):
         "embed_description",
         "mode_field_value",
         "amount",
-        "author_name",
-        "author_icon",
+        "user_name",
+        "user_icon",
         "selected_team",
         "selected_team_deposit",
         "selected_mode",
@@ -209,8 +352,8 @@ class ChangeDepositView(ntd.ui.View):
 
     def __init__(
             self,
-            author_name: str,
-            author_icon: ntd.Asset,
+            user_name: str,
+            user_icon: ntd.Asset,
             bot: commands.Bot
     ):
         super().__init__(timeout=180)
@@ -219,8 +362,8 @@ class ChangeDepositView(ntd.ui.View):
         self.embed_description: str = "請選擇小隊"
         self.mode_field_value: str = "請選擇變更模式"
         self.amount: str | int = "請輸入金額"   # 金額: int
-        self.author_name = author_name
-        self.author_icon = author_icon
+        self.user_name = user_name
+        self.user_icon = user_icon
         # slect status
         self.selected_team: int | None = None
         self.selected_team_deposit: int | None = None # 該小隊目前存款
@@ -256,8 +399,8 @@ class ChangeDepositView(ntd.ui.View):
                 value=f"{self.amount:,}"
             )
         embed.set_footer(
-            text=f"{self.author_name} | Today at {time}",
-            icon_url=self.author_icon
+            text=f"{self.user_name} | Today at {time}",
+            icon_url=self.user_icon
         )
 
         return embed
@@ -308,8 +451,6 @@ class ChangeDepositView(ntd.ui.View):
    
     @ntd.ui.select(
         placeholder="選擇變更模式",
-        min_values=1,
-        max_values=1,
         options=[
             ntd.SelectOption(
                 label="增加存款",
@@ -583,7 +724,7 @@ class TeamStockChangeLogEmbed(ntd.Embed):
     ):
         title = "📊股票成交通知📊"
         description = {
-            "買進": f"隊輔: {user} 成功買入**{stock} {quantity}張!**\n" \
+            "買進": f"隊輔: {user} 成功買進**{stock} {quantity}張!**\n" \
                     f"投資成本: **$FP{value * quantity:,}**",
             "賣出": f"隊輔: {user} 成功賣出**{stock} {quantity}張!**\n" \
                     "總投資損益: " + ("**__利益__**" if value >= 0 else "**__損失__**") + f" **$FP{value:,}**"
@@ -709,14 +850,15 @@ class DiscordUI(commands.Cog):
             guild_ids=[1218130958536937492]
     )
     async def test_ui(self, interaction: ntd.Interaction):
+        view = TradeView(
+            user_name=interaction.user.display_name,
+            user_avatar=interaction.user.display_avatar,
+            user_id=interaction.user.id
+        )
         await interaction.response.send_message(
-            embed=TeamStockChangeLogEmbed(
-                user=interaction.user.display_name,
-                trade="賣出",
-                stock="0321 台雞店",
-                quantity=3,
-                value=10121564
-            )
+            embed=view.status_embed(),
+            view=view,
+            ephemeral=True
         )
 
         pass
