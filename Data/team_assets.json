@@ -1,42 +1,42 @@
 {
     "1": {
-        "deposit": 10000,
-        "stock_cost": null,
+        "deposit": 10000000,
+        "stock_cost": {},
         "revenue": 0
     },
     "2": {
-        "deposit": 10000,
-        "stock_cost": null,
+        "deposit": 10000000,
+        "stock_cost": {},
         "revenue": 0
     },
     "3": {
-        "deposit": 10000,
-        "stock_cost": null,
+        "deposit": 10000000,
+        "stock_cost": {},
         "revenue": 0
     },
     "4": {
-        "deposit": 10000,
-        "stock_cost": null,
+        "deposit": 10000000,
+        "stock_cost": {},
         "revenue": 0
     },
     "5": {
-        "deposit": 10000,
-        "stock_cost": null,
+        "deposit": 10000000,
+        "stock_cost": {},
         "revenue": 0
     },
     "6": {
-        "deposit": 10000,
-        "stock_cost": null,
+        "deposit": 10000000,
+        "stock_cost": {},
         "revenue": 0
     },
     "7": {
-        "deposit": 10000,
-        "stock_cost": null,
+        "deposit": 10000000,
+        "stock_cost": {},
         "revenue": 0
     },
     "8": {
-        "deposit": 10000,
-        "stock_cost": null,
+        "deposit": 10000000,
+        "stock_cost": {},
         "revenue": 0
     }
 }

@@ -7,7 +7,7 @@ from datetime import datetime
 from pprint import pprint
 
 from .utilities import access_file
-from .utilities.datatypes import Config, AssetsData
+from .utilities.datatypes import Config, AssetsData, StockDict
 
 
 @dataclass(kw_only=True, slots=True)
@@ -61,7 +61,7 @@ class AssetsManager(commands.Cog):
         dict_ = {
             str(t): {
                 "deposit": self.CONFIG["STARTER_CASH"],
-                "stock_cost": None,
+                "stock_cost": {},
                 "revenue": 0
             }
             for t in range(1, 9)
@@ -149,10 +149,54 @@ class AssetsManager(commands.Cog):
         # 儲存資料
         self.save_assets(team)
         
+    def stock_trade(
+            self,
+            *,
+            team: int,
+            trade: str,
+            stock: int, 
+            quantity: int,
+
+    ):
+        """買賣股票處理。
+
+        Parameters
+        ----------
+        team: `int`
+            小隊編號。
+        trade: `str`
+            交易別 "buy" or "sell"。
+        stock: `int`
+            所選擇股票的 index
+        quantity: `int`
+            交易數量。
+        """
+
+        # 該股市場資料
+        stock_dict: StockDict = access_file.read_file("market_data")[stock]
+        # 該股當前價值
+        value: int = int(round(stock_dict["price"], 2) * 1000) # 該股當前成本價
+        # 該小隊持有股票及原始成本
+        stock_cost = self.team_assets[team-1].stock_cost
+        if(trade == "buy"):
+            # 新增股票index為key
+            if(stock_cost.get(f"{stock}") is None):
+                stock_cost[f"{stock}"] = []
+            #將成本價新增至TeamAssets資料
+            stock_cost[f"{stock}"].extend([value] * quantity)
+            # 扣錢
+            self.team_assets[team-1].deposit -= value * quantity
+        elif(trade == "sell"):
+            # 以股票當前市場價歸還此小隊，從先買的股票賣。
+            self.team_assets[team-1].stock_cost[f"{stock}"] = stock_cost[f"{stock}"][quantity:]
+            self.team_assets[team-1].deposit += value * quantity
+
+        self.save_assets(team)
 
     @ntd.slash_command(
         name="change_deposit",
         description="🛅針對指定小隊改變存款額。",
+        guild_ids=[1218130958536937492]
     )
     @application_checks.has_any_role(
         1218179373522358313,    # 最強大腦活動組
@@ -179,6 +223,51 @@ class AssetsManager(commands.Cog):
             mode="1",
             amount=amount,
             user=interaction.user.display_name
+        )
+        # update_asset_ui 更新資產ui顯示
+        await interaction.response.send_message(
+            "**改變成功!!!**",
+            delete_after=3,
+            ephemeral=True
+        )
+    
+    @ntd.slash_command(
+        name="change_stock",
+        description="🛅針對指定小隊改變股票庫存。",
+        guild_ids=[1218130958536937492]
+    )
+    @application_checks.has_any_role(
+        1218179373522358313,    # 最強大腦活動組
+        1218184965435691019     # 大神等級幹部組
+    )
+    async def change_stock(
+        self,
+        interaction: ntd.Interaction,
+        team: int = ntd.SlashOption(
+            name="小隊",
+            description="輸入小隊阿拉伯數字",
+            choices={str(t):t for t in range(1, 9)}
+        ),
+        trade: str = ntd.SlashOption(
+            name="交易別",
+            description="選擇交易別",
+            choices={"買入": "buy", "賣出": "sell"}
+        ),
+        stock: int = ntd.SlashOption(
+            name="股票index",
+            description="輸入股票index阿拉伯數字",
+            choices={str(t):t for t in range(10)}
+        ),
+        quantity: int = 1
+    ):
+        """用指令改變指定小隊存款額。
+        """
+        
+        self.stock_trade(
+            team=team,
+            trade=trade,
+            stock=stock,
+            quantity=quantity
         )
         # update_asset_ui 更新資產ui顯示
         await interaction.response.send_message(

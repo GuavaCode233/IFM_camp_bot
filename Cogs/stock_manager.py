@@ -75,7 +75,7 @@ class StockManager(commands.Cog):
     # 股價變動頻率(秒)
     PRICE_CHANGE_FREQUENCY: ClassVar[float] = 5.0
     # 發送新聞間隔(秒)
-    TIME_BETWEEN_NEWS: ClassVar[float] = 10.0
+    TIME_BETWEEN_NEWS: ClassVar[float] = 120.0
 
     def __init__(self, bot: commands.Bot):
         self.bot = bot
