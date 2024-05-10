@@ -1,3 +1,34 @@
 {
-    "serial": 0
+    "serial": 3,
+    "1": [
+        {
+            "type": "StockChange",
+            "time": "05/10 11:04AM",
+            "user": "guava.png",
+            "serial": 0,
+            "team": "1",
+            "trade_type": "買進",
+            "stock": "台雞店 0321",
+            "quantity": 5
+        },
+        {
+            "type": "AssetUpdate",
+            "time": "05/10 11:05AM",
+            "user": "guava.png",
+            "serial": 1,
+            "team": "1",
+            "original": 99850000,
+            "updated": 99849700
+        },
+        {
+            "type": "StockChange",
+            "time": "05/10 11:05AM",
+            "user": "guava.png",
+            "serial": 2,
+            "team": "1",
+            "trade_type": "買進",
+            "stock": "綠海 0218",
+            "quantity": 3
+        }
+    ]
 }
