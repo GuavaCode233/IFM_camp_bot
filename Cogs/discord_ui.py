@@ -79,11 +79,29 @@ def get_stock_price(index_: int | str) -> float:
 class StockMarketEmbed(ntd.Embed):
     """市場動態 Embed Message。
     """
-    ...
-
+    
+    def __init__(self):
+        super().__init__(
+            color=PURPLE,
+            title="市場動態"
+        )
+        market_data: List[StockDict] = access_file.read_file("market_data")
+        self.add_field(
+            name=f"{"商品名稱".center(5, "　")} {"商品代碼":^5} {"產業":^5} {"成交":^5} {"漲跌":^5}",
+            value="",
+            inline=False
+        )
+        for init_data, stock in zip(INITIAL_STOCK_DATA, market_data):
+            self.add_field(
+                name=f"{init_data["name"].center(5, "　")} {init_data["symbol"]:^5}" \
+                     f"{init_data["sector"]:^5} {stock["price"]:^5.2f} {stock["price"]-stock["close"]:^5.2f}",
+                value="",
+                inline=False
+            )
+    
 
 class TradeButton(ntd.ui.View):
-    """交易功能按鈕
+    """交易功能按鈕。
     """
 
     __slots__ = ("bot")
@@ -1022,8 +1040,9 @@ class DiscordUI(commands.Cog):
         self.MESSAGE_IDS: MessageIDs = self.CONFIG["message_ids"]
         
         self.ALTERATION_LOG_MESSAGE: ntd.Message = None
+        self.STOCK_MARKET_MESSAGE: ntd.Message = None
         self.NEWS_FEED_CHANNEL: ntd.TextChannel = None
-
+        
     @commands.Cog.listener()
     async def on_ready(self):
         """DiscordUI啟動程序。
@@ -1044,7 +1063,7 @@ class DiscordUI(commands.Cog):
         UPDATE_ASSET: bool = self.CONFIG["UPDATE_ASSET"]
         if(RESET_UI):
             await self.reset_all_ui()
-        
+
         if(UPDATE_ASSET):
             await self.update_asset()
         
@@ -1054,12 +1073,41 @@ class DiscordUI(commands.Cog):
             await self.update_log()
 
         await self.fetch_alteration_log_message()
+        await self.fetch_news_feed_channel()
+        await self.fetch_stock_market_message()
+
+        await self.update_market()
 
         print("Loaded discord_ui")
 
     @commands.command()
     async def test_ui_com(self, ctx: commands.Context):
-        pass
+        # channel = self.bot.get_channel(1218140719269810237)
+        # # delete old message
+        # await channel.purge(limit=1)
+        # # prompt
+        # embed = ntd.Embed(
+        #     title="領取身分組",
+        #     description="領取「資材營」身分組以開始使用。",
+        #     color=0x433274
+        # )
+        # embed.set_footer(text="(點擊以下表情符號以領取)")
+        # embed.set_thumbnail(url="http://203.72.185.5/~1091303/traveler_logo.png")
+        # await channel.send(embed=embed)
+
+        channel = self.bot.get_channel(1238338526551212082)
+        # delete old message
+        await channel.purge(limit=1)
+        # prompt
+        embed = ntd.Embed(
+            title="領取身分組",
+            description="依照自己的組別領取",
+            color=0x433274
+        )
+        embed.set_footer(text="(點擊以下表情符號以領取)")
+        embed.set_thumbnail(url="http://203.72.185.5/~1091303/traveler_logo.png")
+        await channel.send(embed=embed)
+        
 
     @ntd.slash_command(
             name="test_ui",
@@ -1172,6 +1220,17 @@ class DiscordUI(commands.Cog):
             self.MESSAGE_IDS["ALTERATION_LOG"]
         )
        
+    async def fetch_stock_market_message(self):
+        """抓取ALTERATION_LOG_MESSAGE。
+        """
+
+        channel = self.bot.get_channel(
+            self.CHANNEL_IDS["STOCK_MARKET"]
+        )
+        self.STOCK_MARKET_MESSAGE = await channel.fetch_message(
+            self.MESSAGE_IDS["STOCK_MARKET"]
+        )
+
     async def update_log(
             self,
             *,
@@ -1221,6 +1280,18 @@ class DiscordUI(commands.Cog):
             embed=LogEmbed()
         )
 
+    async def update_market(self):
+        """更新市場動態。
+        """
+
+        if(self.STOCK_MARKET_MESSAGE is None):
+            await self.fetch_stock_market_message()
+
+        await self.STOCK_MARKET_MESSAGE.edit(
+            content=None,
+            embed=StockMarketEmbed()
+        )
+
     async def update_asset(self, team: int | None = None):
         """|coro|
 
@@ -1263,7 +1334,6 @@ class DiscordUI(commands.Cog):
         self.NEWS_FEED_CHANNEL = self.bot.get_channel(
             self.CHANNEL_IDS["NEWS_FEED"]
         )
-
 
     async def clear_news(self):
         """|coro|

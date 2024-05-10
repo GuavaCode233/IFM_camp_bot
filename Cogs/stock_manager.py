@@ -234,6 +234,9 @@ class StockManager(commands.Cog):
         print()
 
         access_file.save_to("market_data", stock_data)  # 儲存所有變動後資料
+        # 更新市場資料
+        ui: DiscordUI = self.bot.get_cog("DiscordUI")
+        await ui.update_market()
 
     @classmethod
     @price_change_loop.before_loop
@@ -366,7 +369,7 @@ class StockManager(commands.Cog):
         self.game_state["is_in_round"] = False
         self.save_game_state()
 
-        self.price_change_loop.stop()
+        self.price_change_loop.stop()   # TODO: 更新收盤價
         self.news_loop.cancel()
 
         await interaction.response.send_message(
