@@ -1,9 +1,8 @@
-from discord import Interaction
 from nextcord.ext import commands
 import nextcord as ntd
 
 from datetime import datetime
-from typing import Coroutine, Dict, List, Any, Literal, ClassVar
+from typing import Dict, List, Any, Literal, ClassVar
 
 from .assets_manager import AssetsManager
 from .utilities import access_file
@@ -45,26 +44,23 @@ def fetch_stock_inventory(team: int) -> Dict[str, List[int]] | None:
     """
 
     asset: AssetDict = access_file.read_file("team_assets")[f"{team}"]
-    stock_cost: Dict[str, List[int]] = asset["stock_cost"]
+    stock_inv: Dict[str, List[int]] | None = asset.get("stock_inv", None)
 
-    if(not stock_cost):
-        return None
-    else:
-        return stock_cost
+    return stock_inv
 
 
-def inventory_to_string(stock_cost: Dict[str, List[int]], index_: str | int | None = None) -> str:
+def inventory_to_string(stock_inv: Dict[str, List[int]], index_: str | int | None = None) -> str:
     """將股票庫存資料格式化。
     """
 
     output: str = ""
     if(index_ is None):
-        for index_, stocks in stock_cost.items():
+        for index_, stocks in stock_inv.items():
             output += f"{INITIAL_STOCK_DATA[int(index_)]["name"]} {INITIAL_STOCK_DATA[int(index_)]["symbol"]}" \
                         f"\t張數: {len(stocks)}\n"
     else:
         output = f"{INITIAL_STOCK_DATA[int(index_)]["name"]} {INITIAL_STOCK_DATA[int(index_)]["symbol"]}" \
-                 f"\t張數: {len(stock_cost[index_])}\n"
+                 f"\t張數: {len(stock_inv[index_])}\n"
     return output
 
 
@@ -128,6 +124,7 @@ class TradeView(ntd.ui.View):
         "user_name",
         "user_avatar",
         "team",
+        "stock_inv",
         "embed_title",
         "deposit",
         "trade_field_name",
@@ -151,6 +148,7 @@ class TradeView(ntd.ui.View):
         self.user_name = user_name
         self.user_avatar = user_avatar
         self.team = USER_ID_TO_TEAM[user_id]
+        self.stock_inv = fetch_stock_inventory(self.team)   # 該小隊股票庫存
         # embed message
         self.embed_title: str = "股票交易"
         self.deposit: int = access_file.read_file(  # 該小隊存款額
@@ -242,11 +240,11 @@ class TradeView(ntd.ui.View):
             self.trade_field_name = "目前庫存"
             self.quantity_field_name = "賣出張數"
 
-            if(fetch_stock_inventory(self.team) is None):
+            if(self.stock_inv is None):
                 self.trade_field_value = "無股票庫存"
             else:
                 self.trade_field_value = inventory_to_string(
-                    fetch_stock_inventory(self.team)
+                    self.stock_inv
                 )
                 self.stock_select = StockSelect(self)
                 self.add_item(self.stock_select)
@@ -303,6 +301,15 @@ class TradeView(ntd.ui.View):
                 ephemeral=True
             )
             return
+        elif(self.trade_type == "賣出" and
+             self.quantity_field_value > len(self.stock_inv[f"{self.selected_stock_index}"])):
+            await interaction.response.send_message(
+                content=f"**{fetch_stock_name_symbol(self.selected_stock_index)} 持有張數不足**",
+                delete_after=5,
+                ephemeral=True
+            )
+            return
+        
         # stock_trade, update_log
         asset: AssetsManager = self.bot.get_cog("AssetsManager")
         await asset.stock_trade(
@@ -348,14 +355,13 @@ class StockSelect(ntd.ui.StringSelect):
     """選取買賣別後選取商品。
     """
 
-    __slots__ = ("original_view", "stock_cost")
+    __slots__ = ("original_view", "stock_inv")
 
     def __init__(
             self,
             original_view: TradeView
     ):
         self.original_view = original_view
-        self.stock_cost = fetch_stock_inventory(original_view.team)
         if(original_view.trade_type == "買進"):
             super().__init__(
                 custom_id="buy",
@@ -376,7 +382,7 @@ class StockSelect(ntd.ui.StringSelect):
                     ntd.SelectOption(
                         label=fetch_stock_name_symbol(int(i)),
                         value=i
-                    ) for i in self.stock_cost.keys()
+                    ) for i in self.original_view.stock_inv.keys()
                 ],
                 row=2
             )
@@ -388,8 +394,9 @@ class StockSelect(ntd.ui.StringSelect):
                 self.original_view.selected_stock_index
             )
         elif(self.original_view.trade_type == "賣出"):
+            self.original_view.trade_field_name = "已選擇的庫存股票"
             self.original_view.trade_field_value = inventory_to_string(
-                self.stock_cost, self.values[0]
+                self.original_view.stock_inv, self.values[0]
             )
         await interaction.response.edit_message(
             view=self.original_view,

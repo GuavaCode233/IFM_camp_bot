@@ -85,14 +85,14 @@ class AssetDict(TypedDict):
     -------
     deposit: `int`
         該小隊存款額。
-    stock_cost: `Dict[str, List[int]]`
+    stock_inv: `Dict[str, List[int]]`
         該小隊所有股票以及原始成本。
     revenue: `int`
         該小隊總收益。
     """
 
     deposit: int
-    stock_cost: Dict[str, List[int]]
+    stock_inv: Dict[str, List[int]]
     revenue: int
 
 

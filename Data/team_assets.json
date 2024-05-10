@@ -1,42 +1,42 @@
 {
     "1": {
         "deposit": 100000000,
-        "stock_cost": {},
+        "stock_inv": {},
         "revenue": 0
     },
     "2": {
         "deposit": 100000000,
-        "stock_cost": {},
+        "stock_inv": {},
         "revenue": 0
     },
     "3": {
         "deposit": 100000000,
-        "stock_cost": {},
+        "stock_inv": {},
         "revenue": 0
     },
     "4": {
         "deposit": 100000000,
-        "stock_cost": {},
+        "stock_inv": {},
         "revenue": 0
     },
     "5": {
         "deposit": 100000000,
-        "stock_cost": {},
+        "stock_inv": {},
         "revenue": 0
     },
     "6": {
         "deposit": 100000000,
-        "stock_cost": {},
+        "stock_inv": {},
         "revenue": 0
     },
     "7": {
         "deposit": 100000000,
-        "stock_cost": {},
+        "stock_inv": {},
         "revenue": 0
     },
     "8": {
         "deposit": 100000000,
-        "stock_cost": {},
+        "stock_inv": {},
         "revenue": 0
     }
 }

@@ -18,7 +18,7 @@ class TeamAssets:
 
     team_number: str
     deposit: int
-    stock_cost: Dict[str, List[int]] = field(default_factory=dict)
+    stock_inv: Dict[str, List[int]] = field(default_factory=dict)
     revenue: int = 0
 
 
@@ -61,7 +61,7 @@ class AssetsManager(commands.Cog):
         dict_ = {
             str(t): {
                 "deposit": self.CONFIG["STARTER_CASH"],
-                "stock_cost": {},
+                "stock_inv": {},
                 "revenue": 0
             }
             for t in range(1, 9)
@@ -78,7 +78,7 @@ class AssetsManager(commands.Cog):
             TeamAssets(
                 team_number=str(t),
                 deposit=asset[str(t)]["deposit"],
-                stock_cost=asset[str(t)]["stock_cost"],
+                stock_inv=asset[str(t)]["stock_inv"],
                 revenue=asset[str(t)]["revenue"]
             )
             for t in range(1, 9)
@@ -95,7 +95,7 @@ class AssetsManager(commands.Cog):
                     {
                         str(t):{
                             "deposit": asset.deposit,
-                            "stock_cost": asset.stock_cost,
+                            "stock_inv": asset.stock_inv,
                             "revenue": asset.revenue
                         }
                     }
@@ -107,7 +107,7 @@ class AssetsManager(commands.Cog):
                 {
                     str(team_number):{
                         "deposit": asset.deposit,
-                        "stock_cost": asset.stock_cost,
+                        "stock_inv": asset.stock_inv,
                         "revenue": asset.revenue
                     }
                 }
@@ -177,23 +177,26 @@ class AssetsManager(commands.Cog):
         # 該股當前價值
         value: int = int(round(stock_dict["price"], 2) * 1000) # 該股當前成本價
         # 該小隊持有股票及原始成本
-        stock_cost = self.team_assets[team-1].stock_cost
+        stock_inv = self.team_assets[team-1].stock_inv
         if(trade_type == "買進"):
             # 新增股票index為key
-            if(stock_cost.get(f"{stock}") is None):
-                stock_cost[f"{stock}"] = []
+            if(stock_inv.get(f"{stock}") is None):
+                stock_inv[f"{stock}"] = []
             #將成本價新增至TeamAssets資料
-            stock_cost[f"{stock}"].extend([value] * quantity)
+            stock_inv[f"{stock}"].extend([value] * quantity)
             # 扣錢
             self.team_assets[team-1].deposit -= value * quantity
             # 計算金額 買進->市價*張數 
             display_value = value * quantity
         elif(trade_type == "賣出"):
             # 計算金額 賣出->投資損益
-            display_value = (value * quantity) - sum(stock_cost[f"{stock}"][:quantity])
+            display_value = (value * quantity) - sum(stock_inv[f"{stock}"][:quantity])
             # 以股票當前市場價歸還此小隊，從先買的股票賣。
-            self.team_assets[team-1].stock_cost[f"{stock}"] = stock_cost[f"{stock}"][quantity:]
+            self.team_assets[team-1].stock_inv[f"{stock}"] = stock_inv[f"{stock}"][quantity:]
             self.team_assets[team-1].deposit += value * quantity
+            # 刪除空的資料
+            if(not self.team_assets[team-1].stock_inv.get(f"{stock}")):
+                self.team_assets[team-1].stock_inv.pop(f"{stock}")
             
         initail_stock_data: InitialStockData = access_file.read_file("raw_stock_data")["initial_data"][stock]
         stock_name_symbol = f"{initail_stock_data["name"]} {initail_stock_data["symbol"]}"
