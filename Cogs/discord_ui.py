@@ -329,19 +329,6 @@ class TradeView(ntd.ui.View):
             )
             return
         
-        # stock_trade, update_log
-        asset: AssetsManager = self.bot.get_cog("AssetsManager")
-        await asset.stock_trade(
-            team=self.team,
-            trade_type=self.trade_type,
-            stock=self.selected_stock_index,
-            quantity=self.quantity_field_value,
-            user=interaction.user.display_name
-        )
-
-        ui: DiscordUI = self.bot.get_cog("DiscordUI")
-        await ui.update_asset(team=self.team)
-
         self.clear_items()
         await interaction.response.edit_message(
             content="**改變成功!!!**",
@@ -350,6 +337,28 @@ class TradeView(ntd.ui.View):
             view=self
         )
         self.stop()
+        # stock_trade, update_log
+        asset: AssetsManager = self.bot.get_cog("AssetsManager")
+        display_value = await asset.stock_trade(
+            team=self.team,
+            trade_type=self.trade_type,
+            stock=self.selected_stock_index,
+            quantity=self.quantity_field_value,
+            user=interaction.user.display_name
+        )
+
+        ui: DiscordUI = self.bot.get_cog("DiscordUI")
+        await ui.send_notification(
+            type_="StockChange",
+            team=self.team,
+            user=interaction.user.display_name,
+            trade_type=self.trade_type,
+            stock=self.selected_stock_index,
+            quantity=self.quantity_field_value,
+            display_value=display_value
+        )
+        await ui.update_alteration_log()
+        await ui.update_asset(team=self.team)
 
     @ntd.ui.button(
         label="取消交易",

@@ -73,7 +73,7 @@ class StockManager(commands.Cog):
         "INITIAL_STOCK_DATA",
     )
     # 股價變動頻率(秒)
-    PRICE_CHANGE_FREQUENCY: ClassVar[float] = 5.0
+    PRICE_CHANGE_FREQUENCY: ClassVar[float] = 20.0
     # 發送新聞間隔(秒)
     TIME_BETWEEN_NEWS: ClassVar[float] = 120.0
 
@@ -275,8 +275,6 @@ class StockManager(commands.Cog):
     async def news_loop(self):
         """當回合開始時每過一段時間發送當回合新聞。
         """
-
-        # TODO: 將擷取的當回合新聞發送到頻道(用 Discord_ui.py)
 
         if(not self.pending_news):
             if(self.game_state["is_in_round"]): # 發完新聞

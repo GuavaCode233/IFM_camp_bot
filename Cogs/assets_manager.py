@@ -157,7 +157,7 @@ class AssetsManager(commands.Cog):
             stock: int, 
             quantity: int,
             user: str
-    ):
+    ) -> int:
         """買賣股票處理，紀錄log。
 
         Parameters
@@ -170,6 +170,11 @@ class AssetsManager(commands.Cog):
             所選擇股票的 index
         quantity: `int`
             交易數量。
+        
+        Returns
+        -------
+        display_value: `int`
+            買進: 購入成本；賣出: 投資損益
         """
 
         # 該股市場資料
@@ -209,20 +214,9 @@ class AssetsManager(commands.Cog):
             stock=stock_name_symbol,
             quantity=quantity
         )
-        
-        ui = self.bot.get_cog("DiscordUI")
-        await ui.send_notification(
-            type_="StockChange",
-            team=team,
-            user=user,
-            trade_type=trade_type,
-            stock=stock,
-            quantity=quantity,
-            display_value=display_value
-        )
-        await ui.update_alteration_log()
 
         self.save_assets(team)
+        return display_value
 
     @ntd.slash_command(
         name="change_deposit",
