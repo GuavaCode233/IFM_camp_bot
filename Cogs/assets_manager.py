@@ -64,7 +64,7 @@ class AssetsManager(commands.Cog):
                 "stock_inv": {},
                 "revenue": 0
             }
-            for t in range(1, 9)
+            for t in range(1, self.CONFIG["NUMBER_OF_TEAMS"]+2)
         }
         access_file.save_to("team_assets", dict_)
         self.fetch_assets()
@@ -81,7 +81,7 @@ class AssetsManager(commands.Cog):
                 stock_inv=asset[str(t)]["stock_inv"],
                 revenue=asset[str(t)]["revenue"]
             )
-            for t in range(1, 9)
+            for t in range(1, self.CONFIG["NUMBER_OF_TEAMS"]+2)
         ]
         
     def save_assets(self, team_number: str | int | None = None):
@@ -211,7 +211,7 @@ class AssetsManager(commands.Cog):
         )
         
         ui = self.bot.get_cog("DiscordUI")
-        await ui.update_log(
+        await ui.send_notification(
             type_="StockChange",
             team=team,
             user=user,
@@ -220,6 +220,7 @@ class AssetsManager(commands.Cog):
             quantity=quantity,
             display_value=display_value
         )
+        await ui.update_alteration_log()
 
         self.save_assets(team)
 

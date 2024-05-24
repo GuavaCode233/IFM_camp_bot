@@ -22,7 +22,7 @@ from .utilities.datatypes import (
 PURPLE: Literal[0x433274] = 0x433274   # Embed color: purple
 # 隊輔id跟小隊對照表
 USER_ID_TO_TEAM: Dict[int, int] = {
-    601014917746786335: 1
+    601014917746786335: 9   # Guava
 }
 # 股票開頭資料
 INITIAL_STOCK_DATA: List[InitialStockData] = access_file.read_file(
@@ -313,7 +313,7 @@ class TradeView(ntd.ui.View):
         
         if(self.trade_type == "買進" and
             (get_stock_price(self.selected_stock_index)
-            * self.quantity_field_value > self.deposit)):    # 餘額不足
+            * self.quantity_field_value * 1000 > self.deposit)):    # 餘額不足
             await interaction.response.send_message(
                 content="**存款餘額不足**",
                 delete_after=5,
@@ -764,13 +764,15 @@ class ChangeDepositView(ntd.ui.View):
         ui: DiscordUI = self.bot.get_cog("DiscordUI")
         await ui.update_asset(team=self.selected_team)
         # 發送即時通知
-        await ui.update_log(
+        await ui.send_notification(
             type_="AssetUpdate",
             team=self.selected_team,
             mode=self.selected_mode,
             amount=self.amount,
             user=interaction.user.display_name
         )
+        # 更新收支動態
+        await ui.update_alteration_log()
         self.stop()
     
     @ntd.ui.button(
@@ -881,7 +883,7 @@ class LogEmbed(ntd.Embed):
         )
 
 
-class TeamAssetChangeLogEmbed(ntd.Embed):
+class TeamAssetChangeNoticeEmbed(ntd.Embed):
     """小隊資產變更即時通知 Embed Message。
     """
 
@@ -914,7 +916,7 @@ class TeamAssetChangeLogEmbed(ntd.Embed):
         )
 
 
-class TeamStockChangeLogEmbed(ntd.Embed):
+class TeamStockChangeNoticeEmbed(ntd.Embed):
     """小隊股票庫存變更即時通知 Embed Message。
     """
 
@@ -1070,7 +1072,7 @@ class DiscordUI(commands.Cog):
         if(CLEAR_LOG):
             await self.clear_log()
         else:
-            await self.update_log()
+            await self.update_alteration_log()
 
         await self.fetch_alteration_log_message()
         await self.fetch_news_feed_channel()
@@ -1095,18 +1097,24 @@ class DiscordUI(commands.Cog):
         # embed.set_thumbnail(url="http://203.72.185.5/~1091303/traveler_logo.png")
         # await channel.send(embed=embed)
 
-        channel = self.bot.get_channel(1238338526551212082)
+        # channel = self.bot.get_channel(1238338526551212082)
+        # # delete old message
+        # await channel.purge(limit=1)
+        # # prompt
+        # embed = ntd.Embed(
+        #     title="領取身分組",
+        #     description="依照自己的組別領取",
+        #     color=0x433274
+        # )
+        # embed.set_footer(text="(點擊以下表情符號以領取)")
+        # embed.set_thumbnail(url="http://203.72.185.5/~1091303/traveler_logo.png")
+        # await channel.send(embed=embed)
+
+        channel = self.bot.get_channel(1243503969032998973)
         # delete old message
         await channel.purge(limit=1)
         # prompt
-        embed = ntd.Embed(
-            title="領取身分組",
-            description="依照自己的組別領取",
-            color=0x433274
-        )
-        embed.set_footer(text="(點擊以下表情符號以領取)")
-        embed.set_thumbnail(url="http://203.72.185.5/~1091303/traveler_logo.png")
-        await channel.send(embed=embed)
+        await channel.send("message")
         
 
     @ntd.slash_command(
@@ -1193,21 +1201,21 @@ class DiscordUI(commands.Cog):
         log: AlterationLog = access_file.read_file("alteration_log")
 
         # 清除各小隊即時訊息
-        for t in range(1, 9):
+        for team, team_key in enumerate(self.MESSAGE_IDS["ASSET_MESSAGE_IDS"].keys(), start=1):
             channel = self.bot.get_channel(
-                self.CHANNEL_IDS[f"team_{t}"]["NOTICE"]
+                self.CHANNEL_IDS[team_key]["NOTICE"]
             )
 
-            if(log.get(str(t), None) is None):  # 有記錄才需要刪
+            if(log.get(str(team), None) is None):  # 有記錄才需要刪
                 continue
             
-            msg_count = len(log[f"{t}"])
+            msg_count = len(log[f"{team}"])
             await channel.purge(limit=msg_count)
         
         # 清除log資料
         access_file.clear_log_data()
         # 更新log
-        await self.update_log()
+        await self.update_alteration_log()
 
     async def fetch_alteration_log_message(self):
         """抓取ALTERATION_LOG_MESSAGE。
@@ -1231,7 +1239,21 @@ class DiscordUI(commands.Cog):
             self.MESSAGE_IDS["STOCK_MARKET"]
         )
 
-    async def update_log(
+    async def update_alteration_log(self):
+        """|coro|
+
+        更新收支動態。
+        """
+                
+        if(self.ALTERATION_LOG_MESSAGE is None):  # 防止資料遺失
+            await self.fetch_alteration_log_message()
+
+        await self.ALTERATION_LOG_MESSAGE.edit(
+            content=None,
+            embed=LogEmbed()
+        )
+
+    async def send_notification(
             self,
             *,
             type_: Literal["AssetUpdate", "StockChange"] | None = None,
@@ -1246,40 +1268,31 @@ class DiscordUI(commands.Cog):
     ):
         """|coro|
 
-        更新收支動態，或更新收支並發送即時動態訊息。
+        發送即時通知。
         """
 
-        if(isinstance(type_, str)): # 發送即時訊息
-            channel = self.bot.get_channel(
-                self.CHANNEL_IDS[f"team_{team}"]["NOTICE"]
-            )
-            if(type_ == "AssetUpdate"):
-                await channel.send(
-                    embed=TeamAssetChangeLogEmbed(
-                        mode=mode,
-                        amount=amount,
-                        user=user
-                    )
-                )
-            elif(type_ == "StockChange"):
-                await channel.send(
-                    embed=TeamStockChangeLogEmbed(
-                        user=user,
-                        trade_type=trade_type,
-                        stock=stock,
-                        quantity=quantity,
-                        display_value=display_value
-                    )
-                )
-                
-        if(self.ALTERATION_LOG_MESSAGE is None):  # 防止資料遺失
-            await self.fetch_alteration_log_message()
-
-        await self.ALTERATION_LOG_MESSAGE.edit(
-            content=None,
-            embed=LogEmbed()
+        channel = self.bot.get_channel(
+            self.CHANNEL_IDS[f"TEAM_{team}"]["NOTICE"]
         )
-
+        if(type_ == "AssetUpdate"):
+            await channel.send(
+                embed=TeamAssetChangeNoticeEmbed(
+                    mode=mode,
+                    amount=amount,
+                    user=user
+                )
+            )
+        elif(type_ == "StockChange"):
+            await channel.send(
+                embed=TeamStockChangeNoticeEmbed(
+                    user=user,
+                    trade_type=trade_type,
+                    stock=stock,
+                    quantity=quantity,
+                    display_value=display_value
+                )
+            )
+        
     async def update_market(self):
         """更新市場動態。
         """
@@ -1288,7 +1301,6 @@ class DiscordUI(commands.Cog):
             await self.fetch_stock_market_message()
 
         await self.STOCK_MARKET_MESSAGE.edit(
-            content=None,
             embed=StockMarketEmbed()
         )
 
@@ -1300,10 +1312,10 @@ class DiscordUI(commands.Cog):
         
         if(isinstance(team, int)):  # 更新指定小隊資產訊息
             channel = self.bot.get_channel(
-                self.CHANNEL_IDS[f"team_{team}"]["ASSET"]
+                self.CHANNEL_IDS[f"TEAM_{team}"]["ASSET"]
             )
             message = await channel.fetch_message(
-                self.MESSAGE_IDS[f"team_{team}"]["msg_1"]
+                self.MESSAGE_IDS["ASSET_MESSAGE_IDS"][f"TEAM_{team}"]
             )
             await message.edit(
                 embeds=[
@@ -1312,18 +1324,18 @@ class DiscordUI(commands.Cog):
                 ]
             )
         else:   # 更新所有小隊資產訊息
-            for t in range(1, 9):
+            for team, team_key in enumerate(self.MESSAGE_IDS["ASSET_MESSAGE_IDS"].keys(), start=1):
                 channel = self.bot.get_channel(
-                    self.CHANNEL_IDS[f"team_{t}"]["ASSET"]
+                    self.CHANNEL_IDS[team_key]["ASSET"]
                 )
                 message = await channel.fetch_message(
-                    self.MESSAGE_IDS[f"team_{t}"]["msg_1"]
+                    self.MESSAGE_IDS["ASSET_MESSAGE_IDS"][team_key]
                 )
                 await message.edit(
                     content=None,
                     embeds=[
-                        TeamAssetEmbed(t),
-                        TeamStockEmbed(t)
+                        TeamAssetEmbed(team),
+                        TeamStockEmbed(team)
                     ]
                 )
     

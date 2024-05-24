@@ -24,19 +24,16 @@ class ChannelIDs(TypedDict):
     __root__: TeamChannelIDs
 
 
-TeamMessageIDs = Dict[str, int]
-"""該隊「資產」頻道內之資產訊息ID。
-
-`"msg_n"`: `int`
-"""
-
-
 class MessageIDs(TypedDict):
     CHANGE_DEPOSIT: int
     ALTERATION_LOG: int
     STOCK_MARKET: int
     TRADE_VIEW: int
-    __root__: TeamMessageIDs
+    ASSET_MESSAGE_IDS: Dict[str, int]
+    """該隊「資產」頻道內之資產訊息ID。
+
+    `"TEAM_n"`: `int`
+    """
 
 
 class Config(TypedDict):
@@ -58,6 +55,8 @@ class Config(TypedDict):
         將Excel原始新聞資料轉換為JSON檔案。
     STARTER_CASH: `int`
         遊戲開始時各小隊的初始資產額。
+    NUMBER_OF_TEAMS: `int`
+        總小隊數量。
     
     頻道及訊息ID
     -----------
@@ -74,6 +73,7 @@ class Config(TypedDict):
     CONVERT_RAW_STOCK_DATA: bool
     CONVERT_RAW_NEWS_DATA: bool
     STARTER_CASH: int
+    NUMBER_OF_TEAMS: int
     channel_ids: ChannelIDs
     message_ids: MessageIDs
 
