@@ -639,7 +639,7 @@ class ChangeDepositView(ntd.ui.View):
                 label=f"第{_t}小隊",
                 value=f"{_t}"
             )
-            for _t in range(1, 9)
+            for _t in range(1, 10)
         ]
     )
     async def team_select_callback(
@@ -761,7 +761,7 @@ class ChangeDepositView(ntd.ui.View):
             amount=self.amount,
             user=interaction.user.display_name
         )
-        # 改變成工訊息
+        # 改變成功訊息
         self.clear_items()
         await interaction.response.edit_message(
             content="**改變成功!!!**",
@@ -780,7 +780,7 @@ class ChangeDepositView(ntd.ui.View):
             amount=self.amount,
             user=interaction.user.display_name
         )
-        # 更新收支動態
+        # 更新收支紀錄
         await ui.update_alteration_log()
         self.stop()
     
@@ -855,36 +855,41 @@ class InputAmount(ntd.ui.Modal):
 
 
 class LogEmbed(ntd.Embed):
-    """收支動態 Embed Message。
+    """收支紀錄 Embed Message。
     """
 
     def __init__(self):
         super().__init__(
             color=PURPLE,
-            title="小隊收支",
+            title="收支紀錄",
             type="rich",
-            description="小隊存款金額的變動紀錄以及\n買賣股票紀錄"
+            description="小隊存款金額的變動以及\n買賣股票最近的25筆紀錄"
         )
 
         log: AlterationLog = access_file.read_file("alteration_log").copy()
-        log.pop("serial")
-        # 將所有字典展開唯一list並按照serial排序
+        serial: int = log.pop("serial")
+        # 將所有字典展開為一list並按照serial排序
         record_list: List[LogData] = sorted(
             [item for sublist in log.values() for item in sublist],
             key=lambda x: x["serial"]
         )
+        # 只列出最近的25個紀錄
+        start_index: int = 0 if serial < 25 else serial-25
+        record_list = record_list[start_index:]
         for record in record_list:
             if(record["type"] == "AssetUpdate"):
                 self.add_field(
-                    name=f"{record["user"]} 在 {record["time"]}\n" \
+                    name=f"#{record["serial"]} {record["user"]} 在 {record["time"]}\n" \
                          f"變更第{record["team"]}小隊存款",
-                    value=f"{record["original"]:,} {u"\u2192"} {record["updated"]:,}"
+                    value=f"{record["original"]:,} {u"\u2192"} {record["updated"]:,}",
+                    inline=False
                 )
             elif(record["type"] == "StockChange"):
                 self.add_field(
-                    name=f"{record["user"]} 在 {record["time"]}\n" \
+                    name=f"#{record["serial"]} {record["user"]} 在 {record["time"]}\n" \
                          f"{record["trade_type"]} 第{record["team"]}小隊股票",
-                    value=f"商品: {record["stock"]} 張數: {record["quantity"]}"
+                    value=f"商品: {record["stock"]} 張數: {record["quantity"]}",
+                    inline=False
                 )
         
         self.set_footer(
@@ -1008,11 +1013,11 @@ class TeamStockEmbed(ntd.Embed):
                           f"**成交均價:** {avg_price:.2f}\n" \
                           f"**投資總成本:** {total_cost:,}\n" \
                           f"**未實現損益:** {"**__利益__** " if unrealized_gain_loss >= 0 else "**__損失__** "}" \
-                          f"{unrealized_gain_loss:.0f}"
+                          f"{abs(unrealized_gain_loss):.0f}"
                 )
             self.description = f"**未實現總損益:** " \
                                f"{"**__利益__** " if total_unrealized_gain_loss >= 0 else "**__損失__** "}" \
-                               f"**{total_unrealized_gain_loss:.0f}**"
+                               f"**{abs(total_unrealized_gain_loss):.0f}**"
         else:
             self.description = "無股票庫存"
             
@@ -1062,7 +1067,7 @@ class DiscordUI(commands.Cog):
         重製所有ui元素訊息(View、Button)
 
         `CLEAR_LOG`
-        清除已發送的小隊即時訊息以及清除收支動態，
+        清除已發送的小隊即時訊息以及清除收支紀錄，
         並清除log資料。
 
         `UPDATE_ASSET`
@@ -1145,29 +1150,30 @@ class DiscordUI(commands.Cog):
 
         pass
 
-    @commands.command()
-    async def fetch_team_message_ids(self, ctx: commands.Context, count: int):
-        """擷取所有小隊(資產)頻道的最初訊息id。
+    # Deprecated
+    # @commands.command()
+    # async def fetch_team_message_ids(self, ctx: commands.Context, count: int):
+    #     """擷取所有小隊(資產)頻道的最初訊息id。
 
-        count: 擷取幾則訊息
-        """
+    #     count: 擷取幾則訊息
+    #     """
 
-        dict_ = self.CONFIG
-        message_ids: MessageIDs = dict_["message_ids"]
+    #     dict_ = self.CONFIG
+    #     message_ids: MessageIDs = dict_["message_ids"]
         
-        for t in range(1, 9):
-            channel = self.bot.get_channel(
-                self.CHANNEL_IDS[f"team_{t}"]["ASSET"]
-            )
-            message_ids.update({f"team_{t}": {}})   # 創建t小隊之訊息id字典
-            for m in range(1, count+1): # 依照指定訊息數量存入訊息id字典
-                if(message_ids[f"team_{t}"].get(f"msg_{m}", None) is None):
-                    msg = await channel.send(f"initial message {m}")
-                    message_ids[f"team_{t}"].update(
-                        {f"msg_{m}": msg.id}
-                    )
+    #     for t in range(1, 9):
+    #         channel = self.bot.get_channel(
+    #             self.CHANNEL_IDS[f"team_{t}"]["ASSET"]
+    #         )
+    #         message_ids.update({f"team_{t}": {}})   # 創建t小隊之訊息id字典
+    #         for m in range(1, count+1): # 依照指定訊息數量存入訊息id字典
+    #             if(message_ids[f"team_{t}"].get(f"msg_{m}", None) is None):
+    #                 msg = await channel.send(f"initial message {m}")
+    #                 message_ids[f"team_{t}"].update(
+    #                     {f"msg_{m}": msg.id}
+    #                 )
                 
-        self.save_to("game_config", dict_)
+    #     self.save_to("game_config", dict_)
 
     async def reset_all_ui(self):
         """|coro|
@@ -1204,7 +1210,7 @@ class DiscordUI(commands.Cog):
     async def clear_log(self):
         """|coro|
         
-        清除已發送的小隊即時訊息以及清除收支動態，並清除log資料。
+        清除已發送的小隊即時訊息以及清除收支紀錄，並清除log資料。
         """
 
         log: AlterationLog = access_file.read_file("alteration_log")
@@ -1251,7 +1257,7 @@ class DiscordUI(commands.Cog):
     async def update_alteration_log(self):
         """|coro|
 
-        更新收支動態。
+        更新收支紀錄。
         """
                 
         if(self.ALTERATION_LOG_MESSAGE is None):  # 防止資料遺失
