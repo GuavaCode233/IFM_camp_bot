@@ -18,6 +18,7 @@ from .utilities.datatypes import (
     StockDict
 )
 
+TradeType = Literal["買進", "賣出"]
 
 PURPLE: Literal[0x433274] = 0x433274   # Embed color: purple
 # 隊輔id跟小隊對照表
@@ -30,7 +31,7 @@ INITIAL_STOCK_DATA: List[InitialStockData] = access_file.read_file(
 )["initial_data"]
 
 
-def fetch_stock_name_symbol(index_: int | str) -> str:
+def get_stock_name_symbol(index_: int | str) -> str:
     """抓取 "股票名 股票代碼" string。
     """
     
@@ -40,7 +41,7 @@ def fetch_stock_name_symbol(index_: int | str) -> str:
     return f"{name} {symbol}"
 
 
-def fetch_stock_inventory(team: int) -> Dict[str, List[int]] | None:
+def get_stock_inventory(team: int) -> Dict[str, List[int]] | None:
     """擷取小隊股票庫存。
     """
 
@@ -50,7 +51,10 @@ def fetch_stock_inventory(team: int) -> Dict[str, List[int]] | None:
     return stock_inv
 
 
-def inventory_to_string(stock_inv: Dict[str, List[int]], index_: str | int | None = None) -> str:
+def inventory_to_string(
+        stock_inv: Dict[str, List[int]],
+        index_: str | int | None = None
+    ) -> str:
     """將股票庫存資料格式化。
     """
 
@@ -87,14 +91,14 @@ class StockMarketEmbed(ntd.Embed):
         )
         market_data: List[StockDict] = access_file.read_file("market_data")
         self.add_field(
-            name=f"{"商品名稱".center(5, "　")} {"商品代碼":^5} {"產業":^5} {"成交":^5} {"漲跌":^5}",
+            name=f"商品名稱\t  {'代碼':4}  產業   成交  漲跌",
             value="",
             inline=False
         )
         for init_data, stock in zip(INITIAL_STOCK_DATA, market_data):
             self.add_field(
-                name=f"{init_data["name"].center(5, "　")} {init_data["symbol"]:^5}" \
-                     f"{init_data["sector"]:^5} {stock["price"]:^5.2f} {stock["price"]-stock["close"]:^5.2f}",
+                name=f"{init_data["name"].ljust(5, "－")} {init_data["symbol"]:6}  " \
+                     f"{init_data["sector"]}  {stock["price"]:>5.2f}  {stock["price"]-stock["close"]:5.2f}",
                 value="",
                 inline=False
             )
@@ -167,7 +171,7 @@ class TradeView(ntd.ui.View):
         self.user_name = user_name
         self.user_avatar = user_avatar
         self.team = USER_ID_TO_TEAM[user_id]
-        self.stock_inv = fetch_stock_inventory(self.team)   # 該小隊股票庫存
+        self.stock_inv = get_stock_inventory(self.team)   # 該小隊股票庫存
         # embed message
         self.embed_title: str = "股票交易"
         self.deposit: int = access_file.read_file(  # 該小隊存款額
@@ -178,7 +182,7 @@ class TradeView(ntd.ui.View):
         self.quantity_field_name: str = "張數"      # 買進 or 賣出 張數
         self.quantity_field_value: str | int = "請輸入張數" # quantity
         # select status
-        self.trade_type: Literal["買進", "賣出"] = None
+        self.trade_type: TradeType = None
         self.stock_select: StockSelect = None # 紀錄股票選取下拉選單
         self.selected_stock_index: int = None
     
@@ -323,7 +327,7 @@ class TradeView(ntd.ui.View):
         elif(self.trade_type == "賣出" and
              self.quantity_field_value > len(self.stock_inv[f"{self.selected_stock_index}"])):
             await interaction.response.send_message(
-                content=f"**{fetch_stock_name_symbol(self.selected_stock_index)} 持有張數不足**",
+                content=f"**{get_stock_name_symbol(self.selected_stock_index)} 持有張數不足**",
                 delete_after=5,
                 ephemeral=True
             )
@@ -401,7 +405,7 @@ class StockSelect(ntd.ui.StringSelect):
                 placeholder="選擇商品",
                 options=[
                     ntd.SelectOption(
-                        label=fetch_stock_name_symbol(i),
+                        label=get_stock_name_symbol(i),
                         value=str(i)
                     ) for i in range(10)
                 ],
@@ -413,7 +417,7 @@ class StockSelect(ntd.ui.StringSelect):
                 placeholder="選擇庫存",
                 options=[
                     ntd.SelectOption(
-                        label=fetch_stock_name_symbol(int(i)),
+                        label=get_stock_name_symbol(int(i)),
                         value=i
                     ) for i in self.original_view.stock_inv.keys()
                 ],
@@ -423,7 +427,7 @@ class StockSelect(ntd.ui.StringSelect):
     async def callback(self, interaction: ntd.Interaction):    
         self.original_view.selected_stock_index = int(self.values[0])
         if(self.original_view.trade_type == "買進"):
-            self.original_view.trade_field_value = fetch_stock_name_symbol(
+            self.original_view.trade_field_value = get_stock_name_symbol(
                 self.original_view.selected_stock_index
             )
         elif(self.original_view.trade_type == "賣出"):
@@ -937,12 +941,12 @@ class TeamStockChangeNoticeEmbed(ntd.Embed):
     def __init__(
             self,
             user: str,
-            trade_type: Literal["買進", "賣出"],
+            trade_type: TradeType,
             stock: int,
             quantity: int,
             display_value: int
     ):
-        stock = fetch_stock_name_symbol(stock)
+        stock = get_stock_name_symbol(stock)
         title = "📊股票成交通知📊"
         description = {
             "買進": f"隊輔: {user} 成功買進**{stock} {quantity}張!**\n" \
@@ -997,7 +1001,7 @@ class TeamStockEmbed(ntd.Embed):
             title="股票庫存",
             type="rich"
         )
-        stock_inv = fetch_stock_inventory(team)
+        stock_inv = get_stock_inventory(team)
         if(stock_inv):
             total_unrealized_gain_loss = 0
             for stock_idx, stocks in stock_inv.items():
@@ -1008,7 +1012,7 @@ class TeamStockEmbed(ntd.Embed):
                                              - avg_price) * pice * 1000
                 total_unrealized_gain_loss += unrealized_gain_loss  # 未實現總損益
                 self.add_field(
-                    name=f"{fetch_stock_name_symbol(stock_idx)}",
+                    name=f"{get_stock_name_symbol(stock_idx)}",
                     value=f"**持有張數:** {pice}\n" \
                           f"**成交均價:** {avg_price:.2f}\n" \
                           f"**投資總成本:** {total_cost:,}\n" \
@@ -1276,7 +1280,7 @@ class DiscordUI(commands.Cog):
             mode: str | None = None,
             amount: int | None = None,
             user: str | None = None,
-            trade_type: Literal["買進", "賣出"] | None = None,
+            trade_type: TradeType | None = None,
             stock: int | None = None,
             quantity: int | None = None,
             display_value: int | None = None
