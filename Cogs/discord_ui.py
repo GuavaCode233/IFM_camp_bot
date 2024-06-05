@@ -953,7 +953,7 @@ class TeamStockChangeNoticeEmbed(ntd.Embed):
             "買進": f"隊輔: {user} 成功買進**{stock} {quantity}張!**\n" \
                     f"投資成本: **$FP{display_value:,}**",
             "賣出": f"隊輔: {user} 成功賣出**{stock} {quantity}張!**\n" \
-                    "總投資損益: " + ("**__利益__**" if display_value >= 0 else "**__損失__**") + f" **$FP{display_value:,}**"
+                    "總投資損益: " + ("**__利益__**" if display_value >= 0 else "**__損失__**") + f" **$FP{abs(display_value):,}**"
         }[trade_type]
 
         super().__init__(
