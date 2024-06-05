@@ -80,29 +80,30 @@ def get_stock_price(index_: int | str) -> float:
     return stock_dict["price"]
 
 
-class StockMarketEmbed(ntd.Embed):
-    """市場動態 Embed Message。
+def stock_market_message_format() -> str:
+    """市場動態訊息格式。
     """
+
+    market_data: List[StockDict] = access_file.read_file("market_data")
+    # title
+    output: str = f"```商品名稱　{'代碼':^5}產業{'成交':^7}漲跌\n"
+    # string formatter
+    for init_data, stock in zip(INITIAL_STOCK_DATA, market_data):
+        delta_price: float = stock["price"] - stock["close"]
+        # up and downs index
+        if(delta_price > 0):    # up
+            price_index = "🔴"  
+        elif(delta_price < 0):  # down
+            price_index = "🟢"
+        else:
+            price_index = "⚪"
+
+        output += f"{init_data['name'].ljust(5, '　')}{init_data['symbol']:^6}" \
+                  f"{init_data['sector']:3}{stock['price']:5.2f} {price_index}{delta_price:.2f}\n"
     
-    def __init__(self):
-        super().__init__(
-            color=PURPLE,
-            title="市場動態"
-        )
-        market_data: List[StockDict] = access_file.read_file("market_data")
-        self.add_field(
-            name=f"商品名稱\t  {'代碼':4}  產業   成交  漲跌",
-            value="",
-            inline=False
-        )
-        for init_data, stock in zip(INITIAL_STOCK_DATA, market_data):
-            self.add_field(
-                name=f"{init_data["name"].ljust(5, "－")} {init_data["symbol"]:6}  " \
-                     f"{init_data["sector"]}  {stock["price"]:>5.2f}  {stock["price"]-stock["close"]:5.2f}",
-                value="",
-                inline=False
-            )
-    
+    output += "```"
+    return output
+
 
 class TradeButton(ntd.ui.View):
     """交易功能按鈕。
@@ -1179,6 +1180,11 @@ class DiscordUI(commands.Cog):
                 
     #     self.save_to("game_config", dict_)
 
+        interaction.response.send_message(
+            content=stock_market_message_format(),
+            ephemeral=True
+        )
+
     async def reset_all_ui(self):
         """|coro|
 
@@ -1320,7 +1326,7 @@ class DiscordUI(commands.Cog):
             await self.fetch_stock_market_message()
 
         await self.STOCK_MARKET_MESSAGE.edit(
-            embed=StockMarketEmbed()
+            content=stock_market_message_format()
         )
 
     async def update_asset(self, team: int | None = None):
