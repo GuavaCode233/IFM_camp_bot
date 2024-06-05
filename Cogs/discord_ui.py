@@ -1103,31 +1103,6 @@ class DiscordUI(commands.Cog):
 
     @commands.command()
     async def test_ui_com(self, ctx: commands.Context):
-        # channel = self.bot.get_channel(1218140719269810237)
-        # # delete old message
-        # await channel.purge(limit=1)
-        # # prompt
-        # embed = ntd.Embed(
-        #     title="領取身分組",
-        #     description="領取「資材營」身分組以開始使用。",
-        #     color=0x433274
-        # )
-        # embed.set_footer(text="(點擊以下表情符號以領取)")
-        # embed.set_thumbnail(url="http://203.72.185.5/~1091303/traveler_logo.png")
-        # await channel.send(embed=embed)
-
-        # channel = self.bot.get_channel(1238338526551212082)
-        # # delete old message
-        # await channel.purge(limit=1)
-        # # prompt
-        # embed = ntd.Embed(
-        #     title="領取身分組",
-        #     description="依照自己的組別領取",
-        #     color=0x433274
-        # )
-        # embed.set_footer(text="(點擊以下表情符號以領取)")
-        # embed.set_thumbnail(url="http://203.72.185.5/~1091303/traveler_logo.png")
-        # await channel.send(embed=embed)
 
         channel = self.bot.get_channel(1243503969032998973)
         # delete old message
@@ -1152,33 +1127,6 @@ class DiscordUI(commands.Cog):
             view=view,
             ephemeral=True
         )
-
-        pass
-
-    # Deprecated
-    # @commands.command()
-    # async def fetch_team_message_ids(self, ctx: commands.Context, count: int):
-    #     """擷取所有小隊(資產)頻道的最初訊息id。
-
-    #     count: 擷取幾則訊息
-    #     """
-
-    #     dict_ = self.CONFIG
-    #     message_ids: MessageIDs = dict_["message_ids"]
-        
-    #     for t in range(1, 9):
-    #         channel = self.bot.get_channel(
-    #             self.CHANNEL_IDS[f"team_{t}"]["ASSET"]
-    #         )
-    #         message_ids.update({f"team_{t}": {}})   # 創建t小隊之訊息id字典
-    #         for m in range(1, count+1): # 依照指定訊息數量存入訊息id字典
-    #             if(message_ids[f"team_{t}"].get(f"msg_{m}", None) is None):
-    #                 msg = await channel.send(f"initial message {m}")
-    #                 message_ids[f"team_{t}"].update(
-    #                     {f"msg_{m}": msg.id}
-    #                 )
-                
-    #     self.save_to("game_config", dict_)
 
         interaction.response.send_message(
             content=stock_market_message_format(),

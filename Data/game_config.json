@@ -1,7 +1,7 @@
 {
     "NEW_GAME": true,
     "RESET_UI": true,
-    "CLEAR_LOG": true,
+    "CLEAR_LOG": false,
     "UPDATE_ASSET": false,
     "CONVERT_RAW_STOCK_DATA": false,
     "CONVERT_RAW_NEWS_DATA": false,
