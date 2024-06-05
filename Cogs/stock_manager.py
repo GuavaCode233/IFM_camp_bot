@@ -36,30 +36,20 @@ class Stock:
     price: float = 0.0
     close: float = 0.0
 
-    def delta_price(self):
-        """股價變動量。
+    def change_price(self):
+        """變動股價。
 
-        股價變動
-        delta P = EPS QoQ * Adjust Ratio + Random * Random Ratio * Rise/Fall
+        股價變動量:
+            delta P = EPS QoQ * Adjust Ratio
         """
-
-        # # 有隨機機制
-        # # 控制隨機變動數的正負
-        # rise_fall_factor: int = 1
-        # if(random.random() <= 0.3): # 跌價機率是否模組化?
-        #     rise_fall_factor = -1
-        
-        # self.price += (self.eps_qoq * self.adjust_ratio
-        #                + random.random() * self.random_ratio
-        #                * rise_fall_factor)
         
         # 無隨機機制
         self.price += self.eps_qoq * self.adjust_ratio
         self.price = round(self.price, 6)
-        # 會顯得有規律，可能要隨機，扣款時用round(price, 2)
         
     def get_price(self) -> str:
-        return f"{self.name:7}{self.symbol:5} 收盤: {self.close:4.2f} 價格: {self.price:4.2f} 漲跌: {self.price - self.close:4.2f}"
+        return f"{self.name:7}{self.symbol:5} 收盤: {self.close:4.2f} " \
+               f"價格: {self.price:4.2f} 漲跌: {self.price - self.close:4.2f}"
 
 
 class StockManager(commands.Cog):
@@ -180,18 +170,18 @@ class StockManager(commands.Cog):
         """清除市場資料並重新抓取 :class:`Stock`資料。
         """
 
-        stock_data: List[FinancialStatement] = self.RAW_STOCK_DATA[self.QUARTERS[1]]
-        list_: MarketData = [
+        financial_statements: List[FinancialStatement] = self.RAW_STOCK_DATA[self.QUARTERS[1]]
+        market_data: MarketData = [
             {
                 "price": init_data["first_open"],
                 "close": init_data["first_open"],
-                "eps_qoq": stock["eps_qoq"],
-                "adjust_ratio": stock["adjust_ratio"],
-                "random_ratio": stock["random_ratio"]
-            } for stock, init_data in zip(stock_data, self.INITIAL_STOCK_DATA)
+                "eps_qoq": statement["eps_qoq"],
+                "adjust_ratio": statement["adjust_ratio"],
+                "random_ratio": statement["random_ratio"]
+            } for statement, init_data in zip(financial_statements, self.INITIAL_STOCK_DATA)
         ]
 
-        access_file.save_to("market_data", list_)
+        access_file.save_to("market_data", market_data)
         self.fetch_stocks()
 
     def fetch_stocks(self):
@@ -227,7 +217,7 @@ class StockManager(commands.Cog):
         print(f"Iteration: {self.price_change_loop.current_loop}")
         for stock, stock_dict in zip(self.stocks, stock_data):
             # 改變該股股價
-            stock.delta_price()
+            stock.change_price()
             print(stock.get_price())
             # 儲存股價
             stock_dict.update({"price": stock.price})
@@ -300,6 +290,19 @@ class StockManager(commands.Cog):
 
         self.fetch_round_news()
         
+    def update_stock_data(self):
+        """回合開始時更新收盤價，並擷取本回合市場資料。
+        """
+
+        financial_statements: List[FinancialStatement] = self.RAW_STOCK_DATA[
+            self.QUARTERS[self.game_state["round"]]
+        ]
+        for statement, stock in zip(financial_statements, self.stocks):
+            # update market_data
+
+            # update close
+            
+
     @ntd.slash_command(
         name="open_round",
         description="開始下一回合(回合未關閉無法使用)"
@@ -309,10 +312,10 @@ class StockManager(commands.Cog):
         """下一回合(開盤)。
         """
 
-        # TODO: Check if round is open, if it"s open then handle error (done)
+        # TODO:
         # 更新遊戲狀態 (done)
-        # 讀取新聞資料 未設計
-        # 開始新聞計時 未設計
+        # 讀取新聞資料 (done)
+        # 開始新聞計時 (done)
         # 開始 price_change_loop (done)
         # 開啟交易功能
      
@@ -351,8 +354,8 @@ class StockManager(commands.Cog):
         """結束本回合(收盤)。
         """
 
-        # TODO: Check if round is closed, if it"s closed then return.
-        # 停止 price_change_loop
+        # TODO:
+        # 停止 price_change_loop (done)
         # 關閉交易功能
 
         # 回合未開啟
@@ -367,7 +370,7 @@ class StockManager(commands.Cog):
         self.game_state["is_in_round"] = False
         self.save_game_state()
 
-        self.price_change_loop.stop()   # TODO: 更新收盤價
+        self.price_change_loop.stop()
         self.news_loop.cancel()
 
         await interaction.response.send_message(
