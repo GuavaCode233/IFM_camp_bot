@@ -1248,7 +1248,7 @@ class DiscordUI(commands.Cog):
         )
        
     async def fetch_stock_market_message(self):
-        """抓取ALTERATION_LOG_MESSAGE。
+        """抓取STOCK_MARKET。
         """
 
         channel = self.bot.get_channel(
