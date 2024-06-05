@@ -363,7 +363,7 @@ class TradeView(ntd.ui.View):
             display_value=display_value
         )
         await ui.update_alteration_log()
-        await ui.update_asset(team=self.team)
+        await ui.update_asset_ui(team=self.team)
 
     @ntd.ui.button(
         label="取消交易",
@@ -776,7 +776,7 @@ class ChangeDepositView(ntd.ui.View):
         )
         # 更新小隊資產
         ui: DiscordUI = self.bot.get_cog("DiscordUI")
-        await ui.update_asset(team=self.selected_team)
+        await ui.update_asset_ui(team=self.selected_team)
         # 發送即時通知
         await ui.send_notification(
             type_="AssetUpdate",
@@ -1086,7 +1086,7 @@ class DiscordUI(commands.Cog):
             await self.reset_all_ui()
 
         if(UPDATE_ASSET):
-            await self.update_asset()
+            await self.update_asset_ui()
         
         if(CLEAR_LOG):
             await self.clear_log()
@@ -1097,7 +1097,7 @@ class DiscordUI(commands.Cog):
         await self.fetch_news_feed_channel()
         await self.fetch_stock_market_message()
 
-        await self.update_market()
+        await self.update_market_ui()
 
         print("Loaded discord_ui")
 
@@ -1319,7 +1319,7 @@ class DiscordUI(commands.Cog):
                 )
             )
         
-    async def update_market(self):
+    async def update_market_ui(self):
         """更新市場動態。
         """
 
@@ -1330,7 +1330,7 @@ class DiscordUI(commands.Cog):
             content=stock_market_message_format()
         )
 
-    async def update_asset(self, team: int | None = None):
+    async def update_asset_ui(self, team: int | None = None):
         """|coro|
 
         任一操作改變資產時更新小隊資產狀況訊息。

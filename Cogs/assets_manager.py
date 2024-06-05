@@ -203,7 +203,6 @@ class AssetsManager(commands.Cog):
             if(not self.team_assets[team-1].stock_inv.get(f"{stock}")):
                 self.team_assets[team-1].stock_inv.pop(f"{stock}")
         
-        pprint(self.team_assets[team-1])
         initail_stock_data: InitialStockData = access_file.read_file("raw_stock_data")["initial_data"][stock]
         stock_name_symbol = f"{initail_stock_data["name"]} {initail_stock_data["symbol"]}"
         access_file.log(

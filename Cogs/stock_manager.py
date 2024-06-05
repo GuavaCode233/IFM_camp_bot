@@ -221,7 +221,7 @@ class StockManager(commands.Cog):
         access_file.save_to("market_data", stock_data)  # 儲存所有變動後資料
         # 更新市場資料
         ui: DiscordUI = self.bot.get_cog("DiscordUI")
-        await ui.update_market()
+        await ui.update_market_ui()
 
     @classmethod
     @price_change_loop.before_loop
@@ -338,6 +338,8 @@ class StockManager(commands.Cog):
         self.game_state["round"] += 1
         if(self.game_state["round"] != 1):
             self.update_market_and_stock_data()
+            ui: DiscordUI = self.bot.get_cog("DiscordUI")
+            await ui.update_market_ui()
 
         if(self.game_state["round"] == 5):
             pass # 遊戲結束
