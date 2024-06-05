@@ -47,7 +47,7 @@ class Stock:
         self.price = round(self.price, 6)
         
     def get_price(self) -> str:
-        return f"{self.name:7}{self.symbol:5} 收盤: {self.close:4.2f} " \
+        return f"{self.name.ljust(5, '　')}{self.symbol:5} 收盤: {self.close:4.2f} " \
                f"價格: {self.price:4.2f} 漲跌: {self.price - self.close:4.2f}"
 
 
@@ -62,7 +62,7 @@ class StockManager(commands.Cog):
         "INITIAL_STOCK_DATA",
     )
     # 股價變動頻率(秒)
-    PRICE_CHANGE_FREQUENCY: ClassVar[float] = 20.0
+    PRICE_CHANGE_FREQUENCY: ClassVar[float] = 3.0
     # 發送新聞間隔(秒)
     TIME_BETWEEN_NEWS: ClassVar[float] = 120.0
 
@@ -347,7 +347,8 @@ class StockManager(commands.Cog):
         self.save_game_state()
 
         self.price_change_loop.start()
-        self.news_loop.start()
+        if(self.CONFIG["RELEASE_NEWS"]):
+            self.news_loop.start()
 
         await interaction.response.send_message(
             f"回合{self.game_state["round"]}開始!",

@@ -53,6 +53,8 @@ class Config(TypedDict):
         將Excel原始股票資料轉換為JSON檔案。
     CONVERT_RAW_NEWS_DATA: `bool`
         將Excel原始新聞資料轉換為JSON檔案。
+    RELEASE_NEWS: `bool`
+        是否發送新聞(測試使用)。
     STARTER_CASH: `int`
         遊戲開始時各小隊的初始資產額。
     NUMBER_OF_TEAMS: `int`
@@ -72,6 +74,7 @@ class Config(TypedDict):
     UPDATE_ASSET: bool
     CONVERT_RAW_STOCK_DATA: bool
     CONVERT_RAW_NEWS_DATA: bool
+    RELEASE_NEWS: bool
     STARTER_CASH: int
     NUMBER_OF_TEAMS: int
     channel_ids: ChannelIDs

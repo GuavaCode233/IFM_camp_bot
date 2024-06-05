@@ -5,7 +5,8 @@
     "UPDATE_ASSET": false,
     "CONVERT_RAW_STOCK_DATA": false,
     "CONVERT_RAW_NEWS_DATA": false,
-    "STARTER_CASH": 10000,
+    "RELEASE_NEWS": false,
+    "STARTER_CASH": 10000000,
     "NUMBER_OF_TEAMS": 8,
     "channel_ids": {
         "NEWS_FEED": 1218189251716452452,

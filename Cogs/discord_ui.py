@@ -41,12 +41,12 @@ def get_stock_name_symbol(index_: int | str) -> str:
     return f"{name} {symbol}"
 
 
-def get_stock_inventory(team: int) -> Dict[str, List[int]] | None:
+def get_stock_inventory(team: int | str) -> Dict[str, List[int]]:
     """擷取小隊股票庫存。
     """
 
     asset: AssetDict = access_file.read_file("team_assets")[f"{team}"]
-    stock_inv: Dict[str, List[int]] | None = asset.get("stock_inv", None)
+    stock_inv: Dict[str, List[int]] = asset.get("stock_inv")
 
     return stock_inv
 
@@ -99,7 +99,7 @@ def stock_market_message_format() -> str:
             price_index = "⚪"
 
         output += f"{init_data['name'].ljust(5, '　')}{init_data['symbol']:^6}" \
-                  f"{init_data['sector']:3}{stock['price']:5.2f} {price_index}{delta_price:.2f}\n"
+                  f"{init_data['sector']:3}{stock['price']:5.2f} {price_index}{abs(delta_price):.2f}\n"
     
     output += "```"
     return output
@@ -264,7 +264,7 @@ class TradeView(ntd.ui.View):
             self.trade_field_name = "目前庫存"
             self.quantity_field_name = "賣出張數"
 
-            if(self.stock_inv is None):
+            if(not self.stock_inv):
                 self.trade_field_value = "無股票庫存"
             else:
                 self.trade_field_value = inventory_to_string(
@@ -1214,6 +1214,7 @@ class DiscordUI(commands.Cog):
         )
         view = TradeButton(self.bot)
         await message.edit(
+            content=None,
             view=view
         )
 
