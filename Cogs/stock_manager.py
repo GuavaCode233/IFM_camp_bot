@@ -6,7 +6,6 @@ from typing import List, Dict, ClassVar
 from dataclasses import dataclass
 from pprint import pprint
 import asyncio
-import random
 import json
 
 from .discord_ui import DiscordUI
@@ -180,7 +179,6 @@ class StockManager(commands.Cog):
                 "random_ratio": statement["random_ratio"]
             } for statement, init_data in zip(financial_statements, self.INITIAL_STOCK_DATA)
         ]
-
         access_file.save_to("market_data", market_data)
         self.fetch_stocks()
 
@@ -208,9 +206,6 @@ class StockManager(commands.Cog):
         `PRICE_CHANGE_FREQUENCY`
         股價變動頻率(秒)。
         """
-
-        # if(not self.stocks):    # 防止資料遺失
-        #     self.fetch_stocks()
         
         stock_data: MarketData = access_file.read_file("market_data")
 
@@ -290,19 +285,30 @@ class StockManager(commands.Cog):
 
         self.fetch_round_news()
         
-    def update_stock_data(self):
+    def update_market_and_stock_data(self):
         """回合開始時更新收盤價，並擷取本回合市場資料。
         """
 
         financial_statements: List[FinancialStatement] = self.RAW_STOCK_DATA[
             self.QUARTERS[self.game_state["round"]]
         ]
+        market_data: MarketData = []
         for statement, stock in zip(financial_statements, self.stocks):
-            # update market_data
-
-            # update close
+            market_data.append(
+                {
+                    "price": stock.price,
+                    "close": stock.price,
+                    "eps_qoq": statement["eps_qoq"],
+                    "adjust_ratio": statement["adjust_ratio"],
+                    "random_ratio": statement["random_ratio"]
+                }
+            )
+            stock.close = stock.price
+            stock.eps_qoq = statement["eps_qoq"]
+            stock.adjust_ratio = statement["adjust_ratio"]
+            stock.random_ratio = statement["random_ratio"]
+        access_file.save_to("market_data", market_data)
             
-
     @ntd.slash_command(
         name="open_round",
         description="開始下一回合(回合未關閉無法使用)"
@@ -328,11 +334,15 @@ class StockManager(commands.Cog):
             )
             return
 
-        if(self.game_state["round"]+1 == 5):
+
+        self.game_state["round"] += 1
+        if(self.game_state["round"] != 1):
+            self.update_market_and_stock_data()
+
+        if(self.game_state["round"] == 5):
             pass # 遊戲結束
             return
         
-        self.game_state["round"] += 1
         self.game_state["is_in_round"] = True
         self.save_game_state()
 
@@ -378,7 +388,6 @@ class StockManager(commands.Cog):
             delete_after=3,
             ephemeral=True
         )
-        # raise NotImplementedError("Function not implimented.")
 
 
 def setup(bot: commands.Bot):
