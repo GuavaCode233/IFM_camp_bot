@@ -2,7 +2,7 @@ from nextcord.ext import commands
 import nextcord as ntd
 
 from datetime import datetime
-from typing import Dict, List, Any, Literal, ClassVar
+from typing import Dict, List, Literal
 
 from .assets_manager import AssetsManager
 from .utilities import access_file
@@ -80,7 +80,7 @@ def get_stock_price(index_: int | str) -> float:
     return stock_dict["price"]
 
 
-def stock_market_message_format() -> str:
+def stock_market_message() -> str:
     """市場動態訊息格式。
     """
 
@@ -105,8 +105,34 @@ def stock_market_message_format() -> str:
     return output
 
 
-class TradeButton(ntd.ui.View):
-    """交易功能按鈕。
+class FinancialStatementView(ntd.ui.View):
+    """財務報表檢視 View。
+    """
+    
+    __slots__ = (
+        "bot"
+    )
+
+    ROUND_TO_QUARTER: Dict[int, str] = {
+        int(r): q for r, q in 
+    }
+
+    def __init__(
+            self,
+            *,
+            bot: commands.Bot,
+            CONFIG: Config,
+    ):
+        super().__init__(timeout=None)
+        self.bot = bot
+
+    def financial_statement_format(self) -> str:
+        """財務報表格式。
+        """
+
+
+class MarketView(ntd.ui.View):
+    """股市 View 放置交易功能按鈕及財務報表查詢按鈕。
     """
 
     __slots__ = ("bot")
@@ -292,7 +318,7 @@ class TradeView(ntd.ui.View):
         """輸入張數按鈕callback。
         """
 
-        await interaction.response.send_modal(InputQuantity(self))
+        await interaction.response.send_modal(InputTradeQuantity(self))
 
     @ntd.ui.button(
         label="確認交易",
@@ -442,7 +468,7 @@ class StockSelect(ntd.ui.StringSelect):
         )
 
 
-class InputQuantity(ntd.ui.Modal):
+class InputTradeQuantity(ntd.ui.Modal):
     """按下「設定張數」按鈕後彈出的文字輸入視窗。
     """
     
@@ -722,7 +748,7 @@ class ChangeDepositView(ntd.ui.View):
         """輸入金額按鈕callback。
         """
 
-        await interaction.response.send_modal(InputAmount(self))
+        await interaction.response.send_modal(InputChangeAmount(self))
 
     @ntd.ui.button(
         label="確認送出",
@@ -813,7 +839,7 @@ class ChangeDepositView(ntd.ui.View):
         self.stop()
 
 
-class InputAmount(ntd.ui.Modal):
+class InputChangeAmount(ntd.ui.Modal):
     """按下「輸入存款」按鈕後彈出的文字輸入視窗。
     """
 
@@ -1051,6 +1077,7 @@ class DiscordUI(commands.Cog):
         "CHANNEL_IDS",
         "MESSAGE_IDS",
         "ALTERATION_LOG_MESSAGE",
+        "STOCK_MARKET_MESSAGE",
         "NEWS_FEED_CHANNEL"
     )
 
@@ -1129,7 +1156,7 @@ class DiscordUI(commands.Cog):
         )
 
         interaction.response.send_message(
-            content=stock_market_message_format(),
+            content=stock_market_message (),
             ephemeral=True
         )
 
@@ -1160,7 +1187,7 @@ class DiscordUI(commands.Cog):
         message = await channel.fetch_message(
             self.MESSAGE_IDS["TRADE_VIEW"]
         )
-        view = TradeButton(self.bot)
+        view = MarketView(self.bot)
         await message.edit(
             content=None,
             view=view
@@ -1275,7 +1302,7 @@ class DiscordUI(commands.Cog):
             await self.fetch_stock_market_message()
 
         await self.STOCK_MARKET_MESSAGE.edit(
-            content=stock_market_message_format()
+            content=stock_market_message ()
         )
 
     async def update_asset_ui(self, team: int | None = None):

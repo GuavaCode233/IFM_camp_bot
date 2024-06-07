@@ -5,7 +5,7 @@ from datetime import datetime
 import json
 import os
 
-from .datatypes import LogData, InitialStockData
+from .datatypes import LogData
 
 
 def read_file(file_name: str) -> Any:

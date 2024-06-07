@@ -57,6 +57,8 @@ class Config(TypedDict):
         是否發送新聞(測試使用)。
     STARTER_CASH: `int`
         遊戲開始時各小隊的初始資產額。
+    ROUND_TO_QUARTER: `dict[str, str]`
+        回合與季對照表("round": "quarter")。
     NUMBER_OF_TEAMS: `int`
         總小隊數量。
     
@@ -76,6 +78,7 @@ class Config(TypedDict):
     CONVERT_RAW_NEWS_DATA: bool
     RELEASE_NEWS: bool
     STARTER_CASH: int
+    ROUND_TO_QUARTER: Dict[str, str]
     NUMBER_OF_TEAMS: int
     channel_ids: ChannelIDs
     message_ids: MessageIDs

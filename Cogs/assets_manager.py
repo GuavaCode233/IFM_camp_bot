@@ -2,7 +2,7 @@ from nextcord.ext import commands, application_checks
 import nextcord as ntd
 
 from dataclasses import dataclass, field
-from typing import List, Dict, Any
+from typing import List, Dict
 from datetime import datetime
 from pprint import pprint
 

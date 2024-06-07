@@ -75,7 +75,9 @@ class StockManager(commands.Cog):
         # 遊戲狀態
         self.game_state: GameState = None
         # 回合、季對照表(round: "quarter")
-        self.QUARTERS: Dict[int, str] = {1: "Q4", 2: "Q1", 3: "Q2", 4: "Q3"}
+        self.ROUND_TO_QUARTER: Dict[int, str] = {
+            int(r): q for r, q in self.CONFIG["ROUND_TO_QUARTER"].items()
+        }
         # 儲存即時股票資料
         self.stocks: List[Stock] = []
         # 當回合預發新聞
@@ -154,7 +156,7 @@ class StockManager(commands.Cog):
             d["symbol"] = d["symbol"].lstrip("n")
         dict_["initial_data"] = json_data
 
-        for quarter in self.QUARTERS.values():   # 1-4季資料
+        for quarter in self.ROUND_TO_QUARTER.values():   # 1-4季資料
             df: pd.DataFrame = pd.read_excel(
                 ".\\Data\\raw_stock_data.xlsx", f"{quarter}"
             )
@@ -169,7 +171,9 @@ class StockManager(commands.Cog):
         """清除市場資料並重新抓取 :class:`Stock`資料。
         """
 
-        financial_statements: List[FinancialStatement] = self.RAW_STOCK_DATA[self.QUARTERS[1]]
+        financial_statements: List[FinancialStatement] = self.RAW_STOCK_DATA[
+            self.ROUND_TO_QUARTER[1]
+        ]
         market_data: MarketData = [
             {
                 "price": init_data["first_open"],
@@ -237,7 +241,7 @@ class StockManager(commands.Cog):
 
         dict_: RawNews = {}
 
-        for round_, quarter in self.QUARTERS.items():
+        for round_, quarter in self.ROUND_TO_QUARTER.items():
             df: pd.DataFrame = pd.read_excel(
                 ".\\Data\\raw_news.xlsx", f"{quarter}"
             )
@@ -290,7 +294,7 @@ class StockManager(commands.Cog):
         """
 
         financial_statements: List[FinancialStatement] = self.RAW_STOCK_DATA[
-            self.QUARTERS[self.game_state["round"]]
+            self.ROUND_TO_QUARTER[self.game_state["round"]]
         ]
         market_data: MarketData = []
         for statement, stock in zip(financial_statements, self.stocks):
