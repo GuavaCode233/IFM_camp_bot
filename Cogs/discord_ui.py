@@ -15,7 +15,9 @@ from .utilities.datatypes import (
     LogData,
     GameState,
     InitialStockData,
-    StockDict
+    StockDict,
+    FinancialStatement,
+    RawStockData
 )
 
 TradeType = Literal["買進", "賣出"]
@@ -114,21 +116,54 @@ class FinancialStatementView(ntd.ui.View):
     )
 
     ROUND_TO_QUARTER: Dict[int, str] = {
-        int(r): q for r, q in 
+        int(r): q for r, q in access_file.read_file("game_config")["ROUND_TO_QUARTER"].items()
     }
+    RAW_STOCK_DATA: RawStockData = access_file.read_file("raw_stock_data")
 
     def __init__(
             self,
             *,
             bot: commands.Bot,
-            CONFIG: Config,
+            selected_stock_index: int
     ):
         super().__init__(timeout=None)
         self.bot = bot
+        self.selected_stock_index = selected_stock_index
+        self.statements = FinancialStatementView.query_financial_statements(
+            index_=self.selected_stock_index
+        )
+
+    @classmethod
+    def query_financial_statements(cls, index_: int) -> List[FinancialStatement]:
+        """查詢報表。
+        """
+
+        round_: int = access_file.read_file("game_state")["round"]
+
+        if(round_ == 0):
+            end = 1
+        else:
+            end = round_
+        return [
+            cls.RAW_STOCK_DATA[cls.ROUND_TO_QUARTER[r]][index_] for r in range(1, end+1)
+        ]
 
     def financial_statement_format(self) -> str:
         """財務報表格式。
         """
+
+        output: str = f"# {get_stock_name_symbol(self.selected_stock_index)} 財務報表\n"
+        for quarter, statement in zip(
+            FinancialStatementView.ROUND_TO_QUARTER.values(), self.statements
+        ):
+            output += f"## {quarter}\n" \
+                      f"```銷貨淨額 {statement['net_revenue']:>10,}\n" \
+                      f"銷貨毛額 {statement['gross_income']:>10,}\n" \
+                      f"營業收入 {statement['income_from_operating']:>10,}\n" \
+                      f"本期損益 {statement['net_income']:>10,}\n\n" \
+                      f"每股盈餘(EPS) {statement['eps']:.2f}\n" \
+                      f"每股盈餘年增率 {statement['eps_qoq']*100:.2f}%```\n"
+        return output
 
 
 class MarketView(ntd.ui.View):
@@ -1144,19 +1179,13 @@ class DiscordUI(commands.Cog):
             guild_ids=[1218130958536937492]
     )
     async def test_ui(self, interaction: ntd.Interaction):
-        view = TradeView(
-            user_name=interaction.user.display_name,
-            user_avatar=interaction.user.display_avatar,
-            user_id=interaction.user.id
+        view = FinancialStatementView(
+            bot=self.bot,
+            selected_stock_index=0
         )
         await interaction.response.send_message(
-            embed=view.status_embed(),
+            content=view.financial_statement_format(),
             view=view,
-            ephemeral=True
-        )
-
-        interaction.response.send_message(
-            content=stock_market_message (),
             ephemeral=True
         )
 
