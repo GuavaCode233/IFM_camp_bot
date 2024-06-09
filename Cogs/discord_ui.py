@@ -83,7 +83,6 @@ def get_stock_price(index_: int | str) -> float:
     return stock_dict["price"]
 
 
-
 def stock_market_message() -> str:
     """市場動態訊息格式。
     """
@@ -109,7 +108,7 @@ def stock_market_message() -> str:
     return output
 
 
-class MarketView(ui.View):
+class MarketFunctionView(ui.View):
     """股市 View 放置交易功能按鈕及財務報表查詢按鈕。
     """
 
@@ -164,7 +163,7 @@ class MarketView(ui.View):
         """股票交易按鈕 callback。
         """
 
-        if(interaction.user.id in MarketView.trading_user_ids):    # 防止重複呼叫功能
+        if(interaction.user.id in MarketFunctionView.trading_user_ids):    # 防止重複呼叫功能
             await interaction.response.send_message(
                 content="**已開啟交易選單!!!**",
                 delete_after=5,
@@ -172,7 +171,7 @@ class MarketView(ui.View):
             )
             return
         
-        MarketView.add_trading_user(interaction.user.id)
+        MarketFunctionView.add_trading_user(interaction.user.id)
         view = TradeView(
             bot=self.bot,
             user_name=interaction.user.display_name,
@@ -199,7 +198,7 @@ class MarketView(ui.View):
         """查詢財務報表按鈕 callback。
         """
         
-        if(interaction.user.id in MarketView.querying_user_ids):    # 防止重複呼叫功能
+        if(interaction.user.id in MarketFunctionView.querying_user_ids):    # 防止重複呼叫功能
             await interaction.response.send_message(
                 content="**已開啟查詢選單!!!**",
                 delete_after=5,
@@ -207,7 +206,7 @@ class MarketView(ui.View):
             )
             return
 
-        MarketView.add_querying_user(interaction.user.id)
+        MarketFunctionView.add_querying_user(interaction.user.id)
         view = FinancialStatementView()
         await interaction.response.send_message(
             content=view.initial_message(),
@@ -411,7 +410,7 @@ class TradeView(ui.View):
             )
             return
         
-        MarketView.remove_trading_user(interaction.user.id)
+        MarketFunctionView.remove_trading_user(interaction.user.id)
         self.clear_items()
         await interaction.response.edit_message(
             content="**改變成功!!!**",
@@ -457,7 +456,7 @@ class TradeView(ui.View):
         """取消按鈕callback。
         """
 
-        MarketView.remove_trading_user(interaction.user.id)
+        MarketFunctionView.remove_trading_user(interaction.user.id)
         self.clear_items()
         await interaction.response.edit_message(
             content="**已取消交易**",
@@ -648,7 +647,7 @@ class FinancialStatementView(ui.View):
         """關閉按鈕 callback。
         """
 
-        MarketView.querying_user_ids.remove(interaction.user.id)
+        MarketFunctionView.querying_user_ids.remove(interaction.user.id)
         self.clear_items()
         await interaction.response.edit_message(
             content="已關閉查詢。",
@@ -658,7 +657,7 @@ class FinancialStatementView(ui.View):
         self.stop()
 
 
-class DepositView(ui.View):
+class DepositFunctionView(ui.View):
     """小隊收支 View。
     """
 
@@ -744,7 +743,7 @@ class DepositView(ui.View):
         interaction: ntd.Interaction
     ):
         
-        if(interaction.user.id in DepositView.changing_user_ids):    # 防止重複呼叫功能
+        if(interaction.user.id in DepositFunctionView.changing_user_ids):    # 防止重複呼叫功能
             await interaction.response.send_message(
                 content="**已開啟變更小隊存款選單!!!**",
                 delete_after=5,
@@ -752,7 +751,7 @@ class DepositView(ui.View):
             )
             return
 
-        DepositView.add_changing_user(interaction.user.id)
+        DepositFunctionView.add_changing_user(interaction.user.id)
         view = ChangeDepositView(
             interaction.user.display_name,
             interaction.user.display_avatar,
@@ -980,7 +979,7 @@ class ChangeDepositView(ui.View):
             amount=self.amount,
             user=interaction.user.display_name
         )
-        DepositView.remove_changing_user(interaction.user.id)
+        DepositFunctionView.remove_changing_user(interaction.user.id)
         # 改變成功訊息
         self.clear_items()
         await interaction.response.edit_message(
@@ -1018,7 +1017,7 @@ class ChangeDepositView(ui.View):
         """取消按鈕callback。
         """
 
-        DepositView.remove_changing_user(interaction.user.id)
+        DepositFunctionView.remove_changing_user(interaction.user.id)
         self.clear_items()
         await interaction.response.edit_message(
             content="**已取消變更**",
@@ -1356,7 +1355,7 @@ class DiscordUI(commands.Cog):
         message = await channel.fetch_message(
             self.MESSAGE_IDS["CHANGE_DEPOSIT"]
         )
-        view = DepositView(self.bot)
+        view = DepositFunctionView(self.bot)
         await message.edit(
             embed=view.embed_message(),
             view=view
@@ -1368,7 +1367,7 @@ class DiscordUI(commands.Cog):
         message = await channel.fetch_message(
             self.MESSAGE_IDS["TRADE_VIEW"]
         )
-        view = MarketView(self.bot)
+        view = MarketFunctionView(self.bot)
         await message.edit(
             content=None,
             view=view
