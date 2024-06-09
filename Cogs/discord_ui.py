@@ -1,4 +1,5 @@
 from nextcord.ext import commands
+from nextcord import ui
 import nextcord as ntd
 
 from datetime import datetime
@@ -107,32 +108,24 @@ def stock_market_message() -> str:
     return output
 
 
-class FinancialStatementView(ntd.ui.View):
+class FinancialStatementView(ui.View):
     """財務報表檢視 View。
     """
-    
-    __slots__ = (
-        "bot"
-    )
 
     ROUND_TO_QUARTER: Dict[int, str] = {
         int(r): q for r, q in access_file.read_file("game_config")["ROUND_TO_QUARTER"].items()
     }
     RAW_STOCK_DATA: RawStockData = access_file.read_file("raw_stock_data")
 
-    def __init__(
-            self,
-            *,
-            bot: commands.Bot,
-            selected_stock_index: int
-    ):
+    def __init__(self):
         super().__init__(timeout=None)
-        self.bot = bot
-        self.selected_stock_index = selected_stock_index
-        self.statements = FinancialStatementView.query_financial_statements(
-            index_=self.selected_stock_index
-        )
 
+    def initial_message(self) -> str:
+        """叫出此 View十顯示的初始訊息。
+        """
+
+        return "⬇️請選擇要查詢的公司"
+    
     @classmethod
     def query_financial_statements(cls, index_: int) -> List[FinancialStatement]:
         """查詢報表。
@@ -148,15 +141,16 @@ class FinancialStatementView(ntd.ui.View):
             cls.RAW_STOCK_DATA[cls.ROUND_TO_QUARTER[r]][index_] for r in range(1, end+1)
         ]
 
-    def financial_statement_format(self) -> str:
+    def financial_statement_format(self, selected_stock_index: int) -> str:
         """財務報表格式。
         """
 
-        output: str = f"# {get_stock_name_symbol(self.selected_stock_index)} 財務報表\n"
+        statements = FinancialStatementView.query_financial_statements(selected_stock_index)
+        output: str = f"## {get_stock_name_symbol(selected_stock_index)} 財務報表\n"
         for quarter, statement in zip(
-            FinancialStatementView.ROUND_TO_QUARTER.values(), self.statements
+            FinancialStatementView.ROUND_TO_QUARTER.values(), statements
         ):
-            output += f"## {quarter}\n" \
+            output += f"### {quarter}\n" \
                       f"```銷貨淨額 {statement['net_revenue']:>10,}\n" \
                       f"銷貨毛額 {statement['gross_income']:>10,}\n" \
                       f"營業收入 {statement['income_from_operating']:>10,}\n" \
@@ -164,28 +158,79 @@ class FinancialStatementView(ntd.ui.View):
                       f"每股盈餘(EPS) {statement['eps']:.2f}\n" \
                       f"每股盈餘年增率 {statement['eps_qoq']*100:.2f}%```\n"
         return output
+    
+    @ui.select(
+        placeholder="選擇查詢的公司",
+        options=[
+            ntd.SelectOption(
+                label=get_stock_name_symbol(i),
+                value=str(i)
+            ) for i in range(10)
+        ],
+        row=0
+    )
+    async def company_select_callback(
+        self,
+        select: ui.StringSelect,
+        interaction: ntd.Interaction
+    ):
+        """選擇公司 callback。
+        """
+
+        await interaction.response.edit_message(
+            content=self.financial_statement_format(int(select.values[0]))
+        )
+    
+    @ui.button(
+        label="關閉查詢",
+        style=ntd.ButtonStyle.red,
+        emoji="✖️",
+        row=1
+    )
+    async def close_button_callback(
+        self,
+        button: ui.Button,
+        interaction: ntd.Interaction
+    ):
+        """關閉按鈕 callback。
+        """
+
+        self.clear_items()
+        MarketView.querying_user.remove(interaction.user.id)
+        await interaction.response.edit_message(
+            content="已關閉查詢。",
+            view=self,
+            delete_after=5
+        )
+        self.stop()
 
 
-class MarketView(ntd.ui.View):
+class MarketView(ui.View):
     """股市 View 放置交易功能按鈕及財務報表查詢按鈕。
     """
 
     __slots__ = ("bot")
 
+    querying_user: List[int] = []   # 存放正在查詢的使用者id
+
     def __init__(self, bot: commands.Bot):
         super().__init__(timeout=None)
         self.bot = bot
     
-    @ntd.ui.button(
+    @ui.button(
         label="股票交易",
         style=ntd.ButtonStyle.gray,
-        emoji="📊"
+        emoji="📊",
+        row=0
     )
     async def trade_button_callback(
         self,
-        button: ntd.ui.Button,
+        button: ui.Button,
         interaction: ntd.Interaction
     ):
+        """股票交易按鈕 callback。
+        """
+
         view = TradeView(
             bot=self.bot,
             user_name=interaction.user.display_name,
@@ -199,8 +244,39 @@ class MarketView(ntd.ui.View):
             ephemeral=True
         )
 
+    # @classmethod
+    @ui.button(
+        label="查詢財務報表",
+        style=ntd.ButtonStyle.gray,
+        emoji="📋",
+        row=0
+    )
+    async def query_button_callback(
+        self,
+        button: ui.Button,
+        interaction: ntd.Interaction
+    ):
+        """查詢財務報表按鈕 callback。
+        """
+        
+        if(interaction.user.id in MarketView.querying_user):    # 防止重複查詢
+            await interaction.response.send_message(
+                content="**已開啟查詢選單!!!**",
+                delete_after=5,
+                ephemeral=True
+            )
+            return
 
-class TradeView(ntd.ui.View):
+        MarketView.querying_user.append(interaction.user.id)
+        view = FinancialStatementView()
+        await interaction.response.send_message(
+            content=view.initial_message(),
+            view=view,
+            ephemeral=True
+        )
+
+
+class TradeView(ui.View):
     """交易功能 View。
     """
     
@@ -286,7 +362,7 @@ class TradeView(ntd.ui.View):
         else:
             return True
         
-    @ntd.ui.select(
+    @ui.select(
         placeholder="選擇買賣別",
         options=[
             ntd.SelectOption(
@@ -302,7 +378,7 @@ class TradeView(ntd.ui.View):
     )
     async def trade_select_callback(
         self,
-        select: ntd.ui.StringSelect,
+        select: ui.StringSelect,
         interaction: ntd.Interaction
     ):
         """買賣別選取選單callback。
@@ -339,7 +415,7 @@ class TradeView(ntd.ui.View):
             view=self
         )
 
-    @ntd.ui.button(
+    @ui.button(
         label="輸入張數",
         style=ntd.ButtonStyle.blurple,
         emoji="📃",
@@ -347,7 +423,7 @@ class TradeView(ntd.ui.View):
     )
     async def input_quantity_button_callback(
         self,
-        button: ntd.ui.Button,
+        button: ui.Button,
         interaction: ntd.Interaction
     ):
         """輸入張數按鈕callback。
@@ -355,7 +431,7 @@ class TradeView(ntd.ui.View):
 
         await interaction.response.send_modal(InputTradeQuantity(self))
 
-    @ntd.ui.button(
+    @ui.button(
         label="確認交易",
         style=ntd.ButtonStyle.green,
         emoji="✅",
@@ -363,7 +439,7 @@ class TradeView(ntd.ui.View):
     )
     async def confirm_button_callback(
         self,
-        button: ntd.ui.Button,
+        button: ui.Button,
         interaction: ntd.Interaction
     ):
         """確認送出按扭callback。
@@ -426,7 +502,7 @@ class TradeView(ntd.ui.View):
         await ui.update_alteration_log()
         await ui.update_asset_ui(team=self.team)
 
-    @ntd.ui.button(
+    @ui.button(
         label="取消交易",
         style=ntd.ButtonStyle.red,
         emoji="✖️",
@@ -434,7 +510,7 @@ class TradeView(ntd.ui.View):
     )
     async def cancel_button_callback(
         self,
-        button: ntd.ui.button,
+        button: ui.button,
         interaction: ntd.Interaction
     ):
         """取消按鈕callback。
@@ -450,7 +526,7 @@ class TradeView(ntd.ui.View):
         self.stop()
 
 
-class StockSelect(ntd.ui.StringSelect):
+class StockSelect(ui.StringSelect):
     """選取買賣別後選取商品。
     """
 
@@ -463,7 +539,6 @@ class StockSelect(ntd.ui.StringSelect):
         self.original_view = original_view
         if(original_view.trade_type == "買進"):
             super().__init__(
-                custom_id="buy",
                 placeholder="選擇商品",
                 options=[
                     ntd.SelectOption(
@@ -475,7 +550,6 @@ class StockSelect(ntd.ui.StringSelect):
             )
         elif(original_view.trade_type == "賣出"):
             super().__init__(
-                custom_id="sell",
                 placeholder="選擇庫存",
                 options=[
                     ntd.SelectOption(
@@ -503,7 +577,7 @@ class StockSelect(ntd.ui.StringSelect):
         )
 
 
-class InputTradeQuantity(ntd.ui.Modal):
+class InputTradeQuantity(ui.Modal):
     """按下「設定張數」按鈕後彈出的文字輸入視窗。
     """
     
@@ -514,7 +588,7 @@ class InputTradeQuantity(ntd.ui.Modal):
 
         self.original_view = original_view
 
-        self.quantity = ntd.ui.TextInput(
+        self.quantity = ui.TextInput(
             label="請輸入張數",
             style=ntd.TextInputStyle.short,
             min_length=1,
@@ -545,7 +619,7 @@ class InputTradeQuantity(ntd.ui.Modal):
         self.stop()
 
 
-class ChangeDepositButton(ntd.ui.View):
+class ChangeDepositButton(ui.View):
     """變更小隊存款按鈕。
     """
 
@@ -589,14 +663,14 @@ class ChangeDepositButton(ntd.ui.View):
 
         return embed
     
-    @ntd.ui.button(
+    @ui.button(
         label="變更小隊存款",
         style=ntd.ButtonStyle.gray,
         emoji="⚙️"
     )
     async def change_deposit_button_callback(
         self,
-        button: ntd.ui.Button,
+        button: ui.Button,
         interaction: ntd.Interaction
     ):
         view = ChangeDepositView(
@@ -612,7 +686,7 @@ class ChangeDepositButton(ntd.ui.View):
         )
         
 
-class ChangeDepositView(ntd.ui.View):
+class ChangeDepositView(ui.View):
     """變更小隊存款更能View。
     """
 
@@ -635,7 +709,7 @@ class ChangeDepositView(ntd.ui.View):
             user_icon: ntd.Asset,
             bot: commands.Bot
     ):
-        super().__init__(timeout=180)
+        super().__init__(timeout=None)
         # embed message
         self.embed_title: str = "變更小隊存款"  # 變更第n小隊存款
         self.embed_description: str = "請選擇小隊"
@@ -696,7 +770,7 @@ class ChangeDepositView(ntd.ui.View):
         else:
             return True
 
-    @ntd.ui.select(
+    @ui.select(
         placeholder="選擇小隊",
         min_values=1,
         max_values=1,
@@ -710,7 +784,7 @@ class ChangeDepositView(ntd.ui.View):
     )
     async def team_select_callback(
         self,
-        select: ntd.ui.StringSelect, 
+        select: ui.StringSelect, 
         interaction: ntd.Interaction
     ):
         """小隊選取選單callback。
@@ -728,7 +802,7 @@ class ChangeDepositView(ntd.ui.View):
             embed=self.status_embed()
         )
    
-    @ntd.ui.select(
+    @ui.select(
         placeholder="選擇變更模式",
         options=[
             ntd.SelectOption(
@@ -750,7 +824,7 @@ class ChangeDepositView(ntd.ui.View):
     )
     async def mode_select_callback(
         self,
-        select: ntd.ui.StringSelect, 
+        select: ui.StringSelect, 
         interaction: ntd.Interaction
     ):
         """模式選取選單callback。
@@ -769,7 +843,7 @@ class ChangeDepositView(ntd.ui.View):
             embed=self.status_embed()
         )
 
-    @ntd.ui.button(
+    @ui.button(
         label="輸入金額",
         style=ntd.ButtonStyle.blurple,
         emoji="🪙",
@@ -777,7 +851,7 @@ class ChangeDepositView(ntd.ui.View):
     )
     async def input_amount_button_callback(
         self,
-        button: ntd.ui.Button,
+        button: ui.Button,
         interaction: ntd.Interaction
     ):
         """輸入金額按鈕callback。
@@ -785,7 +859,7 @@ class ChangeDepositView(ntd.ui.View):
 
         await interaction.response.send_modal(InputChangeAmount(self))
 
-    @ntd.ui.button(
+    @ui.button(
         label="確認送出",
         style=ntd.ButtonStyle.green,
         emoji="✅",
@@ -793,7 +867,7 @@ class ChangeDepositView(ntd.ui.View):
     )
     async def comfirm_button_callback(
         self,
-        button: ntd.ui.Button,
+        button: ui.Button,
         interaction: ntd.Interaction
     ):
         """確認送出按扭callback。
@@ -850,7 +924,7 @@ class ChangeDepositView(ntd.ui.View):
         await ui.update_alteration_log()
         self.stop()
     
-    @ntd.ui.button(
+    @ui.button(
         label="取消",
         style=ntd.ButtonStyle.red,
         emoji="✖️",
@@ -858,7 +932,7 @@ class ChangeDepositView(ntd.ui.View):
     )
     async def cancel_button_callback(
         self,
-        button: ntd.ui.button,
+        button: ui.button,
         interaction: ntd.Interaction
     ):
         """取消按鈕callback。
@@ -874,7 +948,7 @@ class ChangeDepositView(ntd.ui.View):
         self.stop()
 
 
-class InputChangeAmount(ntd.ui.Modal):
+class InputChangeAmount(ui.Modal):
     """按下「輸入存款」按鈕後彈出的文字輸入視窗。
     """
 
@@ -889,7 +963,7 @@ class InputChangeAmount(ntd.ui.Modal):
 
         self.original_view = original_view
 
-        self.amount = ntd.ui.TextInput(
+        self.amount = ui.TextInput(
             label="請輸入金額",
             style=ntd.TextInputStyle.short,
             min_length=1,
@@ -1179,12 +1253,9 @@ class DiscordUI(commands.Cog):
             guild_ids=[1218130958536937492]
     )
     async def test_ui(self, interaction: ntd.Interaction):
-        view = FinancialStatementView(
-            bot=self.bot,
-            selected_stock_index=0
-        )
+        view = FinancialStatementView()
         await interaction.response.send_message(
-            content=view.financial_statement_format(),
+            content=view.initial_message(),
             view=view,
             ephemeral=True
         )
