@@ -83,6 +83,7 @@ def get_stock_price(index_: int | str) -> float:
     return stock_dict["price"]
 
 
+
 def stock_market_message() -> str:
     """市場動態訊息格式。
     """
@@ -108,114 +109,46 @@ def stock_market_message() -> str:
     return output
 
 
-class FinancialStatementView(ui.View):
-    """財務報表檢視 View。
-    """
-
-    ROUND_TO_QUARTER: Dict[int, str] = {
-        int(r): q for r, q in access_file.read_file("game_config")["ROUND_TO_QUARTER"].items()
-    }
-    RAW_STOCK_DATA: RawStockData = access_file.read_file("raw_stock_data")
-
-    def __init__(self):
-        super().__init__(timeout=None)
-
-    def initial_message(self) -> str:
-        """叫出此 View十顯示的初始訊息。
-        """
-
-        return "⬇️請選擇要查詢的公司"
-    
-    @classmethod
-    def query_financial_statements(cls, index_: int) -> List[FinancialStatement]:
-        """查詢報表。
-        """
-
-        round_: int = access_file.read_file("game_state")["round"]
-
-        if(round_ == 0):
-            end = 1
-        else:
-            end = round_
-        return [
-            cls.RAW_STOCK_DATA[cls.ROUND_TO_QUARTER[r]][index_] for r in range(1, end+1)
-        ]
-
-    def financial_statement_format(self, selected_stock_index: int) -> str:
-        """財務報表格式。
-        """
-
-        statements = FinancialStatementView.query_financial_statements(selected_stock_index)
-        output: str = f"## {get_stock_name_symbol(selected_stock_index)} 財務報表\n"
-        for quarter, statement in zip(
-            FinancialStatementView.ROUND_TO_QUARTER.values(), statements
-        ):
-            output += f"### {quarter}\n" \
-                      f"```銷貨淨額 {statement['net_revenue']:>10,}\n" \
-                      f"銷貨毛額 {statement['gross_income']:>10,}\n" \
-                      f"營業收入 {statement['income_from_operating']:>10,}\n" \
-                      f"本期損益 {statement['net_income']:>10,}\n\n" \
-                      f"每股盈餘(EPS) {statement['eps']:.2f}\n" \
-                      f"每股盈餘年增率 {statement['eps_qoq']*100:.2f}%```\n"
-        return output
-    
-    @ui.select(
-        placeholder="選擇查詢的公司",
-        options=[
-            ntd.SelectOption(
-                label=get_stock_name_symbol(i),
-                value=str(i)
-            ) for i in range(10)
-        ],
-        row=0
-    )
-    async def company_select_callback(
-        self,
-        select: ui.StringSelect,
-        interaction: ntd.Interaction
-    ):
-        """選擇公司 callback。
-        """
-
-        await interaction.response.edit_message(
-            content=self.financial_statement_format(int(select.values[0]))
-        )
-    
-    @ui.button(
-        label="關閉查詢",
-        style=ntd.ButtonStyle.red,
-        emoji="✖️",
-        row=1
-    )
-    async def close_button_callback(
-        self,
-        button: ui.Button,
-        interaction: ntd.Interaction
-    ):
-        """關閉按鈕 callback。
-        """
-
-        self.clear_items()
-        MarketView.querying_user.remove(interaction.user.id)
-        await interaction.response.edit_message(
-            content="已關閉查詢。",
-            view=self,
-            delete_after=5
-        )
-        self.stop()
-
-
 class MarketView(ui.View):
     """股市 View 放置交易功能按鈕及財務報表查詢按鈕。
     """
 
     __slots__ = ("bot")
 
-    querying_user: List[int] = []   # 存放正在查詢的使用者id
+    trading_user_ids: List[int] = []    # 存放使用「股票交易」的使用者id
+    querying_user_ids: List[int] = []   # 存放使用「查詢財務報表」的使用者id
 
     def __init__(self, bot: commands.Bot):
         super().__init__(timeout=None)
         self.bot = bot
+
+    @classmethod
+    def add_trading_user(cls, user_id: int):
+        """將使用者加入`trading_user_ids`中。
+        """
+
+        cls.trading_user_ids.append(user_id)
+    
+    @classmethod
+    def remove_trading_user(cls, user_id: int):
+        """將交易結束的使用者從`trading_user_ids`中移除。
+        """
+
+        cls.trading_user_ids.remove(user_id)
+
+    @classmethod
+    def add_querying_user(cls, user_id: int):
+        """將使用者加入`querying_user_ids`中。
+        """
+
+        cls.querying_user_ids.append(user_id)
+    
+    @classmethod
+    def remove_querying_user(cls, user_id: int):
+        """將查詢結束的使用者從`querying_user_ids`中移除。
+        """
+
+        cls.querying_user_ids.remove(user_id)
     
     @ui.button(
         label="股票交易",
@@ -231,6 +164,15 @@ class MarketView(ui.View):
         """股票交易按鈕 callback。
         """
 
+        if(interaction.user.id in MarketView.trading_user_ids):    # 防止重複呼叫功能
+            await interaction.response.send_message(
+                content="**已開啟交易選單!!!**",
+                delete_after=5,
+                ephemeral=True
+            )
+            return
+        
+        MarketView.add_trading_user(interaction.user.id)
         view = TradeView(
             bot=self.bot,
             user_name=interaction.user.display_name,
@@ -240,11 +182,9 @@ class MarketView(ui.View):
         await interaction.response.send_message(
             embed=view.status_embed(),
             view=view,
-            delete_after=180,
             ephemeral=True
         )
 
-    # @classmethod
     @ui.button(
         label="查詢財務報表",
         style=ntd.ButtonStyle.gray,
@@ -259,7 +199,7 @@ class MarketView(ui.View):
         """查詢財務報表按鈕 callback。
         """
         
-        if(interaction.user.id in MarketView.querying_user):    # 防止重複查詢
+        if(interaction.user.id in MarketView.querying_user_ids):    # 防止重複呼叫功能
             await interaction.response.send_message(
                 content="**已開啟查詢選單!!!**",
                 delete_after=5,
@@ -267,7 +207,7 @@ class MarketView(ui.View):
             )
             return
 
-        MarketView.querying_user.append(interaction.user.id)
+        MarketView.add_querying_user(interaction.user.id)
         view = FinancialStatementView()
         await interaction.response.send_message(
             content=view.initial_message(),
@@ -304,7 +244,7 @@ class TradeView(ui.View):
             user_avatar: ntd.Asset,
             user_id: int
         ):
-        super().__init__(timeout=180)
+        super().__init__(timeout=None)
         self.bot = bot
         self.user_name = user_name
         self.user_avatar = user_avatar
@@ -429,7 +369,7 @@ class TradeView(ui.View):
         """輸入張數按鈕callback。
         """
 
-        await interaction.response.send_modal(InputTradeQuantity(self))
+        await interaction.response.send_modal(TradeQuantityInput(self))
 
     @ui.button(
         label="確認交易",
@@ -471,6 +411,7 @@ class TradeView(ui.View):
             )
             return
         
+        MarketView.remove_trading_user(interaction.user.id)
         self.clear_items()
         await interaction.response.edit_message(
             content="**改變成功!!!**",
@@ -516,6 +457,7 @@ class TradeView(ui.View):
         """取消按鈕callback。
         """
 
+        MarketView.remove_trading_user(interaction.user.id)
         self.clear_items()
         await interaction.response.edit_message(
             content="**已取消交易**",
@@ -577,7 +519,7 @@ class StockSelect(ui.StringSelect):
         )
 
 
-class InputTradeQuantity(ui.Modal):
+class TradeQuantityInput(ui.Modal):
     """按下「設定張數」按鈕後彈出的文字輸入視窗。
     """
     
@@ -619,15 +561,143 @@ class InputTradeQuantity(ui.Modal):
         self.stop()
 
 
-class ChangeDepositButton(ui.View):
-    """變更小隊存款按鈕。
+class FinancialStatementView(ui.View):
+    """財務報表檢視 View。
+    """
+
+    ROUND_TO_QUARTER: Dict[int, str] = {
+        int(r): q for r, q in access_file.read_file("game_config")["ROUND_TO_QUARTER"].items()
+    }
+    RAW_STOCK_DATA: RawStockData = access_file.read_file("raw_stock_data")
+
+    def __init__(self):
+        super().__init__(timeout=None)
+    
+    @classmethod
+    def query_financial_statements(cls, index_: int) -> List[FinancialStatement]:
+        """查詢報表。
+        """
+
+        round_: int = access_file.read_file("game_state")["round"]
+
+        if(round_ == 0):
+            end = 1
+        else:
+            end = round_
+        return [
+            cls.RAW_STOCK_DATA[cls.ROUND_TO_QUARTER[r]][index_] for r in range(1, end+1)
+        ]
+    
+    def initial_message(self) -> str:
+        """叫出此 View十顯示的初始訊息。
+        """
+
+        return "⬇️請選擇要查詢的公司"
+
+    def financial_statement_format(self, selected_stock_index: int) -> str:
+        """財務報表格式。
+        """
+
+        statements = FinancialStatementView.query_financial_statements(selected_stock_index)
+        output: str = f"## {get_stock_name_symbol(selected_stock_index)} 財務報表\n"
+        for quarter, statement in zip(
+            FinancialStatementView.ROUND_TO_QUARTER.values(), statements
+        ):
+            output += f"### {quarter}\n" \
+                      f"```銷貨淨額 {statement['net_revenue']:>10,}\n" \
+                      f"銷貨毛額 {statement['gross_income']:>10,}\n" \
+                      f"營業收入 {statement['income_from_operating']:>10,}\n" \
+                      f"本期損益 {statement['net_income']:>10,}\n\n" \
+                      f"每股盈餘(EPS) {statement['eps']:.2f}\n" \
+                      f"每股盈餘年增率 {statement['eps_qoq']*100:.2f}%```\n"
+        return output
+    
+    @ui.select(
+        placeholder="選擇查詢的公司",
+        options=[
+            ntd.SelectOption(
+                label=get_stock_name_symbol(i),
+                value=str(i)
+            ) for i in range(10)
+        ],
+        row=0
+    )
+    async def company_select_callback(
+        self,
+        select: ui.StringSelect,
+        interaction: ntd.Interaction
+    ):
+        """選擇公司 callback。
+        """
+
+        await interaction.response.edit_message(
+            content=self.financial_statement_format(int(select.values[0]))
+        )
+    
+    @ui.button(
+        label="關閉查詢",
+        style=ntd.ButtonStyle.red,
+        emoji="✖️",
+        row=1
+    )
+    async def close_button_callback(
+        self,
+        button: ui.Button,
+        interaction: ntd.Interaction
+    ):
+        """關閉按鈕 callback。
+        """
+
+        MarketView.querying_user_ids.remove(interaction.user.id)
+        self.clear_items()
+        await interaction.response.edit_message(
+            content="已關閉查詢。",
+            view=self,
+            delete_after=5
+        )
+        self.stop()
+
+
+class DepositView(ui.View):
+    """小隊收支 View。
     """
 
     __slots__ = ("bot")
 
+    changing_user_ids: List[int] = []   # 存放使用「變更小隊存款」的使用者id
+    transfering_user_ids: List[int] = []    # 存放使用「過路費轉帳」的使用者id
+
     def __init__(self, bot: commands.Bot):
         super().__init__(timeout=None)
         self.bot = bot
+
+    @classmethod
+    def add_changing_user(cls, user_id: int):
+        """將使用者加入`changing_user_ids`中。
+        """
+
+        cls.changing_user_ids.append(user_id)
+    
+    @classmethod
+    def remove_changing_user(cls, user_id: int):
+        """將交易結束的使用者從`changing_user_ids`中移除。
+        """
+
+        cls.changing_user_ids.remove(user_id)
+
+    @classmethod
+    def add_transfering_user(cls, user_id: int):
+        """將使用者加入`transfering_user_ids`中。
+        """
+
+        cls.transfering_user_ids.append(user_id)
+    
+    @classmethod
+    def remove_transfering_user(cls, user_id: int):
+        """將交易結束的使用者從`transfering_user_ids`中移除。
+        """
+
+        cls.transfering_user_ids.remove(user_id)
 
     def embed_message(self) -> ntd.Embed:
         """嵌入訊息。
@@ -673,6 +743,16 @@ class ChangeDepositButton(ui.View):
         button: ui.Button,
         interaction: ntd.Interaction
     ):
+        
+        if(interaction.user.id in DepositView.changing_user_ids):    # 防止重複呼叫功能
+            await interaction.response.send_message(
+                content="**已開啟變更小隊存款選單!!!**",
+                delete_after=5,
+                ephemeral=True
+            )
+            return
+
+        DepositView.add_changing_user(interaction.user.id)
         view = ChangeDepositView(
             interaction.user.display_name,
             interaction.user.display_avatar,
@@ -681,7 +761,6 @@ class ChangeDepositButton(ui.View):
         await interaction.response.send_message(
             view=view,
             embed=view.status_embed(),
-            delete_after=180,
             ephemeral=True
         )
         
@@ -857,7 +936,7 @@ class ChangeDepositView(ui.View):
         """輸入金額按鈕callback。
         """
 
-        await interaction.response.send_modal(InputChangeAmount(self))
+        await interaction.response.send_modal(AmountInput(self))
 
     @ui.button(
         label="確認送出",
@@ -901,6 +980,7 @@ class ChangeDepositView(ui.View):
             amount=self.amount,
             user=interaction.user.display_name
         )
+        DepositView.remove_changing_user(interaction.user.id)
         # 改變成功訊息
         self.clear_items()
         await interaction.response.edit_message(
@@ -938,6 +1018,7 @@ class ChangeDepositView(ui.View):
         """取消按鈕callback。
         """
 
+        DepositView.remove_changing_user(interaction.user.id)
         self.clear_items()
         await interaction.response.edit_message(
             content="**已取消變更**",
@@ -948,7 +1029,7 @@ class ChangeDepositView(ui.View):
         self.stop()
 
 
-class InputChangeAmount(ui.Modal):
+class AmountInput(ui.Modal):
     """按下「輸入存款」按鈕後彈出的文字輸入視窗。
     """
 
@@ -1275,7 +1356,7 @@ class DiscordUI(commands.Cog):
         message = await channel.fetch_message(
             self.MESSAGE_IDS["CHANGE_DEPOSIT"]
         )
-        view = ChangeDepositButton(self.bot)
+        view = DepositView(self.bot)
         await message.edit(
             embed=view.embed_message(),
             view=view
