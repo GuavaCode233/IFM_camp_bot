@@ -83,31 +83,6 @@ def get_stock_price(index_: int | str) -> float:
     return stock_dict["price"]
 
 
-def stock_market_message() -> str:
-    """市場動態訊息格式。
-    """
-
-    market_data: List[StockDict] = access_file.read_file("market_data")
-    # title
-    output: str = f"```商品名稱　{'代碼':^5}產業{'成交':^7}漲跌\n"
-    # string formatter
-    for init_data, stock in zip(INITIAL_STOCK_DATA, market_data):
-        delta_price: float = stock["price"] - stock["close"]
-        # up and downs index
-        if(delta_price > 0):    # up
-            price_index = "🔴"  
-        elif(delta_price < 0):  # down
-            price_index = "🟢"
-        else:
-            price_index = "⚪"
-
-        output += f"{init_data['name'].ljust(5, '　')}{init_data['symbol']:^6}" \
-                  f"{init_data['sector']:3}{stock['price']:5.2f} {price_index}{abs(delta_price):.2f}\n"
-    
-    output += "```"
-    return output
-
-
 class MarketFunctionView(ui.View):
     """股市 View 放置交易功能按鈕及財務報表查詢按鈕。
     """
@@ -1257,7 +1232,7 @@ class NewsEmbed(ntd.Embed):
 
 
 class DiscordUI(commands.Cog):
-    """控制Discord端的UI介面
+    """控制Discord端的UI介面。
     """
 
     __slots__ = (
@@ -1339,6 +1314,31 @@ class DiscordUI(commands.Cog):
             view=view,
             ephemeral=True
         )
+    
+    @staticmethod
+    def stock_market_message() -> str:
+        """市場動態訊息格式。
+        """
+
+        market_data: List[StockDict] = access_file.read_file("market_data")
+        # title
+        output: str = f"```商品名稱　{'代碼':^5}產業{'成交':^7}漲跌\n"
+        # string formatter
+        for init_data, stock in zip(INITIAL_STOCK_DATA, market_data):
+            delta_price: float = stock["price"] - stock["close"]
+            # up and downs index
+            if(delta_price > 0):    # up
+                price_index = "🔴"  
+            elif(delta_price < 0):  # down
+                price_index = "🟢"
+            else:
+                price_index = "⚪"
+
+            output += f"{init_data['name'].ljust(5, '　')}{init_data['symbol']:^6}" \
+                    f"{init_data['sector']:3}{stock['price']:5.2f} {price_index}{abs(delta_price):.2f}\n"
+        
+        output += "```"
+        return output
 
     async def reset_all_ui(self):
         """|coro|
@@ -1473,7 +1473,7 @@ class DiscordUI(commands.Cog):
                     display_value=display_value
                 )
             )
-        
+    
     async def update_market_ui(self):
         """更新市場動態。
         """
@@ -1482,7 +1482,7 @@ class DiscordUI(commands.Cog):
             await self.fetch_stock_market_message()
 
         await self.STOCK_MARKET_MESSAGE.edit(
-            content=stock_market_message ()
+            content=self.stock_market_message()
         )
 
     async def update_asset_ui(self, team: int | None = None):
