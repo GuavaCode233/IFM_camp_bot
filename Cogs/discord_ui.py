@@ -32,6 +32,8 @@ USER_ID_TO_TEAM: Dict[int, int] = {
 INITIAL_STOCK_DATA: List[InitialStockData] = access_file.read_file(
     "raw_stock_data"
 )["initial_data"]
+# 小隊個數
+NUMBER_OF_TEAMS: int = access_file.read_file("game_config").get("NUMBER_OF_TEAMS")
 
 
 def get_stock_name_symbol(index_: int | str) -> str:
@@ -246,7 +248,7 @@ class TradeView(ui.View):
         time = time.strftime("%I:%M%p")
 
         embed = ntd.Embed(
-            colour=PURPLE,
+            color=PURPLE,
             title=f"第{self.team}小隊 {self.embed_title}",
             type="rich",
             description=f"目前存款: {self.deposit:,}"
@@ -727,7 +729,7 @@ class DepositFunctionView(ui.View):
             return
 
         DepositFunctionView.add_changing_user(interaction.user.id)
-        view = ChangeDepositView(
+        view = DepositChangeView(
             interaction.user.display_name,
             interaction.user.display_avatar,
             self.bot
@@ -739,7 +741,7 @@ class DepositFunctionView(ui.View):
         )
         
 
-class ChangeDepositView(ui.View):
+class DepositChangeView(ui.View):
     """變更小隊存款更能View。
     """
 
@@ -778,14 +780,14 @@ class ChangeDepositView(ui.View):
         self.bot = bot
 
     def status_embed(self) -> ntd.Embed:
-        """用於編排嵌入訊息。
+        """用於編排選單狀態訊息。
         """
 
         time = datetime.now()
         time = time.strftime("%I:%M%p")
 
         embed = ntd.Embed(
-            colour=PURPLE,
+            color=PURPLE,
             title=self.embed_title,
             type="rich",
             description=self.embed_description
@@ -825,15 +827,14 @@ class ChangeDepositView(ui.View):
 
     @ui.select(
         placeholder="選擇小隊",
-        min_values=1,
-        max_values=1,
         options=[
             ntd.SelectOption(
-                label=f"第{_t}小隊",
-                value=f"{_t}"
+                label=f"第{t}小隊",
+                value=str(t)
             )
-            for _t in range(1, 10)
-        ]
+            for t in range(1, NUMBER_OF_TEAMS+2)   # +1 (Testing team)
+        ],
+        row=0
     )
     async def team_select_callback(
         self,
@@ -873,7 +874,8 @@ class ChangeDepositView(ui.View):
                 description="輸入改變的餘額。",
                 emoji="🔑"
             )
-        ]
+        ],
+        row=1
     )
     async def mode_select_callback(
         self,
@@ -1003,15 +1005,131 @@ class ChangeDepositView(ui.View):
         self.stop()
 
 
+class DepositTransferView(ui.View):
+
+    __slots__ = ()
+
+    def __init__(
+            self
+    ):
+        super().__init__(timeout=None)
+
+    def status_embed(self) -> ntd.Embed:
+        """用於編排選單狀態訊息。
+        """
+
+        time = datetime.now()
+        time = time.strftime("%I:%M%p")
+
+        embed = ntd.Embed(
+            color=PURPLE,
+        )
+
+    @ui.select(
+        placeholder="選擇轉出小隊",
+        options=[
+            ntd.SelectOption(
+                label=f"第{t}小隊",
+                value=str(t)
+            ) for t in range(1, NUMBER_OF_TEAMS+2)  # +1 (Testing team)
+        ],
+        row=0
+    )
+    def transfer_team_select_callback(
+        self,
+        select: ui.StringSelect,
+        interaction: ntd.Interaction
+    ):
+        """選取轉出小隊 callback。
+        """
+
+        ...
+
+    @ui.select(
+        placeholder="選擇轉入小隊",
+        options=[
+            ntd.SelectOption(
+                label=f"第{t}小隊",
+                value=str(t)
+            ) for t in range(1, NUMBER_OF_TEAMS+2)  # +1 (Testing team)
+        ],
+        row=1
+    )
+    def deposit_team_select_callback(
+        self,
+        select: ui.StringSelect,
+        interaction: ntd.Interaction
+    ):
+        """選取轉入小隊 callback。
+        """
+
+        ...
+
+    @ui.button(
+    label="輸入金額",
+    style=ntd.ButtonStyle.blurple,
+    emoji="🪙",
+    row=2
+    )
+    async def input_amount_button_callback(
+        self,
+        button: ui.Button,
+        interaction: ntd.Interaction
+    ):
+        """輸入金額按鈕callback。
+        """
+
+        await interaction.response.send_modal(AmountInput(self))
+
+    @ui.button(
+        label="確認轉出",
+        style=ntd.ButtonStyle.green,
+        emoji="✅",
+        row=3
+    )
+    def comfirm_button_callback(
+        self,
+        button: ui.Button,
+        interaction: ntd.Interaction
+    ):
+        """確認轉出按鈕 callback。
+        """
+
+        ...
+
+    @ui.button(
+        label="取消",
+        style=ntd.ButtonStyle.red,
+        emoji="✖️",
+        row=3
+    )
+    async def cancel_button_callback(
+        self,
+        button: ui.button,
+        interaction: ntd.Interaction
+    ):
+        """取消按鈕callback。
+        """
+
+        DepositFunctionView.remove_transfering_user(interaction.user.id)
+        self.clear_items()
+        await interaction.response.edit_message(
+            content="**已取消轉帳**",
+            embed=None,
+            delete_after=5,
+            view=self
+        )
+        self.stop()
+
 class AmountInput(ui.Modal):
-    """按下「輸入存款」按鈕後彈出的文字輸入視窗。
+    """金額輸入視窗。
     """
 
     __slots__ = ("original_view", "amount")
 
     def __init__(
             self,
-            original_view: ChangeDepositView,
+            original_view: DepositChangeView | DepositTransferView,
             default_value: str | None = None
     ):
         super().__init__(title="請輸入金額")
@@ -1223,7 +1341,7 @@ class NewsEmbed(ntd.Embed):
 
     def __init__(self, title: str, content: str):
         super().__init__(
-            colour=PURPLE,
+            color=PURPLE,
             title=title,
             type="rich",
             description=content,

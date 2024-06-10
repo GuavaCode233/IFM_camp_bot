@@ -64,7 +64,7 @@ class AssetsManager(commands.Cog):
                 "stock_inv": {},
                 "revenue": 0
             }
-            for t in range(1, self.CONFIG["NUMBER_OF_TEAMS"]+2)
+            for t in range(1, self.CONFIG["NUMBER_OF_TEAMS"]+2) # +1 (Testing team)
         }
         access_file.save_to("team_assets", dict_)
         self.fetch_assets()
@@ -81,7 +81,7 @@ class AssetsManager(commands.Cog):
                 stock_inv=asset[str(t)]["stock_inv"],
                 revenue=asset[str(t)]["revenue"]
             )
-            for t in range(1, self.CONFIG["NUMBER_OF_TEAMS"]+2)
+            for t in range(1, self.CONFIG["NUMBER_OF_TEAMS"]+2) # +1 (Testing team)
         ]
         
     def save_assets(self, team_number: str | int | None = None):
