@@ -1,3 +1,4 @@
 *.env
+Test/
 ~$raw_stock_data.xlsx
 ~$raw_news.xlsx
