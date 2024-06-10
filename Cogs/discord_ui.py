@@ -56,6 +56,13 @@ def get_stock_inventory(team: int | str) -> Dict[str, List[int]]:
     return stock_inv
 
 
+def get_deposit(team: int | str) -> int:
+    """擷取小隊存款額。
+    """
+
+    return access_file.read_file("team_assets")[f"{team}"]["deposit"]
+
+
 def inventory_to_string(
         stock_inv: Dict[str, List[int]],
         index_: str | int | None = None
@@ -228,9 +235,7 @@ class TradeView(ui.View):
         self.stock_inv = get_stock_inventory(self.team)   # 該小隊股票庫存
         # embed message
         self.embed_title: str = "股票交易"
-        self.deposit: int = access_file.read_file(  # 該小隊存款額
-            "team_assets"
-        )[f"{self.team}"]["deposit"]
+        self.deposit: int = get_deposit(self.team)
         self.trade_field_name: str = "請選擇交易別"   # 買進: 商品；賣出: 目前庫存
         self.trade_field_value: str = "請選擇商品"    # 買進: name symbol；賣出: 庫存內容
         self.quantity_field_name: str = "張數"      # 買進 or 賣出 張數
@@ -241,7 +246,7 @@ class TradeView(ui.View):
         self.selected_stock_index: int = None
     
     def status_embed(self) -> ntd.Embed:
-        """用於編排嵌入訊息。
+        """用於編排選單狀態訊息。
         """
 
         time = datetime.now()
@@ -250,7 +255,6 @@ class TradeView(ui.View):
         embed = ntd.Embed(
             color=PURPLE,
             title=f"第{self.team}小隊 {self.embed_title}",
-            type="rich",
             description=f"目前存款: {self.deposit:,}"
         )
         embed.add_field(
@@ -684,8 +688,7 @@ class DepositFunctionView(ui.View):
 
         embed = ntd.Embed(
             color=PURPLE,
-            title="變更小隊存款",
-            type="rich"
+            title="變更小隊存款"
         )
         # embed.add_field(name="功能介紹", value="")
         embed.add_field(
@@ -730,9 +733,9 @@ class DepositFunctionView(ui.View):
 
         DepositFunctionView.add_changing_user(interaction.user.id)
         view = DepositChangeView(
-            interaction.user.display_name,
-            interaction.user.display_avatar,
-            self.bot
+            user_name=interaction.user.display_name,
+            user_icon=interaction.user.display_avatar,
+            bot=self.bot
         )
         await interaction.response.send_message(
             view=view,
@@ -760,6 +763,7 @@ class DepositChangeView(ui.View):
 
     def __init__(
             self,
+            *,
             user_name: str,
             user_icon: ntd.Asset,
             bot: commands.Bot
@@ -789,7 +793,6 @@ class DepositChangeView(ui.View):
         embed = ntd.Embed(
             color=PURPLE,
             title=self.embed_title,
-            type="rich",
             description=self.embed_description
         )
         embed.add_field(
@@ -846,8 +849,7 @@ class DepositChangeView(ui.View):
 
         self.selected_team = int(select.values[0])
         self.embed_title = f"變更第{select.values[0]}小隊存款"
-        self.selected_team_deposit = \
-            access_file.read_file("team_assets")[select.values[0]]["deposit"]
+        self.selected_team_deposit = get_deposit(self.selected_team)
         self.embed_description = \
             f"第{select.values[0]}小隊目前存款: " \
             f"{self.selected_team_deposit:,}"
@@ -894,8 +896,7 @@ class DepositChangeView(ui.View):
         
         self.mode_field_value = select.values[0]
         await interaction.response.edit_message(
-            view=self,
-            embed=self.status_embed()
+            embed=self.status_embed(),
         )
 
     @ui.button(
@@ -935,10 +936,8 @@ class DepositChangeView(ui.View):
                     ephemeral=True
                 )
             return
-        
         # 檢查小隊金額是否足夠
-        self.selected_team_deposit = \
-            access_file.read_file("team_assets")[f"{self.selected_team}"]["deposit"]
+        self.selected_team_deposit = get_deposit(self.selected_team)
         if(self.selected_mode == "2" and
             self.selected_team_deposit < self.amount):   # 此小隊金額不足扣繳
             await interaction.response.send_message(
@@ -948,6 +947,15 @@ class DepositChangeView(ui.View):
             )
             return
         
+        # 改變成功訊息
+        self.clear_items()
+        await interaction.response.edit_message(
+            content="**改變成功!!!**",
+            embed=None,
+            view=self,
+            delete_after=5,
+        )
+        DepositFunctionView.remove_changing_user(interaction.user.id)
         # 變更第n小隊存款
         asset: AssetsManager = self.bot.get_cog("AssetsManager")
         asset.update_deposit(   
@@ -955,15 +963,6 @@ class DepositChangeView(ui.View):
             mode=self.selected_mode,
             amount=self.amount,
             user=interaction.user.display_name
-        )
-        DepositFunctionView.remove_changing_user(interaction.user.id)
-        # 改變成功訊息
-        self.clear_items()
-        await interaction.response.edit_message(
-            content="**改變成功!!!**",
-            embed=None,
-            delete_after=5,
-            view=self
         )
         # 更新小隊資產
         ui: DiscordUI = self.bot.get_cog("DiscordUI")
@@ -1007,12 +1006,35 @@ class DepositChangeView(ui.View):
 
 class DepositTransferView(ui.View):
 
-    __slots__ = ()
+    __slots__ = (
+        "user_name",
+        "user_icon",
+        "transfer_team",
+        "t_team_deposit",
+        "d_team_deposit",
+        "deposit_team",
+        "amount",
+        "bot"
+    )
 
     def __init__(
-            self
+            self,
+            *,
+            user_name: str,
+            user_icon: ntd.Asset,
+            bot: commands.Bot
     ):
         super().__init__(timeout=None)
+        self.user_name = user_name
+        self.user_icon = user_icon
+        # select status
+        self.transfer_team: str = "請選擇轉出小隊"
+        self.t_team_deposit: int | None = None    # 轉出小隊目前存款額
+        self.deposit_team: str = "請選擇轉入小隊"
+        self.d_team_deposit: int | None = None    # 轉入小隊目前存款額
+        self.amount: int | str = "請輸入轉帳金額"
+        # bot
+        self.bot = bot
 
     def status_embed(self) -> ntd.Embed:
         """用於編排選單狀態訊息。
@@ -1023,7 +1045,52 @@ class DepositTransferView(ui.View):
 
         embed = ntd.Embed(
             color=PURPLE,
+            title="過路費轉帳"
         )
+        # 轉出小隊
+        if(self.t_team_deposit is None):
+            field_value = self.transfer_team
+        else:
+            field_value = f"第{self.transfer_team}小隊\n" \
+                          f"帳戶餘額: {self.t_team_deposit:,}"
+        embed.add_field(
+            name="轉出小隊",
+            value=field_value
+        )
+        # 轉入小隊
+        if(self.d_team_deposit is None):
+            field_value = self.deposit_team
+        else:
+            field_value = f"第{self.deposit_team}小隊\n" \
+                          f"帳戶餘額: {self.d_team_deposit:,}"
+        embed.add_field(
+            name="轉入小隊",
+            value=field_value
+        )
+        # 轉帳金額
+        embed.add_field(
+            name="轉帳金額",
+            value=self.amount,
+            inline=False
+        )
+        embed.set_footer(
+            text=f"{self.user_name} | Today at {time}",
+            icon_url=self.user_icon
+        )
+        return embed
+
+    def input_check(self) -> bool:
+        """檢查輸入資料是否完整。
+        """
+
+        if(self.d_team_deposit is None or
+           self.t_team_deposit is None or 
+           isinstance(self.amount, str) or
+           self.amount == 0
+        ):
+            return False
+        else:
+            return True
 
     @ui.select(
         placeholder="選擇轉出小隊",
@@ -1035,7 +1102,7 @@ class DepositTransferView(ui.View):
         ],
         row=0
     )
-    def transfer_team_select_callback(
+    async def transfer_team_select_callback(
         self,
         select: ui.StringSelect,
         interaction: ntd.Interaction
@@ -1043,7 +1110,11 @@ class DepositTransferView(ui.View):
         """選取轉出小隊 callback。
         """
 
-        ...
+        self.transfer_team = select.values[0]
+        self.t_team_deposit = get_deposit(self.transfer_team)
+        await interaction.response.edit_message(
+            embed=self.status_embed()
+        )
 
     @ui.select(
         placeholder="選擇轉入小隊",
@@ -1055,7 +1126,7 @@ class DepositTransferView(ui.View):
         ],
         row=1
     )
-    def deposit_team_select_callback(
+    async def deposit_team_select_callback(
         self,
         select: ui.StringSelect,
         interaction: ntd.Interaction
@@ -1063,7 +1134,11 @@ class DepositTransferView(ui.View):
         """選取轉入小隊 callback。
         """
 
-        ...
+        self.deposit_team = select.values[0]
+        self.d_team_deposit = get_deposit(self.deposit_team)
+        await interaction.response.edit_message(
+            embed=self.status_embed()
+        )
 
     @ui.button(
     label="輸入金額",
@@ -1087,7 +1162,7 @@ class DepositTransferView(ui.View):
         emoji="✅",
         row=3
     )
-    def comfirm_button_callback(
+    async def comfirm_button_callback(
         self,
         button: ui.Button,
         interaction: ntd.Interaction
@@ -1095,7 +1170,44 @@ class DepositTransferView(ui.View):
         """確認轉出按鈕 callback。
         """
 
-        ...
+        if(not self.input_check()): # 檢查資料都填齊
+            await interaction.response.send_message(
+                    content="**輸入資料不完整!!!**",
+                    delete_after=5,
+                    ephemeral=True
+                )
+            return
+        # 檢查轉出小隊金額是否足夠
+        self.t_team_deposit = get_deposit(self.transfer_team)
+        if(self.t_team_deposit < self.amount):
+            await interaction.response.send_message(
+                content=f"**第{self.transfer_team}小隊帳戶餘額不足!!!**",
+                delete_after=5,
+                ephemeral=True
+            )
+            return
+        # 不可轉帳給同個小隊
+        if(self.transfer_team == self.deposit_team):
+            await interaction.response.send_message(
+                content="**不可轉帳給同個小隊!!!**",
+                delete_after=5,
+                ephemeral=True
+            )
+            return
+        
+        # 轉帳成功訊息
+        self.clear_items()
+        await interaction.response.edit_message(
+            content="**轉帳成功**",
+            embed=None,
+            view=self,
+            delete_after=5
+        )
+        DepositFunctionView.remove_transfering_user(interaction.user.id)
+
+        # TODO: Transfer money, log alteration, send notification
+  
+        self.stop()
 
     @ui.button(
         label="取消",
@@ -1155,8 +1267,7 @@ class AmountInput(ui.Modal):
                 raise ValueError
             
             await interaction.response.edit_message(
-                embed=self.original_view.status_embed(),
-                view=self.original_view
+                embed=self.original_view.status_embed()
             )
         except ValueError:  # 防呆(輸入文字或負數)
             await interaction.response.send_message(
@@ -1175,7 +1286,6 @@ class LogEmbed(ntd.Embed):
         super().__init__(
             color=PURPLE,
             title="收支紀錄",
-            type="rich",
             description="小隊存款金額的變動以及\n買賣股票最近的25筆紀錄"
         )
 
@@ -1235,7 +1345,6 @@ class TeamAssetChangeNoticeEmbed(ntd.Embed):
         super().__init__(
             color=PURPLE,
             title=title,
-            type="rich",
             description=description
         )
         self.set_footer(
@@ -1267,7 +1376,6 @@ class TeamStockChangeNoticeEmbed(ntd.Embed):
         super().__init__(
             color=PURPLE,
             title=title,
-            type="rich",
             description=description
         )
         self.set_footer(
@@ -1284,8 +1392,7 @@ class TeamAssetEmbed(ntd.Embed):
     def __init__(self, team: int):
         super().__init__(
             color=PURPLE,
-            title=f"第{team}小隊 F-pay帳戶",
-            type="rich"
+            title=f"第{team}小隊 F-pay帳戶"
         )
         asset_data: AssetDict = access_file.read_file("team_assets")[f"{team}"]
         self.add_field( # 要加市值
@@ -1308,7 +1415,6 @@ class TeamStockEmbed(ntd.Embed):
         super().__init__(
             color=PURPLE,
             title="股票庫存",
-            type="rich"
         )
         stock_inv = get_stock_inventory(team)
         if(stock_inv):
@@ -1343,7 +1449,6 @@ class NewsEmbed(ntd.Embed):
         super().__init__(
             color=PURPLE,
             title=title,
-            type="rich",
             description=content,
             timestamp=datetime.now()
         )
@@ -1426,9 +1531,14 @@ class DiscordUI(commands.Cog):
             guild_ids=[1218130958536937492]
     )
     async def test_ui(self, interaction: ntd.Interaction):
-        view = FinancialStatementView()
+        DepositFunctionView.add_transfering_user(interaction.user.id)
+        view = DepositTransferView(
+            user_name=interaction.user.display_name,
+            user_icon=interaction.user.display_avatar,
+            bot=self.bot
+        )
         await interaction.response.send_message(
-            content=view.initial_message(),
+            embed=view.status_embed(),
             view=view,
             ephemeral=True
         )

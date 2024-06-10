@@ -126,6 +126,24 @@ class AssetsManager(commands.Cog):
             user: str
     ):
         """更新小隊存款額並記錄log。
+
+        Parameters
+        ----------
+        team: `int`
+            要更新存款的小隊。
+        mode: `Literal['1', '2', '3', '4-1', '4-2']`
+            變更模式
+            '1': deposit
+            '2': withdraw
+            '3': change
+
+            轉帳變更
+            '4-1 from': to deposit team
+            '4-2 to': to transfer team
+        amount: `int`
+            變更量。
+        user: `str`
+            變更者。
         """
         
         original = self.team_assets[team-1].deposit # 原餘額
