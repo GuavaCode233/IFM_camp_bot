@@ -9,14 +9,14 @@ import json
 
 from .utilities import access_file
 from .utilities.datatypes import (
-    Config,
     AssetsData,
-    StockDict,
+    ChangeMode,
+    Config,
     InitialStockData,
     LogData,
-    TradeType,
     LogType,
-    ChangeMode
+    StockDict,
+    TradeType
 )
 
 
@@ -208,11 +208,10 @@ class AssetsManager(commands.Cog):
             要更新存款的小隊。
         change_mode: `ChangeMode`
             變更模式
-            - deposit
-            - withdraw
-            - change
-            - transfer
-
+            - Deposit: 增加存款
+            - Withdraw: 減少存款
+            - Change: 更改存款餘額
+            - Transfer: 轉帳
         amount: `int`
             變更量。
         user: `str`
@@ -221,11 +220,11 @@ class AssetsManager(commands.Cog):
         
         original = self.team_assets[team-1].deposit # 原餘額
 
-        if(change_mode == "deposit"):
+        if(change_mode == "Deposit"):
             self.team_assets[team-1].deposit += amount
-        elif(change_mode == "withdraw"):
+        elif(change_mode == "Withdraw"):
             self.team_assets[team-1].deposit -= amount
-        elif(change_mode == "change"):
+        elif(change_mode == "Change"):
             self.team_assets[team-1].deposit = amount
         
         # 儲存紀錄
@@ -256,7 +255,7 @@ class AssetsManager(commands.Cog):
         team: `int`
             小隊編號。
         trade_type: `TradeType`
-            交易別 "buy" or "sell"。
+            交易別 "買進" or "賣出"。
         stock: `int`
             所選擇股票的 index
         quantity: `int`

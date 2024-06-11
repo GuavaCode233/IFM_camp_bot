@@ -106,7 +106,7 @@ class AssetsData(TypedDict):
     __root__: AssetDict
 
 
-ChangeMode = Literal["deposit", "withdraw", "change", "transfer"]
+ChangeMode = Literal["Deposit", "Withdraw", "Change", "Transfer"]
 LogType = Literal["DepositChange", "StockChange"]
 
 LogData = TypedDict(

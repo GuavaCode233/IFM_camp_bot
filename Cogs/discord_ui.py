@@ -8,19 +8,19 @@ from typing import Dict, List, Literal
 from .assets_manager import AssetsManager
 from .utilities import access_file
 from .utilities.datatypes import (
-    Config,
-    ChannelIDs,
-    MessageIDs,
-    AssetDict,
-    ChangeMode,
     AlterationLog,
-    LogData,
-    LogType,
+    AssetDict,
+    ChannelIDs,
+    ChangeMode,
+    Config,
+    FinancialStatement,
     GameState,
     InitialStockData,
-    StockDict,
-    FinancialStatement,
+    LogData,
+    LogType,
+    MessageIDs,
     RawStockData,
+    StockDict,
     TradeType
 )
 
@@ -251,6 +251,7 @@ class TradeView(ui.View):
         """用於編排選單狀態訊息。
         """
 
+        self.deposit = get_deposit(self.team)   # 更新顯示的存款額
         time = datetime.now()
         time = time.strftime("%I:%M%p")
 
@@ -396,7 +397,7 @@ class TradeView(ui.View):
         MarketFunctionView.remove_trading_user(interaction.user.id)
         self.clear_items()
         await interaction.response.edit_message(
-            content="**改變成功!!!**",
+            content=f"**{self.trade_type}成功!!!**",
             embed=None,
             delete_after=5,
             view=self
@@ -414,7 +415,7 @@ class TradeView(ui.View):
 
         ui: DiscordUI = self.bot.get_cog("DiscordUI")
         await ui.send_notification(
-            type_="StockChange",
+            log_type="StockChange",
             team=self.team,
             user=interaction.user.display_name,
             trade_type=self.trade_type,
@@ -764,9 +765,9 @@ class DepositChangeView(ui.View):
     )
     # 更改模式轉換標籤
     CHANGE_MODE_TO_LABEL: Dict[ChangeMode, str] = {
-        "deposit": "增加存款",
-        "withdraw": "減少存款",
-        "change": "更改存款餘額"
+        "Deposit": "增加存款",
+        "Withdraw": "減少存款",
+        "Change": "更改存款餘額"
     }
 
     def __init__(
@@ -871,19 +872,19 @@ class DepositChangeView(ui.View):
         options=[
             ntd.SelectOption(
                 label="增加存款",
-                value="deposit",
+                value="Deposit",
                 description="輸入增加的金額。",
                 emoji="➕"
             ),
             ntd.SelectOption(
                 label="減少存款",
-                value="withdraw",
+                value="Withdraw",
                 description="輸入減少的金額。",
                 emoji="➖"
             ),
             ntd.SelectOption(
                 label="更改存款餘額",
-                value="change",
+                value="Change",
                 description="輸入改變的餘額。",
                 emoji="🔑"
             )
@@ -946,7 +947,7 @@ class DepositChangeView(ui.View):
             return
         # 檢查小隊金額是否足夠
         self.selected_team_deposit = get_deposit(self.selected_team)
-        if(self.selected_mode == "withdraw" and
+        if(self.selected_mode == "Withdraw" and
             self.selected_team_deposit < self.amount):   # 此小隊金額不足扣繳
             await interaction.response.send_message(
                 content=f"**第{self.selected_team}小隊帳戶餘額不足!!!**",
@@ -979,7 +980,7 @@ class DepositChangeView(ui.View):
         await ui.send_notification(
             log_type="DepositChange",
             team=self.selected_team,
-            mode=self.selected_mode,
+            change_mode=self.selected_mode,
             amount=self.amount,
             user=interaction.user.display_name
         )
@@ -1341,14 +1342,14 @@ class TeamDepositChangeNoticeEmbed(ntd.Embed):
     ):
 
         title = {
-            "deposit": "🔔即時入帳通知🔔",
-            "withdraw": "💸F-pay消費通知💸",
-            "change": "🔑帳戶額變更通知🔑"
+            "Deposit": "🔔即時入帳通知🔔",
+            "Withdraw": "💸F-pay消費通知💸",
+            "Change": "🔑帳戶額變更通知🔑"
         }[change_mode]
         description = {
-            "deposit": f"關主: {user} 已將 **FP${amount:,}** 匯入帳戶!",
-            "withdraw": f"關主: {user} 已將 **FP${amount:,}** 從帳戶中扣除!",
-            "change": f"關主: {user} 已改變帳戶餘額為 **$FP{amount:,}** !"
+            "Deposit": f"關主: {user} 已將 **FP${amount:,}** 匯入帳戶!",
+            "Withdraw": f"關主: {user} 已將 **FP${amount:,}** 從帳戶中扣除!",
+            "Change": f"關主: {user} 已改變帳戶餘額為 **$FP{amount:,}** !"
         }[change_mode]
 
         super().__init__(
@@ -1695,7 +1696,7 @@ class DiscordUI(commands.Cog):
         if(log_type == "DepositChange"):
             await channel.send(
                 embed=TeamDepositChangeNoticeEmbed(
-                    change_mode=mode,
+                    change_mode=change_mode,
                     amount=amount,
                     user=user
                 )
