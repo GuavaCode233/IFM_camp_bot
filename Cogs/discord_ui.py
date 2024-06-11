@@ -1233,6 +1233,7 @@ class DepositTransferView(ui.View):
         )
         self.stop()
 
+
 class AmountInput(ui.Modal):
     """金額輸入視窗。
     """
