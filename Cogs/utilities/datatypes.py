@@ -106,20 +106,21 @@ class AssetsData(TypedDict):
     __root__: AssetDict
 
 
-ChangeMode = Literal["Deposit", "Withdraw", "Change", "Transfer"]
-LogType = Literal["DepositChange", "StockChange"]
+ChangeMode = Literal["Deposit", "Withdraw", "Change"]
+LogType = Literal["DepositChange", "Transfer", "StockChange"]
 
 LogData = TypedDict(
     "LogData",
     {
-        "type": LogType,
+        "log_type": LogType,
         "time": str,
         "user": str,
         "serial": int,
         "team": str,
-        "original": NotRequired[int],
-        "updated": NotRequired[int],
-        "trade": NotRequired[str],
+        "original_deposit": NotRequired[int],
+        "changed_deposit": NotRequired[int],
+        "transfer_tag": NotRequired[Literal['T']] | NotRequired[Literal['D']],
+        "trade_type": NotRequired[str],
         "stock": NotRequired[str],
         "quantity": NotRequired[str]
     }

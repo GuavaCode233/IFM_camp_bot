@@ -5,6 +5,8 @@ import nextcord as ntd
 from datetime import datetime
 from typing import Dict, List, Literal
 
+import Cogs.assets_manager
+
 from .assets_manager import AssetsManager
 from .utilities import access_file
 from .utilities.datatypes import (
@@ -1310,20 +1312,26 @@ class LogEmbed(ntd.Embed):
         start_index: int = 0 if serial < 25 else serial-25
         record_list = record_list[start_index:]
         for record in record_list:
-            if(record["type"] == "DepositChange"):
-                self.add_field(
-                    name=f"#{record["serial"]} {record["user"]} 在 {record["time"]}\n" \
-                         f"變更第{record["team"]}小隊存款",
-                    value=f"{record["original"]:,} {u"\u2192"} {record["updated"]:,}",
-                    inline=False
-                )
-            elif(record["type"] == "StockChange"):
-                self.add_field(
-                    name=f"#{record["serial"]} {record["user"]} 在 {record["time"]}\n" \
-                         f"{record["trade_type"]} 第{record["team"]}小隊股票",
-                    value=f"商品: {record["stock"]} 張數: {record["quantity"]}",
-                    inline=False
-                )
+            if(record["log_type"] == "DepositChange"):
+                field_name = f"#{record['serial']} {record['user']} 在 {record['time']}\n" \
+                             f"變更第{record['team']}小隊存款"
+                field_value = f"{record['original_deposit']:,} {u'\u2192'} {record['changed_deposit']:,}"
+            elif(record["log_type"] == "Transfer"):
+                field_name = f"#{record['serial']} {record['user']} 在 {record['time']}\n" \
+                            f"進行轉帳"
+                transfer_label = {"T": "轉出", "D": "轉入"}[record["transfer_tag"]]
+                field_value = f"{transfer_label} 第{record['team']}小隊存款\n" \
+                              f"{record['original_deposit']} {u'\u2192'} {record['changed_deposit']}"
+            elif(record["log_type"] == "StockChange"):
+                field_name = f"#{record['serial']} {record['user']} 在 {record['time']}\n" \
+                             f"{record['trade_type']} 第{record['team']}小隊股票"
+                field_value = f"商品: {record['stock']} 張數: {record['quantity']}"
+            
+            self.add_field(
+                name=field_name,
+                value=field_value,
+                inline=False
+            )
         
         self.set_footer(
             text=f"資料更新時間: {datetime.now().strftime("%m/%d %I:%M%p")}"
@@ -1552,6 +1560,29 @@ class DiscordUI(commands.Cog):
             view=view,
             ephemeral=True
         )
+        # time = datetime.now()
+        # time = time.strftime("%m/%d %I:%M%p")
+
+        # embed = ntd.Embed(
+        #     color=PURPLE,
+        #     title="收支紀錄",
+        #     description="小隊存款金額的變動以及\n買賣股票最近的25筆紀錄"
+        # )
+        # field_name = f"#{10} {interaction.user.display_name} 在 {time}\n" \
+        #              f"進行轉帳"
+        # field_value = f"轉出小隊存款: {56560} {u'\u2192'} {66115}\n" \
+        #               f"轉入小隊存款: {56664} {u'\u2192'} {88888}"
+        # embed.add_field(
+        #     name=field_name,
+        #     value=field_value,
+        #     inline=False
+        # )
+        # await interaction.response.send_message(
+        #     embed=embed,
+        #     ephemeral=True
+        # )
+        
+
     
     @staticmethod
     def stock_market_message() -> str:

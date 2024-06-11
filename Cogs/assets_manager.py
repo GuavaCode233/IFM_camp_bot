@@ -2,7 +2,7 @@ from nextcord.ext import commands, application_checks
 import nextcord as ntd
 
 from dataclasses import dataclass, field
-from typing import List, Dict
+from typing import List, Dict, Tuple
 from datetime import datetime
 from pprint import pprint
 import json
@@ -20,26 +20,13 @@ from .utilities.datatypes import (
 )
 
 
-@dataclass(kw_only=True, slots=True)
-class TeamAssets:
-    """儲存小隊資產。
-    包括「小隊編號」、「資產總額」、「存款總額」。
-    """
-
-    team_number: str
-    deposit: int
-    stock_inv: Dict[str, List[int]] = field(default_factory=dict)
-    revenue: int = 0
-
-
 def log(
     *,
     log_type: LogType,
-    time: datetime,
     user: str,
-    team: str,
-    original: int | None = None,
-    updated: int | None = None,
+    team: str | Tuple[str, str],
+    original_deposit: int | Tuple[int, int] | None = None,
+    changed_deposit : int | Tuple[int, int] | None = None,
     trade_type: TradeType | None = None,
     stock: str | None = None,
     quantity: int | None = None
@@ -54,26 +41,59 @@ def log(
     ) as json_file:
         dict_: Dict[str, int | List[LogData]] = json.load(json_file)
 
-    if(dict_.get(team, None) is None):
+    time = datetime.now()
+    time = time.strftime("%m/%d %I:%M%p")
+    
+    if(log_type == "Transfer"):
+        transfer_team, deposit_team = team
+        if(dict_.get(transfer_team, None)):
+            dict_[transfer_team] = []
+        dict_[transfer_team].append(
+            {
+                "log_type": log_type,
+                "time": time,
+                "user": user,
+                "serial": dict_["serial"],
+                "team": transfer_team,
+                "transfer_tag": "T",
+                "original_deposit": original_deposit[0],
+                "changed_deposit": changed_deposit[0]
+            }
+        )
+        if(dict_.get(deposit_team, None)):
+            dict_[deposit_team] = []
+        dict_[deposit_team].append(
+            {
+                "log_type": log_type,
+                "time": time,
+                "user": user,
+                "serial": dict_["serial"],
+                "team": deposit_team,
+                "transfer_tag": "T",
+                "original_deposit": original_deposit[1],
+                "changed_deposit": changed_deposit[1]
+            }
+        )
+    elif(dict_.get(team, None) is None):
         dict_[team] = []
 
     if(log_type == "DepositChange"):
         dict_[team].append(
             {
-                "type": log_type,
-                "time": time.strftime("%m/%d %I:%M%p"),
+                "log_type": log_type,
+                "time": time,
                 "user": user,
                 "serial": dict_["serial"],
                 "team": team,
-                "original": original,
-                "updated": updated
+                "original": original_deposit,
+                "updated": changed_deposit 
             }
         )
     elif(log_type == "StockChange"):
         dict_[team].append(
             {
-                "type": log_type,
-                "time": time.strftime("%m/%d %I:%M%p"),
+                "log_type": log_type,
+                "time": time,
                 "user": user,
                 "serial": dict_["serial"],
                 "team": team,
@@ -97,6 +117,18 @@ def log(
         )
 
 
+@dataclass(kw_only=True, slots=True)
+class TeamAssets:
+    """儲存小隊資產。
+    包括「小隊編號」、「資產總額」、「存款總額」。
+    """
+
+    team_number: str
+    deposit: int
+    stock_inv: Dict[str, List[int]] = field(default_factory=dict)
+    revenue: int = 0
+
+    
 class AssetsManager(commands.Cog):
     """資產控制。
     """
@@ -198,7 +230,7 @@ class AssetsManager(commands.Cog):
             team: int,
             change_mode: ChangeMode,
             amount: int,
-            user: str
+            user: str,
     ):
         """改變小隊存款額並記錄log。
 
@@ -211,15 +243,16 @@ class AssetsManager(commands.Cog):
             - Deposit: 增加存款
             - Withdraw: 減少存款
             - Change: 更改存款餘額
-            - Transfer: 轉帳
+
         amount: `int`
             變更量。
         user: `str`
             變更者。
         """
         
-        original = self.team_assets[team-1].deposit # 原餘額
+        original = self.team_assets[team-1].deposit # 原餘額     
 
+    
         if(change_mode == "Deposit"):
             self.team_assets[team-1].deposit += amount
         elif(change_mode == "Withdraw"):
@@ -230,14 +263,54 @@ class AssetsManager(commands.Cog):
         # 儲存紀錄
         log(
             log_type="DepositChange",
-            time=datetime.now(),
             user=user,
             team=str(team),
-            original=original,
-            updated=self.team_assets[team-1].deposit
+            original_deposit=original,
+            changed_deposit=self.team_assets[team-1].deposit
         )
         # 儲存資料
         self.save_assets(team)
+
+    def transfer(
+            self,
+            *,
+            transfer_deposit_teams: Tuple[int, int],
+            amount: int,
+            user: str
+    ):
+        """轉帳並記錄log。
+
+        Parameters
+        ----------
+        transfer_deposit_teams: `Tuple[int, int]` = `None`
+            轉出與轉入小隊 (transfer_team, deposit_team)。
+        amount: `int`
+            轉帳額度。
+        user: `str`
+            操作轉帳者。
+        """
+
+        transfer_team, deposit_team = transfer_deposit_teams
+        original_deposits = (
+            self.team_assets[transfer_team-1].deposit,
+            self.team_assets[deposit_team-1].deposit
+        )
+        self.team_assets[transfer_team-1].deposit -= amount
+        self.team_assets[deposit_team-1].deposit += amount
+
+        log(
+            log_type="Transfer",
+            user=user,
+            team=(str(t) for t in transfer_deposit_teams),
+            original_deposit=original_deposits,
+            changed_deposit=(
+                self.team_assets[transfer_team-1].deposit,
+                self.team_assets[deposit_team-1].deposit
+            )
+        )
+
+        self.save_assets(transfer_team)
+        self.save_assets(deposit_team)
         
     async def stock_trade(
             self,
@@ -297,7 +370,6 @@ class AssetsManager(commands.Cog):
         stock_name_symbol = f"{initail_stock_data["name"]} {initail_stock_data["symbol"]}"
         log(
             log_type="StockChange",
-            time=datetime.now(),
             user=user,
             team=str(team),
             trade_type=trade_type,
@@ -391,4 +463,3 @@ class AssetsManager(commands.Cog):
 
 def setup(bot: commands.Bot):
     bot.add_cog(AssetsManager(bot))
-    

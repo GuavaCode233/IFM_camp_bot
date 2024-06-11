@@ -5,7 +5,6 @@ import json
 import os
 
 
-
 def read_file(file_name: str) -> Any:
     """讀取指定檔名的檔案。
     """
@@ -42,7 +41,7 @@ def save_to(file_name: str, data: dict | list):
             ensure_ascii=False,
             indent=4
         )
-
+        
 
 def clear_log_data():
     """清除log。
@@ -58,4 +57,3 @@ def clear_log_data():
             ensure_ascii=False,
             indent=4
         )
-        
