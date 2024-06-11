@@ -1,11 +1,9 @@
 """存取檔案用。
 """
-from typing import Dict, List, Any, Literal
-from datetime import datetime
+from typing import Any
 import json
 import os
 
-from .datatypes import LogData
 
 
 def read_file(file_name: str) -> Any:
@@ -41,71 +39,6 @@ def save_to(file_name: str, data: dict | list):
     ) as json_file:
         json.dump(
             data, json_file,
-            ensure_ascii=False,
-            indent=4
-        )
-
-
-def log(
-    *,
-    type_: Literal["AssetUpdate", "StockChange"],
-    time: datetime,
-    user: str,
-    team: str,
-    original: int | None = None,
-    updated: int | None = None,
-    trade_type: Literal["買進", "賣出"] | None = None,
-    stock: str | None = None,
-    quantity: int | None = None
-):
-    """紀錄收支動態(各小隊)。
-    """
-
-    with open(
-        ".\\Data\\alteration_log.json",
-        mode="r",
-        encoding="utf-8"
-    ) as json_file:
-        dict_: Dict[str, int | List[LogData]] = json.load(json_file)
-
-    if(dict_.get(team, None) is None):
-        dict_[team] = []
-    
-    if(type_ == "AssetUpdate"):
-        dict_[team].append(
-            {
-                "type": type_,
-                "time": time.strftime("%m/%d %I:%M%p"),
-                "user": user,
-                "serial": dict_["serial"],
-                "team": team,
-                "original": original,
-                "updated": updated
-            }            
-        )
-    elif(type_ == "StockChange"):
-        dict_[team].append(
-            {
-                "type": type_,
-                "time": time.strftime("%m/%d %I:%M%p"),
-                "user": user,
-                "serial": dict_["serial"],
-                "team": team,
-                "trade_type": trade_type,
-                "stock": stock,
-                "quantity": quantity
-            }
-        )
-
-    dict_["serial"] += 1
-
-    with open(
-        ".\\Data\\alteration_log.json",
-        mode="w",
-        encoding="utf-8"
-    ) as json_file:
-        json.dump(
-            dict_, json_file,
             ensure_ascii=False,
             indent=4
         )

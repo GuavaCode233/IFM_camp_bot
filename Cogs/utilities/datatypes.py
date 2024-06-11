@@ -106,10 +106,13 @@ class AssetsData(TypedDict):
     __root__: AssetDict
 
 
+ChangeMode = Literal["deposit", "withdraw", "change", "transfer"]
+LogType = Literal["DepositChange", "StockChange"]
+
 LogData = TypedDict(
     "LogData",
     {
-        "type": Literal["AssetUpdate", "StockChange"],
+        "type": LogType,
         "time": str,
         "user": str,
         "serial": int,
@@ -211,6 +214,9 @@ MarketData = List[StockDict]
 """每支股票的市場資料。
 """
 
+TradeType = Literal["買進", "賣出"]
+"""交易類別(買進、賣出)。
+"""
 
 class News(TypedDict):
     """個別新聞資料。

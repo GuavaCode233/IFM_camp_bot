@@ -5,9 +5,19 @@ from dataclasses import dataclass, field
 from typing import List, Dict
 from datetime import datetime
 from pprint import pprint
+import json
 
 from .utilities import access_file
-from .utilities.datatypes import Config, AssetsData, StockDict, InitialStockData
+from .utilities.datatypes import (
+    Config,
+    AssetsData,
+    StockDict,
+    InitialStockData,
+    LogData,
+    TradeType,
+    LogType,
+    ChangeMode
+)
 
 
 @dataclass(kw_only=True, slots=True)
@@ -20,6 +30,71 @@ class TeamAssets:
     deposit: int
     stock_inv: Dict[str, List[int]] = field(default_factory=dict)
     revenue: int = 0
+
+
+def log(
+    *,
+    log_type: LogType,
+    time: datetime,
+    user: str,
+    team: str,
+    original: int | None = None,
+    updated: int | None = None,
+    trade_type: TradeType | None = None,
+    stock: str | None = None,
+    quantity: int | None = None
+):
+    """收支紀錄(各小隊)。
+    """
+
+    with open(
+        ".\\Data\\alteration_log.json",
+        mode="r",
+        encoding="utf-8"
+    ) as json_file:
+        dict_: Dict[str, int | List[LogData]] = json.load(json_file)
+
+    if(dict_.get(team, None) is None):
+        dict_[team] = []
+
+    if(log_type == "DepositChange"):
+        dict_[team].append(
+            {
+                "type": log_type,
+                "time": time.strftime("%m/%d %I:%M%p"),
+                "user": user,
+                "serial": dict_["serial"],
+                "team": team,
+                "original": original,
+                "updated": updated
+            }
+        )
+    elif(log_type == "StockChange"):
+        dict_[team].append(
+            {
+                "type": log_type,
+                "time": time.strftime("%m/%d %I:%M%p"),
+                "user": user,
+                "serial": dict_["serial"],
+                "team": team,
+                "trade_type": trade_type,
+                "stock": stock,
+                "quantity": quantity
+            }
+        )
+
+    dict_["serial"] += 1
+
+    with open(
+        ".\\Data\\alteration_log.json",
+        mode="w",
+        encoding="utf-8"
+    ) as json_file:
+        json.dump(
+            dict_, json_file,
+            ensure_ascii=False,
+            indent=4
+        )
 
 
 class AssetsManager(commands.Cog):
@@ -117,29 +192,27 @@ class AssetsManager(commands.Cog):
         pprint(dict_)
         print()
     
-    def update_deposit(
+    def change_deposit(
             self,
             *,
             team: int,
-            mode: str,  # "1": deposit, "2": withdraw, "3": change
+            change_mode: ChangeMode,
             amount: int,
             user: str
     ):
-        """更新小隊存款額並記錄log。
+        """改變小隊存款額並記錄log。
 
         Parameters
         ----------
         team: `int`
             要更新存款的小隊。
-        mode: `Literal['1', '2', '3', '4-1', '4-2']`
+        change_mode: `ChangeMode`
             變更模式
-            '1': deposit
-            '2': withdraw
-            '3': change
+            - deposit
+            - withdraw
+            - change
+            - transfer
 
-            轉帳變更
-            '4-1 from': to deposit team
-            '4-2 to': to transfer team
         amount: `int`
             變更量。
         user: `str`
@@ -148,16 +221,16 @@ class AssetsManager(commands.Cog):
         
         original = self.team_assets[team-1].deposit # 原餘額
 
-        if(mode == "1"):
+        if(change_mode == "deposit"):
             self.team_assets[team-1].deposit += amount
-        elif(mode == "2"):
+        elif(change_mode == "withdraw"):
             self.team_assets[team-1].deposit -= amount
-        elif(mode == "3"):
+        elif(change_mode == "change"):
             self.team_assets[team-1].deposit = amount
         
         # 儲存紀錄
-        access_file.log(
-            type_="AssetUpdate",
+        log(
+            log_type="DepositChange",
             time=datetime.now(),
             user=user,
             team=str(team),
@@ -171,7 +244,7 @@ class AssetsManager(commands.Cog):
             self,
             *,
             team: int,
-            trade_type: str,
+            trade_type: TradeType,
             stock: int, 
             quantity: int,
             user: str
@@ -182,7 +255,7 @@ class AssetsManager(commands.Cog):
         ----------
         team: `int`
             小隊編號。
-        trade_type: `str`
+        trade_type: `TradeType`
             交易別 "buy" or "sell"。
         stock: `int`
             所選擇股票的 index
@@ -223,8 +296,8 @@ class AssetsManager(commands.Cog):
         
         initail_stock_data: InitialStockData = access_file.read_file("raw_stock_data")["initial_data"][stock]
         stock_name_symbol = f"{initail_stock_data["name"]} {initail_stock_data["symbol"]}"
-        access_file.log(
-            type_="StockChange",
+        log(
+            log_type="StockChange",
             time=datetime.now(),
             user=user,
             team=str(team),
@@ -236,83 +309,85 @@ class AssetsManager(commands.Cog):
         self.save_assets(team)
         return display_value
 
-    @ntd.slash_command(
-        name="change_deposit",
-        description="🛅針對指定小隊改變存款額。",
-        guild_ids=[1218130958536937492]
-    )
-    @application_checks.is_owner()
-    async def change_deposit(
-        self,
-        interaction: ntd.Interaction,
-        team: int = ntd.SlashOption(
-            name="小隊",
-            description="輸入小隊阿拉伯數字",
-            choices={str(t):t for t in range(1, 9)}
-        ),
-        amount: int = ntd.SlashOption(
-            name="改變金額",
-            description="輸入金額阿拉伯數字(可為負數)",
-        )
-    ):
-        """用指令改變指定小隊存款額。
-        """
+    # Deprecated
+    # @ntd.slash_command(
+    #     name="change_deposit",
+    #     description="🛅針對指定小隊改變存款額。",
+    #     guild_ids=[1218130958536937492]
+    # )
+    # @application_checks.is_owner()
+    # async def change_deposit(
+    #     self,
+    #     interaction: ntd.Interaction,
+    #     team: int = ntd.SlashOption(
+    #         name="小隊",
+    #         description="輸入小隊阿拉伯數字",
+    #         choices={str(t):t for t in range(1, 9)}
+    #     ),
+    #     amount: int = ntd.SlashOption(
+    #         name="改變金額",
+    #         description="輸入金額阿拉伯數字(可為負數)",
+    #     )
+    # ):
+    #     """用指令改變指定小隊存款額。
+    #     """
         
-        self.update_deposit(
-            team=team,
-            mode="1",
-            amount=amount,
-            user=interaction.user.display_name
-        )
-        # update_asset_ui 更新資產ui顯示
-        await interaction.response.send_message(
-            "**改變成功!!!**",
-            delete_after=3,
-            ephemeral=True
-        )
+    #     self.change_deposit(
+    #         team=team,
+    #         mode="1",
+    #         amount=amount,
+    #         user=interaction.user.display_name
+    #     )
+    #     # update_asset_ui 更新資產ui顯示
+    #     await interaction.response.send_message(
+    #         "**改變成功!!!**",
+    #         delete_after=3,
+    #         ephemeral=True
+    #     )
     
-    @ntd.slash_command(
-        name="change_stock",
-        description="🛅針對指定小隊改變股票庫存。",
-        guild_ids=[1218130958536937492]
-    )
-    @application_checks.is_owner()
-    async def change_stock(
-        self,
-        interaction: ntd.Interaction,
-        team: int = ntd.SlashOption(
-            name="小隊",
-            description="輸入小隊阿拉伯數字",
-            choices={str(t):t for t in range(1, 9)}
-        ),
-        trade_type: str = ntd.SlashOption(
-            name="交易別",
-            description="選擇交易別",
-            choices=["買進", "賣出"]
-        ),
-        stock: int = ntd.SlashOption(
-            name="股票index",
-            description="輸入股票index阿拉伯數字",
-            choices={str(t):t for t in range(10)}
-        ),
-        quantity: int = 1
-    ):
-        """用指令改變指定小隊存款額。
-        """
+    # Deprecated
+    # @ntd.slash_command(
+    #     name="change_stock",
+    #     description="🛅針對指定小隊改變股票庫存。",
+    #     guild_ids=[1218130958536937492]
+    # )
+    # @application_checks.is_owner()
+    # async def change_stock(
+    #     self,
+    #     interaction: ntd.Interaction,
+    #     team: int = ntd.SlashOption(
+    #         name="小隊",
+    #         description="輸入小隊阿拉伯數字",
+    #         choices={str(t):t for t in range(1, 9)}
+    #     ),
+    #     trade_type: str = ntd.SlashOption(
+    #         name="交易別",
+    #         description="選擇交易別",
+    #         choices=["買進", "賣出"]
+    #     ),
+    #     stock: int = ntd.SlashOption(
+    #         name="股票index",
+    #         description="輸入股票index阿拉伯數字",
+    #         choices={str(t):t for t in range(10)}
+    #     ),
+    #     quantity: int = 1
+    # ):
+    #     """用指令改變指定小隊存款額。
+    #     """
         
-        await self.stock_trade(
-            team=team,
-            trade_type=trade_type,
-            stock=stock,
-            quantity=quantity,
-            user=interaction.user.display_name
-        )
-        # update_asset_ui 更新資產ui顯示
-        await interaction.response.send_message(
-            "**改變成功!!!**",
-            delete_after=3,
-            ephemeral=True
-        )
+    #     await self.stock_trade(
+    #         team=team,
+    #         trade_type=trade_type,
+    #         stock=stock,
+    #         quantity=quantity,
+    #         user=interaction.user.display_name
+    #     )
+    #     # update_asset_ui 更新資產ui顯示
+    #     await interaction.response.send_message(
+    #         "**改變成功!!!**",
+    #         delete_after=3,
+    #         ephemeral=True
+    #     )
 
 
 def setup(bot: commands.Bot):

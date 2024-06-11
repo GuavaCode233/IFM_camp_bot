@@ -12,16 +12,18 @@ from .utilities.datatypes import (
     ChannelIDs,
     MessageIDs,
     AssetDict,
+    ChangeMode,
     AlterationLog,
     LogData,
+    LogType,
     GameState,
     InitialStockData,
     StockDict,
     FinancialStatement,
-    RawStockData
+    RawStockData,
+    TradeType
 )
 
-TradeType = Literal["買進", "賣出"]
 
 PURPLE: Literal[0x433274] = 0x433274   # Embed color: purple
 # 隊輔id跟小隊對照表
@@ -760,6 +762,12 @@ class DepositChangeView(ui.View):
         "selected_mode",
         "bot"
     )
+    # 更改模式轉換標籤
+    CHANGE_MODE_TO_LABEL: Dict[ChangeMode, str] = {
+        "deposit": "增加存款",
+        "withdraw": "減少存款",
+        "change": "更改存款餘額"
+    }
 
     def __init__(
             self,
@@ -779,7 +787,7 @@ class DepositChangeView(ui.View):
         # slect status
         self.selected_team: int | None = None
         self.selected_team_deposit: int | None = None # 該小隊目前存款
-        self.selected_mode: str | None = None
+        self.selected_mode: ChangeMode | None = None
         # bot
         self.bot = bot
 
@@ -863,16 +871,19 @@ class DepositChangeView(ui.View):
         options=[
             ntd.SelectOption(
                 label="增加存款",
+                value="deposit",
                 description="輸入增加的金額。",
                 emoji="➕"
             ),
             ntd.SelectOption(
                 label="減少存款",
+                value="withdraw",
                 description="輸入減少的金額。",
                 emoji="➖"
             ),
             ntd.SelectOption(
                 label="更改存款餘額",
+                value="change",
                 description="輸入改變的餘額。",
                 emoji="🔑"
             )
@@ -887,14 +898,11 @@ class DepositChangeView(ui.View):
         """模式選取選單callback。
         """
 
-        if(select.values[0] == "增加存款"):
-            self.selected_mode = "1"
-        elif(select.values[0] == "減少存款"):
-            self.selected_mode = "2"
-        elif(select.values[0] == "更改存款餘額"):
-            self.selected_mode = "3"
+        self.selected_mode = select.values[0]
         
-        self.mode_field_value = select.values[0]
+        self.mode_field_value = DepositChangeView.CHANGE_MODE_TO_LABEL[
+            self.selected_mode
+        ]
         await interaction.response.edit_message(
             embed=self.status_embed(),
         )
@@ -938,7 +946,7 @@ class DepositChangeView(ui.View):
             return
         # 檢查小隊金額是否足夠
         self.selected_team_deposit = get_deposit(self.selected_team)
-        if(self.selected_mode == "2" and
+        if(self.selected_mode == "withdraw" and
             self.selected_team_deposit < self.amount):   # 此小隊金額不足扣繳
             await interaction.response.send_message(
                 content=f"**第{self.selected_team}小隊帳戶餘額不足!!!**",
@@ -958,9 +966,9 @@ class DepositChangeView(ui.View):
         DepositFunctionView.remove_changing_user(interaction.user.id)
         # 變更第n小隊存款
         asset: AssetsManager = self.bot.get_cog("AssetsManager")
-        asset.update_deposit(   
+        asset.change_deposit(   
             team=self.selected_team,  
-            mode=self.selected_mode,
+            change_mode=self.selected_mode,
             amount=self.amount,
             user=interaction.user.display_name
         )
@@ -969,7 +977,7 @@ class DepositChangeView(ui.View):
         await ui.update_asset_ui(team=self.selected_team)
         # 發送即時通知
         await ui.send_notification(
-            type_="AssetUpdate",
+            log_type="DepositChange",
             team=self.selected_team,
             mode=self.selected_mode,
             amount=self.amount,
@@ -1301,7 +1309,7 @@ class LogEmbed(ntd.Embed):
         start_index: int = 0 if serial < 25 else serial-25
         record_list = record_list[start_index:]
         for record in record_list:
-            if(record["type"] == "AssetUpdate"):
+            if(record["type"] == "DepositChange"):
                 self.add_field(
                     name=f"#{record["serial"]} {record["user"]} 在 {record["time"]}\n" \
                          f"變更第{record["team"]}小隊存款",
@@ -1321,27 +1329,27 @@ class LogEmbed(ntd.Embed):
         )
 
 
-class TeamAssetChangeNoticeEmbed(ntd.Embed):
+class TeamDepositChangeNoticeEmbed(ntd.Embed):
     """小隊資產變更即時通知 Embed Message。
     """
 
     def __init__(
             self,
-            mode: str,
+            change_mode: ChangeMode,
             amount: int,
             user: str
     ):
 
         title = {
-            "1": "🔔即時入帳通知🔔",
-            "2": "💸F-pay消費通知💸",
-            "3": "🔑帳戶額變更通知🔑"
-        }[mode]
+            "deposit": "🔔即時入帳通知🔔",
+            "withdraw": "💸F-pay消費通知💸",
+            "change": "🔑帳戶額變更通知🔑"
+        }[change_mode]
         description = {
-            "1": f"關主: {user} 已將 **FP${amount:,}** 匯入帳戶!",
-            "2": f"關主: {user} 已將 **FP${amount:,}** 從帳戶中扣除!",
-            "3": f"關主: {user} 已改變帳戶餘額為 **$FP{amount:,}** !"
-        }[mode]
+            "deposit": f"關主: {user} 已將 **FP${amount:,}** 匯入帳戶!",
+            "withdraw": f"關主: {user} 已將 **FP${amount:,}** 從帳戶中扣除!",
+            "change": f"關主: {user} 已改變帳戶餘額為 **$FP{amount:,}** !"
+        }[change_mode]
 
         super().__init__(
             color=PURPLE,
@@ -1666,9 +1674,9 @@ class DiscordUI(commands.Cog):
     async def send_notification(
             self,
             *,
-            type_: Literal["AssetUpdate", "StockChange"] | None = None,
+            log_type: LogType | None = None,
             team: int | None = None,
-            mode: str | None = None,
+            change_mode: ChangeMode | None = None,
             amount: int | None = None,
             user: str | None = None,
             trade_type: TradeType | None = None,
@@ -1684,15 +1692,15 @@ class DiscordUI(commands.Cog):
         channel = self.bot.get_channel(
             self.CHANNEL_IDS[f"TEAM_{team}"]["NOTICE"]
         )
-        if(type_ == "AssetUpdate"):
+        if(log_type == "DepositChange"):
             await channel.send(
-                embed=TeamAssetChangeNoticeEmbed(
-                    mode=mode,
+                embed=TeamDepositChangeNoticeEmbed(
+                    change_mode=mode,
                     amount=amount,
                     user=user
                 )
             )
-        elif(type_ == "StockChange"):
+        elif(log_type == "StockChange"):
             await channel.send(
                 embed=TeamStockChangeNoticeEmbed(
                     user=user,
