@@ -116,10 +116,9 @@ LogData = TypedDict(
         "time": str,
         "user": str,
         "serial": int,
-        "team": str,
-        "original_deposit": NotRequired[int],
-        "changed_deposit": NotRequired[int],
-        "transfer_tag": NotRequired[Literal['T', 'D']],
+        "team": str | List[str, str],
+        "original_deposit": NotRequired[int | List[int, int]],
+        "changed_deposit": NotRequired[int | List[int, int]],
         "trade_type": NotRequired[str],
         "stock": NotRequired[str],
         "quantity": NotRequired[str]

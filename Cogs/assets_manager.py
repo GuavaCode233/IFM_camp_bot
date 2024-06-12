@@ -45,8 +45,8 @@ def log(
     time = time.strftime("%m/%d %I:%M%p")
     
     if(log_type == "Transfer"):
-        transfer_team, deposit_team = team
-        if(dict_.get(transfer_team, None)):
+        transfer_team = team[0]
+        if(dict_.get(transfer_team, None) is None):
             dict_[transfer_team] = []
         dict_[transfer_team].append(
             {
@@ -54,24 +54,9 @@ def log(
                 "time": time,
                 "user": user,
                 "serial": dict_["serial"],
-                "team": transfer_team,
-                "transfer_tag": "T",
-                "original_deposit": original_deposit[0],
-                "changed_deposit": changed_deposit[0]
-            }
-        )
-        if(dict_.get(deposit_team, None)):
-            dict_[deposit_team] = []
-        dict_[deposit_team].append(
-            {
-                "log_type": log_type,
-                "time": time,
-                "user": user,
-                "serial": dict_["serial"],
-                "team": deposit_team,
-                "transfer_tag": "T",
-                "original_deposit": original_deposit[1],
-                "changed_deposit": changed_deposit[1]
+                "team": team,
+                "original_deposit": original_deposit,
+                "changed_deposit": changed_deposit
             }
         )
     elif(dict_.get(team, None) is None):
@@ -85,8 +70,8 @@ def log(
                 "user": user,
                 "serial": dict_["serial"],
                 "team": team,
-                "original": original_deposit,
-                "updated": changed_deposit 
+                "original_deposit": original_deposit,
+                "changed_deposit": changed_deposit 
             }
         )
     elif(log_type == "StockChange"):
@@ -274,7 +259,7 @@ class AssetsManager(commands.Cog):
     def transfer(
             self,
             *,
-            transfer_deposit_teams: Tuple[int, int],
+            transfer_deposit_teams: Tuple[str, str],
             amount: int,
             user: str
     ):
@@ -290,7 +275,7 @@ class AssetsManager(commands.Cog):
             操作轉帳者。
         """
 
-        transfer_team, deposit_team = transfer_deposit_teams
+        transfer_team, deposit_team = (int(t) for t in transfer_deposit_teams)
         original_deposits = (
             self.team_assets[transfer_team-1].deposit,
             self.team_assets[deposit_team-1].deposit
@@ -301,7 +286,7 @@ class AssetsManager(commands.Cog):
         log(
             log_type="Transfer",
             user=user,
-            team=(str(t) for t in transfer_deposit_teams),
+            team=transfer_deposit_teams,
             original_deposit=original_deposits,
             changed_deposit=(
                 self.team_assets[transfer_team-1].deposit,

@@ -1,3 +1,42 @@
 {
-    "serial": 0
+    "serial": 3,
+    "9": [
+        {
+            "log_type": "DepositChange",
+            "time": "06/12 11:38AM",
+            "user": "摳叮面",
+            "serial": 0,
+            "team": "9",
+            "original_deposit": 10000,
+            "changed_deposit": 600000
+        },
+        {
+            "log_type": "Transfer",
+            "time": "06/12 11:39AM",
+            "user": "摳叮面",
+            "serial": 1,
+            "team": [
+                "9",
+                "1"
+            ],
+            "original_deposit": [
+                600000,
+                10000
+            ],
+            "changed_deposit": [
+                594445,
+                15555
+            ]
+        },
+        {
+            "log_type": "StockChange",
+            "time": "06/12 11:40AM",
+            "user": "摳叮面",
+            "serial": 2,
+            "team": "9",
+            "trade_type": "買進",
+            "stock": "蓮花科 0614",
+            "quantity": 2
+        }
+    ]
 }

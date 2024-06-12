@@ -1,6 +1,6 @@
 {
     "1": {
-        "deposit": 10000,
+        "deposit": 15555,
         "stock_inv": {},
         "revenue": 0
     },
@@ -40,8 +40,13 @@
         "revenue": 0
     },
     "9": {
-        "deposit": 10000,
-        "stock_inv": {},
+        "deposit": 544445,
+        "stock_inv": {
+            "3": [
+                25000,
+                25000
+            ]
+        },
         "revenue": 0
     }
 }

@@ -1248,10 +1248,15 @@ class DepositTransferView(ui.View):
         assets_manager: AssetsManager = self.bot.get_cog("AssetsManager")
         assets_manager.transfer(
             transfer_deposit_teams=(self.transfer_team, self.deposit_team),
-            amount=self.amount
+            amount=self.amount,
+            user=self.user_name
         )
-        # Send Notification
+        
         discord_ui: DiscordUI = self.bot.get_cog("DiscordUI")
+        # Update Asset UI
+        await discord_ui.update_asset_ui(team=self.transfer_team)
+        await discord_ui.update_asset_ui(team=self.deposit_team)
+        # Send Notification
         await discord_ui.send_notification(
             log_type="Transfer",
             team=(self.transfer_team, self.deposit_team),
@@ -1361,9 +1366,10 @@ class LogEmbed(ntd.Embed):
             elif(record["log_type"] == "Transfer"):
                 field_name = f"#{record['serial']} {record['user']} 在 {record['time']}\n" \
                             f"進行轉帳"
-                transfer_label = {"T": "轉出", "D": "轉入"}[record["transfer_tag"]]
-                field_value = f"{transfer_label} 第{record['team']}小隊存款\n" \
-                              f"{record['original_deposit']} {u'\u2192'} {record['changed_deposit']}"
+                field_value = f"轉出 第{record['team'][0]}小隊存款\n" \
+                              f"{record['original_deposit'][0]} {u'\u2192'} {record['changed_deposit'][0]}\n" \
+                              f"轉入 第{record['team'][1]}小隊存款\n" \
+                              f"{record['original_deposit'][1]} {u'\u2192'} {record['changed_deposit'][1]}"
             elif(record["log_type"] == "StockChange"):
                 field_name = f"#{record['serial']} {record['user']} 在 {record['time']}\n" \
                              f"{record['trade_type']} 第{record['team']}小隊股票"
@@ -1422,19 +1428,19 @@ class TransferNotificationEmbed(ntd.Embed):
             *,
             user: str,
             amount: int,
-            deposit_team: str | None,
-            transfer_team: str | None
+            deposit_team: str | None = None,
+            transfer_team: str | None = None
     ):
         """根據 `deposit_team` 以及 `transfer_team` 來判斷此為「轉出小隊」或「轉入小隊」之通知。
         """
 
         if(isinstance(deposit_team, str)):
             title = "💸轉帳通知💸"
-            description = f"已將 **FP${amount:,}** 轉入第{deposit_team}小隊帳號!\n" \
+            description = f"已將 **FP${amount:,}** 轉入 第{deposit_team}小隊 帳號!\n" \
                           f"關主: {user}"
         elif(isinstance(transfer_team, str)):
             title = "🔔即時入帳通知🔔"
-            description = f"已收到第{transfer_team}小隊帳款 **FP${amount:,}** !\n" \
+            description = f"已收到 第{transfer_team}小隊 帳款 **FP${amount:,}** !\n" \
                           f"關主: {user}"
         super().__init__(
             color=PURPLE,
@@ -1832,13 +1838,13 @@ class DiscordUI(commands.Cog):
             content=self.stock_market_message()
         )
 
-    async def update_asset_ui(self, team: int | None = None):
+    async def update_asset_ui(self, team: str | int | None = None):
         """|coro|
 
         任一操作改變資產時更新小隊資產狀況訊息。
         """
         
-        if(isinstance(team, int)):  # 更新指定小隊資產訊息
+        if(team is not None):  # 更新指定小隊資產訊息
             channel = self.bot.get_channel(
                 self.CHANNEL_IDS[f"TEAM_{team}"]["ASSET"]
             )

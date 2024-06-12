@@ -2,7 +2,7 @@
     "NEW_GAME": true,
     "RESET_UI": true,
     "CLEAR_LOG": true,
-    "UPDATE_ASSET": false,
+    "UPDATE_ASSET": true,
     "CONVERT_RAW_STOCK_DATA": false,
     "CONVERT_RAW_NEWS_DATA": false,
     "RELEASE_NEWS": false,
