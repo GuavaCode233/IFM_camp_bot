@@ -119,7 +119,7 @@ LogData = TypedDict(
         "team": str,
         "original_deposit": NotRequired[int],
         "changed_deposit": NotRequired[int],
-        "transfer_tag": NotRequired[Literal['T']] | NotRequired[Literal['D']],
+        "transfer_tag": NotRequired[Literal['T', 'D']],
         "trade_type": NotRequired[str],
         "stock": NotRequired[str],
         "quantity": NotRequired[str]

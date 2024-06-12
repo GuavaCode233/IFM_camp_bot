@@ -3,9 +3,7 @@ from nextcord import ui
 import nextcord as ntd
 
 from datetime import datetime
-from typing import Dict, List, Literal
-
-import Cogs.assets_manager
+from typing import Dict, List, Literal, Tuple
 
 from .assets_manager import AssetsManager
 from .utilities import access_file
@@ -406,27 +404,27 @@ class TradeView(ui.View):
         )
         self.stop()
         # stock_trade, update_log
-        asset: AssetsManager = self.bot.get_cog("AssetsManager")
-        display_value = await asset.stock_trade(
+        assets_manager: AssetsManager = self.bot.get_cog("AssetsManager")
+        display_value = await assets_manager.stock_trade(
             team=self.team,
             trade_type=self.trade_type,
             stock=self.selected_stock_index,
             quantity=self.quantity_field_value,
-            user=interaction.user.display_name
+            user=self.user_name
         )
 
-        ui: DiscordUI = self.bot.get_cog("DiscordUI")
-        await ui.send_notification(
+        discord_ui: DiscordUI = self.bot.get_cog("DiscordUI")
+        await discord_ui.send_notification(
             log_type="StockChange",
             team=self.team,
-            user=interaction.user.display_name,
+            user=self.user_name,
             trade_type=self.trade_type,
             stock=self.selected_stock_index,
             quantity=self.quantity_field_value,
             display_value=display_value
         )
-        await ui.update_alteration_log()
-        await ui.update_asset_ui(team=self.team)
+        await discord_ui.update_alteration_log()
+        await discord_ui.update_asset_ui(team=self.team)
 
     @ui.button(
         label="取消交易",
@@ -743,8 +741,39 @@ class DepositFunctionView(ui.View):
             bot=self.bot
         )
         await interaction.response.send_message(
-            view=view,
             embed=view.status_embed(),
+            view=view,
+            ephemeral=True
+        )
+
+    @ui.button(
+        label="轉帳",
+        style=ntd.ButtonStyle.gray,
+        emoji="💸"
+    )
+    async def transfer_button_callback(
+        self,
+        button: ui.Button,
+        interaction: ntd.Interaction
+    ):
+        
+        if(interaction.user.id in DepositFunctionView.transfering_user_ids):    # 防止重複呼叫功能
+            await interaction.response.send_message(
+                content="**已開啟轉帳選單!!!**",
+                delete_after=5,
+                ephemeral=True
+            )
+            return
+
+        DepositFunctionView.add_transfering_user(interaction.user.id)
+        view = DepositTransferView(
+            user_name=interaction.user.display_name,
+            user_icon=interaction.user.display_avatar,
+            bot=self.bot
+        )
+        await interaction.response.send_message(
+            embed=view.status_embed(),
+            view=view,
             ephemeral=True
         )
         
@@ -968,26 +997,26 @@ class DepositChangeView(ui.View):
         )
         DepositFunctionView.remove_changing_user(interaction.user.id)
         # 變更第n小隊存款
-        asset: AssetsManager = self.bot.get_cog("AssetsManager")
-        asset.change_deposit(   
+        assets_manager: AssetsManager = self.bot.get_cog("AssetsManager")
+        assets_manager.change_deposit(   
             team=self.selected_team,  
             change_mode=self.selected_mode,
             amount=self.amount,
-            user=interaction.user.display_name
+            user=self.user_name
         )
         # 更新小隊資產
-        ui: DiscordUI = self.bot.get_cog("DiscordUI")
-        await ui.update_asset_ui(team=self.selected_team)
+        discord_ui: DiscordUI = self.bot.get_cog("DiscordUI")
+        await discord_ui.update_asset_ui(team=self.selected_team)
         # 發送即時通知
-        await ui.send_notification(
+        await discord_ui.send_notification(
             log_type="DepositChange",
             team=self.selected_team,
+            user=self.user_name,
             change_mode=self.selected_mode,
-            amount=self.amount,
-            user=interaction.user.display_name
+            amount=self.amount
         )
         # 更新收支紀錄
-        await ui.update_alteration_log()
+        await discord_ui.update_alteration_log()
         self.stop()
     
     @ui.button(
@@ -1097,7 +1126,7 @@ class DepositTransferView(ui.View):
         if(self.d_team_deposit is None or
            self.t_team_deposit is None or 
            isinstance(self.amount, str) or
-           self.amount == 0
+           self.amount == 0 # 轉帳金額不可為0
         ):
             return False
         else:
@@ -1215,9 +1244,21 @@ class DepositTransferView(ui.View):
             delete_after=5
         )
         DepositFunctionView.remove_transfering_user(interaction.user.id)
-
-        # TODO: Transfer money, log alteration, send notification
-  
+        # Transfer
+        assets_manager: AssetsManager = self.bot.get_cog("AssetsManager")
+        assets_manager.transfer(
+            transfer_deposit_teams=(self.transfer_team, self.deposit_team),
+            amount=self.amount
+        )
+        # Send Notification
+        discord_ui: DiscordUI = self.bot.get_cog("DiscordUI")
+        await discord_ui.send_notification(
+            log_type="Transfer",
+            team=(self.transfer_team, self.deposit_team),
+            user=self.user_name,
+            amount=self.amount
+        )
+        await discord_ui.update_alteration_log()
         self.stop()
 
     @ui.button(
@@ -1311,6 +1352,7 @@ class LogEmbed(ntd.Embed):
         # 只列出最近的25個紀錄
         start_index: int = 0 if serial < 25 else serial-25
         record_list = record_list[start_index:]
+
         for record in record_list:
             if(record["log_type"] == "DepositChange"):
                 field_name = f"#{record['serial']} {record['user']} 在 {record['time']}\n" \
@@ -1338,15 +1380,16 @@ class LogEmbed(ntd.Embed):
         )
 
 
-class TeamDepositChangeNoticeEmbed(ntd.Embed):
-    """小隊資產變更即時通知 Embed Message。
+class DepositChangeNotificationEmbed(ntd.Embed):
+    """資產變更即時通知 Embed Message。
     """
 
     def __init__(
             self,
+            *,
+            user: str,
             change_mode: ChangeMode,
-            amount: int,
-            user: str
+            amount: int
     ):
 
         title = {
@@ -1370,12 +1413,46 @@ class TeamDepositChangeNoticeEmbed(ntd.Embed):
         )
 
 
-class TeamStockChangeNoticeEmbed(ntd.Embed):
-    """小隊股票庫存變更即時通知 Embed Message。
+class TransferNotificationEmbed(ntd.Embed):
+    """轉帳即時通知 Embed Message。
     """
 
     def __init__(
             self,
+            *,
+            user: str,
+            amount: int,
+            deposit_team: str | None,
+            transfer_team: str | None
+    ):
+        """根據 `deposit_team` 以及 `transfer_team` 來判斷此為「轉出小隊」或「轉入小隊」之通知。
+        """
+
+        if(isinstance(deposit_team, str)):
+            title = "💸轉帳通知💸"
+            description = f"已將 **FP${amount:,}** 轉入第{deposit_team}小隊帳號!\n" \
+                          f"關主: {user}"
+        elif(isinstance(transfer_team, str)):
+            title = "🔔即時入帳通知🔔"
+            description = f"已收到第{transfer_team}小隊帳款 **FP${amount:,}** !\n" \
+                          f"關主: {user}"
+        super().__init__(
+            color=PURPLE,
+            title=title,
+            description=description
+        )
+        self.set_footer(
+            text=f"{datetime.now().strftime("%m/%d %I:%M%p")}"
+        )
+
+
+class StockChangeNoticeEmbed(ntd.Embed):
+    """股票庫存變更即時通知 Embed Message。
+    """
+
+    def __init__(
+            self,
+            *,
             user: str,
             trade_type: TradeType,
             stock: int,
@@ -1560,29 +1637,6 @@ class DiscordUI(commands.Cog):
             view=view,
             ephemeral=True
         )
-        # time = datetime.now()
-        # time = time.strftime("%m/%d %I:%M%p")
-
-        # embed = ntd.Embed(
-        #     color=PURPLE,
-        #     title="收支紀錄",
-        #     description="小隊存款金額的變動以及\n買賣股票最近的25筆紀錄"
-        # )
-        # field_name = f"#{10} {interaction.user.display_name} 在 {time}\n" \
-        #              f"進行轉帳"
-        # field_value = f"轉出小隊存款: {56560} {u'\u2192'} {66115}\n" \
-        #               f"轉入小隊存款: {56664} {u'\u2192'} {88888}"
-        # embed.add_field(
-        #     name=field_name,
-        #     value=field_value,
-        #     inline=False
-        # )
-        # await interaction.response.send_message(
-        #     embed=embed,
-        #     ephemeral=True
-        # )
-        
-
     
     @staticmethod
     def stock_market_message() -> str:
@@ -1706,11 +1760,11 @@ class DiscordUI(commands.Cog):
     async def send_notification(
             self,
             *,
-            log_type: LogType | None = None,
-            team: int | None = None,
+            log_type: LogType,
+            team: Tuple[str, str] | str | int,
+            user: str,
             change_mode: ChangeMode | None = None,
             amount: int | None = None,
-            user: str | None = None,
             trade_type: TradeType | None = None,
             stock: int | None = None,
             quantity: int | None = None,
@@ -1721,20 +1775,44 @@ class DiscordUI(commands.Cog):
         發送即時通知。
         """
 
+        if(log_type == "Transfer"):
+            transfer_team, deposit_team = team
+            channel = self.bot.get_channel(
+                self.CHANNEL_IDS[f"TEAM_{transfer_team}"]["NOTICE"]
+            )
+            await channel.send( # 轉出小隊之通知
+                embed=TransferNotificationEmbed(
+                    user=user,
+                    amount=amount,
+                    deposit_team=deposit_team
+                )
+            )
+            channel = self.bot.get_channel( # 轉入小隊之通知
+                self.CHANNEL_IDS[f"TEAM_{deposit_team}"]["NOTICE"]
+            )
+            await channel.send(
+                embed=TransferNotificationEmbed(
+                    user=user,
+                    amount=amount,
+                    transfer_team=transfer_team
+                )
+            )
+            return
+        
         channel = self.bot.get_channel(
             self.CHANNEL_IDS[f"TEAM_{team}"]["NOTICE"]
         )
         if(log_type == "DepositChange"):
             await channel.send(
-                embed=TeamDepositChangeNoticeEmbed(
+                embed=DepositChangeNotificationEmbed(
+                    user=user,
                     change_mode=change_mode,
-                    amount=amount,
-                    user=user
+                    amount=amount
                 )
             )
         elif(log_type == "StockChange"):
             await channel.send(
-                embed=TeamStockChangeNoticeEmbed(
+                embed=StockChangeNoticeEmbed(
                     user=user,
                     trade_type=trade_type,
                     stock=stock,

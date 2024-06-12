@@ -107,8 +107,8 @@ class StockManager(commands.Cog):
 
         if(NEW_GAME):
             self.reset_market_data()
-            ui: DiscordUI = self.bot.get_cog("DiscordUI")
-            await ui.clear_news()
+            discord_ui: DiscordUI = self.bot.get_cog("DiscordUI")
+            await discord_ui.clear_news()
             self.reset_game_state()
         elif(not self.stocks):  # 資料不對等
             self.fetch_stocks()
@@ -224,8 +224,8 @@ class StockManager(commands.Cog):
 
         access_file.save_to("market_data", stock_data)  # 儲存所有變動後資料
         # 更新市場資料
-        ui: DiscordUI = self.bot.get_cog("DiscordUI")
-        await ui.update_market_ui()
+        discord_ui: DiscordUI = self.bot.get_cog("DiscordUI")
+        await discord_ui.update_market_ui()
 
     @classmethod
     @price_change_loop.before_loop
@@ -273,8 +273,8 @@ class StockManager(commands.Cog):
 
         news = self.pending_news.pop(0)
 
-        ui: DiscordUI = self.bot.get_cog("DiscordUI")
-        await ui.release_news(
+        discord_ui: DiscordUI = self.bot.get_cog("DiscordUI")
+        await discord_ui.release_news(
             title=news["title"],
             content=news["content"]
         )
@@ -342,8 +342,8 @@ class StockManager(commands.Cog):
         self.game_state["round"] += 1
         if(self.game_state["round"] != 1):
             self.update_market_and_stock_data()
-            ui: DiscordUI = self.bot.get_cog("DiscordUI")
-            await ui.update_market_ui()
+            discord_ui: DiscordUI = self.bot.get_cog("DiscordUI")
+            await discord_ui.update_market_ui()
 
         if(self.game_state["round"] == 5):
             pass # 遊戲結束
