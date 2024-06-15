@@ -339,6 +339,7 @@ class StockManager(commands.Cog):
             return
 
         # 若機器人有被重啟，這裡不能加一
+        # TODO: 偵測機器人是否重啟過
         self.game_state["round"] += 1
         if(self.game_state["round"] != 1):
             self.update_market_and_stock_data()
