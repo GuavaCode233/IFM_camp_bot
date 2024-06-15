@@ -1594,6 +1594,7 @@ class DiscordUI(commands.Cog):
         更新各小隊資產狀況訊息。
         """
 
+        NEW_GAME: bool = self.CONFIG["NEW_GAME"]
         RESET_UI: bool = self.CONFIG["RESET_UI"]
         CLEAR_LOG: bool = self.CONFIG["CLEAR_LOG"]
         UPDATE_ASSET: bool = self.CONFIG["UPDATE_ASSET"]
@@ -1603,7 +1604,7 @@ class DiscordUI(commands.Cog):
         if(UPDATE_ASSET):
             await self.update_asset_ui()
         
-        if(CLEAR_LOG):
+        if(NEW_GAME and CLEAR_LOG):
             await self.clear_log()
         else:
             await self.update_alteration_log()
