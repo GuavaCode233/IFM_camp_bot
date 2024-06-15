@@ -72,15 +72,15 @@ def inventory_to_string(
     """將股票庫存資料格式化。
     """
 
-    output: str = ""
     if(index_ is None):
-        for index_, stocks in stock_inv.items():
-            output += f"{INITIAL_STOCK_DATA[int(index_)]["name"]} {INITIAL_STOCK_DATA[int(index_)]["symbol"]}" \
-                        f"\t張數: {len(stocks)}\n"
+        output = [
+            f"{INITIAL_STOCK_DATA[int(index_)]["name"]} {INITIAL_STOCK_DATA[int(index_)]["symbol"]}" \
+            f"\t張數: {len(stocks)}\n" for index_, stocks in stock_inv.items()
+        ]
     else:
         output = f"{INITIAL_STOCK_DATA[int(index_)]["name"]} {INITIAL_STOCK_DATA[int(index_)]["symbol"]}" \
                  f"\t張數: {len(stock_inv[index_])}\n"
-    return output
+    return "".join(output)
 
 
 def get_stock_price(index_: int | str) -> float:
@@ -299,7 +299,7 @@ class TradeView(ui.View):
         ],
         row=1
     )
-    async def trade_select_callback(
+    async def trade_type_select_callback(
         self,
         select: ui.StringSelect,
         interaction: ntd.Interaction
@@ -1651,7 +1651,7 @@ class DiscordUI(commands.Cog):
 
         market_data: List[StockDict] = access_file.read_file("market_data")
         # title
-        output: str = f"```商品名稱　{'代碼':^5}產業{'成交':^7}漲跌\n"
+        output: List[str] = [f"```商品名稱　{'代碼':^5}產業{'成交':^7}漲跌\n"]
         # string formatter
         for init_data, stock in zip(INITIAL_STOCK_DATA, market_data):
             delta_price: float = stock["price"] - stock["close"]
@@ -1663,11 +1663,11 @@ class DiscordUI(commands.Cog):
             else:
                 price_index = "⚪"
 
-            output += f"{init_data['name'].ljust(5, '　')}{init_data['symbol']:^6}" \
-                    f"{init_data['sector']:3}{stock['price']:5.2f} {price_index}{abs(delta_price):.2f}\n"
-        
-        output += "```"
-        return output
+            output.append(f"{init_data['name'].ljust(5, '　')}{init_data['symbol']:^6}" \
+                          f"{init_data['sector']:3}{stock['price']:5.2f} {price_index}{abs(delta_price):.2f}\n"
+            )     
+        output.append("```")
+        return "".join(output)
 
     async def reset_all_ui(self):
         """|coro|
