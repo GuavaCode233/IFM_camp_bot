@@ -8,7 +8,7 @@ from pprint import pprint
 import asyncio
 import json
 
-from .discord_ui import DiscordUI
+from .discord_ui import DiscordUI, get_stock_inventory
 from .utilities import access_file
 from .utilities.datatypes import (
     Config,
@@ -226,6 +226,11 @@ class StockManager(commands.Cog):
         # 更新市場資料
         discord_ui: DiscordUI = self.bot.get_cog("DiscordUI")
         await discord_ui.update_market_ui()
+        update_teams: List[int] = [ # 有股票庫存的小隊須更新未實現損益
+            team for team in range(1, self.CONFIG["NUMBER_OF_TEAMS"]+2) if get_stock_inventory(team)
+        ]
+        for team in update_teams:
+            await discord_ui.update_asset_ui(team)
 
     @classmethod
     @price_change_loop.before_loop
@@ -338,9 +343,10 @@ class StockManager(commands.Cog):
             )
             return
 
-        # 若機器人有被重啟，這裡不能加一
-        # TODO: 偵測機器人是否重啟過
-        self.game_state["round"] += 1
+        # 若機器人在回合中重新啟動，則不進入下一回合
+        if(not self.game_state["is_in_round"]):
+            self.game_state["round"] += 1
+
         if(self.game_state["round"] != 1):
             self.update_market_and_stock_data()
             discord_ui: DiscordUI = self.bot.get_cog("DiscordUI")

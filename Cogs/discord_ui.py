@@ -1485,9 +1485,7 @@ class StockChangeNoticeEmbed(ntd.Embed):
 
 
 class TeamAssetEmbed(ntd.Embed):
-    """小隊資產 Embed Message。
-
-    總資產(股票市值+存款)、存款。
+    """小隊資產 Embed Message，包含存款、總收益以及持股狀況。
     """
 
     def __init__(self, team: int):
@@ -1495,31 +1493,43 @@ class TeamAssetEmbed(ntd.Embed):
             color=PURPLE,
             title=f"第{team}小隊 F-pay帳戶"
         )
+        self.deposit_embed_format(team)
+        self.stock_embed_format(team)
+
+    @staticmethod
+    def get_profit_lost(value: int) -> str:
+        """判斷利益、持平或損失。
+        """
+
+        if(value > 0):
+            return "__利益__"
+        elif(value == 0):
+            return "__持平__"
+        else:
+            return "__損失__"
+
+    def deposit_embed_format(self, team: int):
+        """存款、總收益格式。
+        """
+
         asset_data: AssetDict = access_file.read_file("team_assets")[f"{team}"]
-        self.add_field( # 要加市值
+        self.add_field(
             name="",
-            value=f"**總資產: {asset_data["deposit"]:,}** (股票市值+存款)"
+            value=f"**存款: {asset_data['deposit']:,}**"
         )
         self.add_field(
             name="",
-            value=f"**存款: {asset_data["deposit"]:,}**"
+            value=f"**總收益: {asset_data['revenue']:,}**"
         )
+    
+    def stock_embed_format(self, team: int):
+        """持股狀況格式。
+        """
 
-
-class TeamStockEmbed(ntd.Embed):
-    """小隊持股狀況 Embed Message。
-
-    持有股票、股票市值、投入成本、未實現投資損益、已實現投資損益、總收益
-    """
-
-    def __init__(self, team: int):
-        super().__init__(
-            color=PURPLE,
-            title="股票庫存",
-        )
         stock_inv = get_stock_inventory(team)
         if(stock_inv):
             total_unrealized_gain_loss = 0
+            fields: List[str] = []
             for stock_idx, stocks in stock_inv.items():
                 pice: int = len(stocks) # 持有張數
                 total_cost: int = sum(stocks)   # 投資總成本
@@ -1527,19 +1537,36 @@ class TeamStockEmbed(ntd.Embed):
                 unrealized_gain_loss: int = (round(get_stock_price(stock_idx), 2)
                                              - avg_price) * pice * 1000
                 total_unrealized_gain_loss += unrealized_gain_loss  # 未實現總損益
-                self.add_field(
-                    name=f"{get_stock_name_symbol(stock_idx)}",
-                    value=f"**持有張數:** {pice}\n" \
-                          f"**成交均價:** {avg_price:.2f}\n" \
-                          f"**投資總成本:** {total_cost:,}\n" \
-                          f"**未實現損益:** {"**__利益__** " if unrealized_gain_loss >= 0 else "**__損失__** "}" \
-                          f"{abs(unrealized_gain_loss):.0f}"
+                fields.append(
+                    f"**{get_stock_name_symbol(stock_idx)}**" \
+                    f"持有張數: {pice}\n" \
+                    f"成交均價: {avg_price:.2f}\n" \
+                    f"投資總成本: {total_cost:,}\n" \
+                    f"未實現損益: {self.get_profit_lost(unrealized_gain_loss)} {abs(unrealized_gain_loss):,.0f}\n" \
                 )
-            self.description = f"**未實現總損益:** " \
-                               f"{"**__利益__** " if total_unrealized_gain_loss >= 0 else "**__損失__** "}" \
-                               f"**{abs(total_unrealized_gain_loss):.0f}**"
+            self.add_field(
+                name=f"**未實現總損益:** " \
+                     f"{self.get_profit_lost(total_unrealized_gain_loss)} " \
+                     f"**{abs(total_unrealized_gain_loss):,.0f}**",
+                value="",
+                inline=False
+            )
+            for field in fields:
+                self.add_field(
+                    name="",
+                    value=field
+                )
         else:
-            self.description = "無股票庫存"
+            self.add_field(
+                name="股票庫存",
+                value="**未實現總損益:** 0\n",
+                inline=False
+            )
+            self.add_field(
+                name="",
+                value="無股票庫存",
+                inline=False
+            )
             
 
 class NewsEmbed(ntd.Embed):
@@ -1853,10 +1880,7 @@ class DiscordUI(commands.Cog):
                 self.MESSAGE_IDS["ASSET_MESSAGE_IDS"][f"TEAM_{team}"]
             )
             await message.edit(
-                embeds=[
-                    TeamAssetEmbed(team),
-                    TeamStockEmbed(team)
-                ]
+                embed=TeamAssetEmbed(team)
             )
         else:   # 更新所有小隊資產訊息
             for team, team_key in enumerate(self.MESSAGE_IDS["ASSET_MESSAGE_IDS"].keys(), start=1):
@@ -1867,11 +1891,7 @@ class DiscordUI(commands.Cog):
                     self.MESSAGE_IDS["ASSET_MESSAGE_IDS"][team_key]
                 )
                 await message.edit(
-                    content=None,
-                    embeds=[
-                        TeamAssetEmbed(team),
-                        TeamStockEmbed(team)
-                    ]
+                    embed=TeamAssetEmbed(team)
                 )
     
     async def fetch_news_feed_channel(self):
