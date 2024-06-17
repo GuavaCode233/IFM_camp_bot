@@ -1485,7 +1485,7 @@ class StockChangeNoticeEmbed(ntd.Embed):
 
 
 class TeamAssetEmbed(ntd.Embed):
-    """小隊資產 Embed Message，包含存款、總收益以及持股狀況。
+    """小隊資產狀態 Embed Message，包含存款、總收益以及持股狀況。
     """
 
     def __init__(self, team: int):
