@@ -302,7 +302,7 @@ class AssetsManager(commands.Cog):
             *,
             team: int,
             trade_type: TradeType,
-            stock: int, 
+            stock_index: int, 
             quantity: int,
             user: str
     ) -> int:
@@ -318,6 +318,8 @@ class AssetsManager(commands.Cog):
             所選擇股票的 index
         quantity: `int`
             交易數量。
+        user: `str`
+            執行交易的使用者。
         
         Returns
         -------
@@ -326,32 +328,32 @@ class AssetsManager(commands.Cog):
         """
 
         # 該股市場資料
-        stock_dict: StockDict = access_file.read_file("market_data")[stock]
+        stock_dict: StockDict = access_file.read_file("market_data")[stock_index]
         # 該股當前價值
         value: int = int(round(stock_dict["price"], 2) * 1000) # 該股當前成本價
         # 該小隊持有股票及原始成本
         stock_inv = self.team_assets[team-1].stock_inv
         if(trade_type == "買進"):
             # 新增股票index為key
-            if(stock_inv.get(f"{stock}") is None):
-                stock_inv[f"{stock}"] = []
+            if(stock_inv.get(f"{stock_index}") is None):
+                stock_inv[f"{stock_index}"] = []
             #將成本價新增至TeamAssets資料
-            stock_inv[f"{stock}"].extend([value] * quantity)
+            stock_inv[f"{stock_index}"].extend([value] * quantity)
             # 扣錢
             self.team_assets[team-1].deposit -= value * quantity
             # 計算金額 買進->市價*張數 
             display_value = value * quantity
         elif(trade_type == "賣出"):
             # 計算金額 賣出->投資損益
-            display_value = (value * quantity) - sum(stock_inv[f"{stock}"][:quantity])
+            display_value = (value * quantity) - sum(stock_inv[f"{stock_index}"][:quantity])
             # 以股票當前市場價歸還此小隊，從先買的股票賣。
-            self.team_assets[team-1].stock_inv[f"{stock}"] = stock_inv[f"{stock}"][quantity:]
+            self.team_assets[team-1].stock_inv[f"{stock_index}"] = stock_inv[f"{stock_index}"][quantity:]
             self.team_assets[team-1].deposit += value * quantity
             # 刪除空的資料
-            if(not self.team_assets[team-1].stock_inv.get(f"{stock}")):
-                self.team_assets[team-1].stock_inv.pop(f"{stock}")
+            if(not self.team_assets[team-1].stock_inv.get(f"{stock_index}")):
+                self.team_assets[team-1].stock_inv.pop(f"{stock_index}")
         
-        initail_stock_data: InitialStockData = access_file.read_file("raw_stock_data")["initial_data"][stock]
+        initail_stock_data: InitialStockData = access_file.read_file("raw_stock_data")["initial_data"][stock_index]
         stock_name_symbol = f"{initail_stock_data["name"]} {initail_stock_data["symbol"]}"
         log(
             log_type="StockChange",

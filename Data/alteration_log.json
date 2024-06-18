@@ -1,3 +1,14 @@
 {
-    "serial": 0
+    "serial": 1,
+    "9": [
+        {
+            "log_type": "DepositChange",
+            "time": "06/18 10:15PM",
+            "user": "摳叮面 (清算)",
+            "serial": 0,
+            "team": "9",
+            "original_deposit": 10000,
+            "changed_deposit": 310000
+        }
+    ]
 }

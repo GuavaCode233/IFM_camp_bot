@@ -1,9 +1,10 @@
+from discord import Interaction
 from nextcord.ext import commands
 from nextcord import ui
 import nextcord as ntd
 
 from datetime import datetime
-from typing import Dict, List, Literal, Tuple
+from typing import Coroutine, Dict, List, Literal, Tuple
 
 from .assets_manager import AssetsManager
 from .utilities import access_file
@@ -18,7 +19,6 @@ from .utilities.datatypes import (
     InitialStockData,
     LogData,
     LogType,
-    LiquidationType,
     MessageIDs,
     RawStockData,
     StockDict,
@@ -39,13 +39,13 @@ INITIAL_STOCK_DATA: List[InitialStockData] = access_file.read_file(
 NUMBER_OF_TEAMS: int = access_file.read_file("game_config").get("NUMBER_OF_TEAMS")
 
 
-def get_stock_name_symbol(index_: int | str) -> str:
+def get_stock_name_symbol(stock_index: int | str) -> str:
     """抓取 "股票名 股票代碼" string。
     """
     
-    index_ = int(index_)
-    name = INITIAL_STOCK_DATA[index_]["name"]
-    symbol = INITIAL_STOCK_DATA[index_]["symbol"]
+    stock_index = int(stock_index)
+    name = INITIAL_STOCK_DATA[stock_index]["name"]
+    symbol = INITIAL_STOCK_DATA[stock_index]["symbol"]
     return f"{name} {symbol}"
 
 
@@ -84,13 +84,13 @@ def inventory_to_string(
     return "".join(output)
 
 
-def get_stock_price(index_: int | str) -> float:
+def get_stock_price(stock_index: int | str) -> float:
     """擷取指定股票當下的價格。
     """
 
     stock_dict: StockDict = access_file.read_file(
         "market_data"
-    )[int(index_)]
+    )[int(stock_index)]
 
     return stock_dict["price"]
 
@@ -409,7 +409,7 @@ class TradeView(ui.View):
         display_value = await assets_manager.stock_trade(
             team=self.team,
             trade_type=self.trade_type,
-            stock=self.selected_stock_index,
+            stock_index=self.selected_stock_index,
             quantity=self.quantity_field_value,
             user=self.user_name
         )
@@ -527,11 +527,12 @@ class TradeQuantityInput(ui.Modal):
     
     async def callback(self, interaction: ntd.Interaction):
         try:
-            self.original_view.quantity_field_value = int(self.quantity.value)
+            temp_quantity = int(self.quantity.value)
 
-            if(self.original_view.quantity_field_value < 0):
+            if(temp_quantity < 0):
                 raise ValueError
             
+            self.original_view.quantity_field_value = temp_quantity
             await interaction.response.edit_message(
                 embed=self.original_view.status_embed(),
                 view=self.original_view
@@ -642,7 +643,7 @@ class FinancialStatementView(ui.View):
         self.stop()
 
 
-class DepositFunctionView(ui.View):
+class AssetFunctionView(ui.View):
     """小隊收支 View。
     """
 
@@ -650,6 +651,7 @@ class DepositFunctionView(ui.View):
 
     changing_user_ids: List[int] = []   # 存放使用「變更小隊存款」的使用者id
     transfering_user_ids: List[int] = []    # 存放使用「過路費轉帳」的使用者id
+    liquidating_user_ids: List[int] = []
 
     def __init__(self, bot: commands.Bot):
         super().__init__(timeout=None)
@@ -682,6 +684,20 @@ class DepositFunctionView(ui.View):
         """
 
         cls.transfering_user_ids.remove(user_id)
+
+    @classmethod
+    def add_liquidating_user(cls, user_id: int):
+        """將使用者加入`liquidating_user_ids`中。
+        """
+
+        cls.liquidating_user_ids.append(user_id)
+
+    @classmethod
+    def remove_liquidating_user(cls, user_id: int):
+        """將清算結束的使用者從`liquidating_user_ids`中移除。
+        """
+
+        cls.liquidating_user_ids.remove(user_id)
 
     def embed_message(self) -> ntd.Embed:
         """嵌入訊息。
@@ -727,7 +743,7 @@ class DepositFunctionView(ui.View):
         interaction: ntd.Interaction
     ):
         
-        if(interaction.user.id in DepositFunctionView.changing_user_ids):    # 防止重複呼叫功能
+        if(interaction.user.id in AssetFunctionView.changing_user_ids):    # 防止重複呼叫功能
             await interaction.response.send_message(
                 content="**已開啟變更小隊存款選單!!!**",
                 delete_after=5,
@@ -735,7 +751,7 @@ class DepositFunctionView(ui.View):
             )
             return
 
-        DepositFunctionView.add_changing_user(interaction.user.id)
+        AssetFunctionView.add_changing_user(interaction.user.id)
         view = DepositChangeView(
             user_name=interaction.user.display_name,
             user_icon=interaction.user.display_avatar,
@@ -758,7 +774,7 @@ class DepositFunctionView(ui.View):
         interaction: ntd.Interaction
     ):
         
-        if(interaction.user.id in DepositFunctionView.transfering_user_ids):    # 防止重複呼叫功能
+        if(interaction.user.id in AssetFunctionView.transfering_user_ids):    # 防止重複呼叫功能
             await interaction.response.send_message(
                 content="**已開啟轉帳選單!!!**",
                 delete_after=5,
@@ -766,8 +782,39 @@ class DepositFunctionView(ui.View):
             )
             return
 
-        DepositFunctionView.add_transfering_user(interaction.user.id)
+        AssetFunctionView.add_transfering_user(interaction.user.id)
         view = DepositTransferView(
+            user_name=interaction.user.display_name,
+            user_icon=interaction.user.display_avatar,
+            bot=self.bot
+        )
+        await interaction.response.send_message(
+            embed=view.status_embed(),
+            view=view,
+            ephemeral=True
+        )
+    
+    @ui.button(
+        label="小隊清算",
+        style=ntd.ButtonStyle.gray,
+        emoji="💲"
+    )
+    async def liquidation_button_callback(
+        self,
+        button: ui.Button,
+        interaction: ntd.Interaction
+    ):
+        
+        if(interaction.user.id in AssetFunctionView.liquidating_user_ids):    # 防止重複呼叫功能
+            await interaction.response.send_message(
+                content="**已開啟清算選單!!!**",
+                delete_after=5,
+                ephemeral=True
+            )
+            return
+
+        AssetFunctionView.add_liquidating_user(interaction.user.id)
+        view = LiquidationView(
             user_name=interaction.user.display_name,
             user_icon=interaction.user.display_avatar,
             bot=self.bot
@@ -996,7 +1043,7 @@ class DepositChangeView(ui.View):
             view=self,
             delete_after=5,
         )
-        DepositFunctionView.remove_changing_user(interaction.user.id)
+        AssetFunctionView.remove_changing_user(interaction.user.id)
         # 變更第n小隊存款
         assets_manager: AssetsManager = self.bot.get_cog("AssetsManager")
         assets_manager.change_deposit(   
@@ -1005,8 +1052,8 @@ class DepositChangeView(ui.View):
             amount=self.amount,
             user=self.user_name
         )
-        # 更新小隊資產
         discord_ui: DiscordUI = self.bot.get_cog("DiscordUI")
+        # 更新小隊資產
         await discord_ui.update_asset_ui(team=self.selected_team)
         # 發送即時通知
         await discord_ui.send_notification(
@@ -1034,7 +1081,7 @@ class DepositChangeView(ui.View):
         """取消按鈕callback。
         """
 
-        DepositFunctionView.remove_changing_user(interaction.user.id)
+        AssetFunctionView.remove_changing_user(interaction.user.id)
         self.clear_items()
         await interaction.response.edit_message(
             content="**已取消變更**",
@@ -1083,8 +1130,7 @@ class DepositTransferView(ui.View):
         """用於編排選單狀態訊息。
         """
 
-        time = datetime.now()
-        time = time.strftime("%I:%M%p")
+        time = datetime.now().strftime("%I:%M%p")
 
         embed = ntd.Embed(
             color=PURPLE,
@@ -1246,7 +1292,7 @@ class DepositTransferView(ui.View):
             view=self,
             delete_after=5
         )
-        DepositFunctionView.remove_transfering_user(interaction.user.id)
+        AssetFunctionView.remove_transfering_user(interaction.user.id)
         # Transfer
         assets_manager: AssetsManager = self.bot.get_cog("AssetsManager")
         assets_manager.transfer(
@@ -1270,7 +1316,7 @@ class DepositTransferView(ui.View):
         self.stop()
 
     @ui.button(
-        label="取消",
+        label="取消轉帳",
         style=ntd.ButtonStyle.red,
         emoji="✖️",
         row=3
@@ -1283,7 +1329,7 @@ class DepositTransferView(ui.View):
         """取消按鈕callback。
         """
 
-        DepositFunctionView.remove_transfering_user(interaction.user.id)
+        AssetFunctionView.remove_transfering_user(interaction.user.id)
         self.clear_items()
         await interaction.response.edit_message(
             content="**已取消轉帳**",
@@ -1300,7 +1346,14 @@ class LiquidationView(ui.View):
 
     __slots__ = (
         "user_name",
-        "user_icon"
+        "user_icon",
+        "selected_team",
+        "liquidation_type",
+        "view_item",
+        "selected_stock_index",
+        "embed_description",
+        "amount",
+        "bot"
     )
 
     def __init__(
@@ -1314,12 +1367,68 @@ class LiquidationView(ui.View):
         self.user_name = user_name
         self.user_icon = user_icon
         # Select status
-        self.select_team: int = None
-        self.liquidation_type_select = None
-        self.liquidation_type: LiquidationType = None
+        self.selected_team: int = None
+        self.liquidation_type: Literal["股票", "房地"] = None
+        self.view_item: StockLiquidationSelect | RealEstateLiquidationValueInputButton = None
+        self.selected_stock_index: int = None
+        self.embed_description: str = "請選擇小隊"
+        self.amount: int = 0
         # Bot
         self.bot = bot
 
+    def status_embed(self) -> ntd.Embed:
+        """用於編排選單狀態訊息。
+        """
+
+        time = datetime.now().strftime("%I:%M%p")
+
+        embed = ntd.Embed(
+            color=PURPLE,
+            title="小隊清算",
+            description=self.embed_description
+        )
+        embed.set_footer(
+            text=f"{self.user_name} | Today at {time}",
+            icon_url=self.user_icon
+        )
+        if(self.selected_team is None): # 尚未選擇小隊
+            return embed
+        # 已選擇小隊 -> 更新狀態訊息
+        if(self.liquidation_type == "股票"):
+            field_name = "股票清算"
+            if(self.selected_stock_index is None):
+                field_value = "請小隊選擇持有的股票出售"
+            else:
+                field_value = f"將強制出售: {get_stock_name_symbol(self.selected_stock_index)}"
+        elif(self.liquidation_type == "房地"):
+            field_name = "房屋清算"
+            field_value = "輸入原房價，並歸還房價一半的現金給此小隊"
+        embed.add_field(
+            name=field_name,
+            value=field_value
+        )
+        return embed
+    
+    def input_check(self) -> bool:
+        """檢查輸入資料是否完整。
+        """
+
+        if(self.liquidation_type == "股票" and
+           self.selected_stock_index is None):
+                return False
+        elif(self.liquidation_type == "房地" and
+             self.amount == 0):
+                return False
+        else:
+            return True
+    
+    def reset_selected_data(self):
+        """若更換小隊清算時將已選擇的資料清空。
+        """
+
+        self.selected_stock_index = None
+        self.amount = 0
+        
     @ui.select(
         placeholder="選擇小隊",
                 options=[
@@ -1341,7 +1450,168 @@ class LiquidationView(ui.View):
 
         # 選完小隊後判斷該小隊是否可以賣股票，是則進行賣股票，
         # 否則賣資產或資產歸零
+        self.selected_team = int(select.values[0])
+        self.embed_description = f"第{self.selected_team}小隊"
+        stock_inv = get_stock_inventory(self.selected_team)
+        self.reset_selected_data()
+        self.remove_item(self.view_item)
+        if(stock_inv):  # 有股票可賣
+            self.liquidation_type = "股票"
+            self.view_item = StockLiquidationSelect(self, stock_inv)
+        else:   # 無股票可賣，需賣房地
+            self.liquidation_type = "房地"
+            self.view_item = RealEstateLiquidationValueInputButton(self)
+        self.add_item(self.view_item)
+
+        await interaction.response.edit_message(
+            embed=self.status_embed(),
+            view=self
+        )
+    
+    @ui.button(
+        label="確認送出",
+        style=ntd.ButtonStyle.green,
+        emoji="✅",
+        row=2
+    )
+    async def comfirm_button_callback(
+        self,
+        button: ui.Button,
+        interaction: ntd.Interaction
+    ):
+        """確認送出按扭callback。
+        """
+
+        if(not self.input_check()): # 檢查資料都填齊
+            await interaction.response.send_message(
+                    content="**輸入資料不完整!!!**",
+                    delete_after=5,
+                    ephemeral=True
+                )
+            return
+
+        # 清算成功訊息
+        self.clear_items()
+        await interaction.response.edit_message(
+            content="**清算成功!!!**",
+            embed=None,
+            view=self,
+            delete_after=5,
+        )
+        AssetFunctionView.remove_liquidating_user(interaction.user.id)
+        # 清算
+        assets_manager: AssetsManager = self.bot.get_cog("AssetsManager")
+        discord_ui: DiscordUI = self.bot.get_cog("DiscordUI")
+        if(self.liquidation_type == "股票"):
+            display_value = await assets_manager.stock_trade(
+                team=self.selected_team,
+                trade_type="賣出",
+                stock_index=self.selected_stock_index,
+                quantity=1,
+                user=f"{self.user_name} (清算)"
+            )
+            await discord_ui.send_notification(
+                log_type="StockChange",
+                team=self.selected_team,
+                user=f"{self.user_name} (關主清算)",
+                trade_type="賣出",
+                stock=self.selected_stock_index,
+                quantity=1,
+                display_value=display_value
+            )
+        elif(self.liquidation_type == "房地"):
+            assets_manager.change_deposit(
+                team=self.selected_team,
+                change_mode="Deposit",
+                amount=(self.amount//2), # 歸還房地的一半價值
+                user=f"{self.user_name} (清算)"
+            )
+            # 發送及時通知
+            await discord_ui.send_notification(
+                log_type="DepositChange",
+                team=self.selected_team,
+                user=f"{self.user_name} (清算)",
+                change_mode="Deposit",
+                amount=(self.amount//2)
+            )
+        # 更新小隊資產並更新收支紀錄
+        await discord_ui.update_asset_ui(team=self.selected_team)
+        await discord_ui.update_alteration_log()
+        self.stop()
+
+    @ui.button(
+        label="取消清算",
+        style=ntd.ButtonStyle.red,
+        emoji="✖️",
+        row=2
+    )
+    async def cancel_button_callback(
+        self,
+        button: ui.button,
+        interaction: ntd.Interaction
+    ):
+        """取消按鈕callback。
+        """
+
+        AssetFunctionView.remove_liquidating_user(interaction.user.id)
+        self.clear_items()
+        await interaction.response.edit_message(
+            content="**已取消清算**",
+            embed=None,
+            delete_after=5,
+            view=self
+        )
+        self.stop()
+
         
+class StockLiquidationSelect(ui.StringSelect):
+    """選擇要清算的股票。
+    """
+
+    __slots__ = ("original_view")
+
+    def __init__(
+            self,
+            original_view: LiquidationView,
+            stock_inv: Dict[str, List[int]]
+    ):
+        super().__init__(
+            placeholder="選擇要清算的股票",
+            options=[
+                ntd.SelectOption(
+                    label=get_stock_name_symbol(stock_index),
+                    value=stock_index
+                ) for stock_index in stock_inv.keys()
+            ],
+            row=1
+        )
+        self.original_view = original_view
+
+    async def callback(self, interaction: ntd.Interaction):
+        self.original_view.selected_stock_index = int(self.values[0])
+        await interaction.response.edit_message(
+            embed=self.original_view.status_embed()
+        )
+
+
+class RealEstateLiquidationValueInputButton(ui.Button):
+    """房地清算輸入原房價 Button。
+    """
+
+    __slots__ = ("original_view")
+
+    def __init__(self, original_view: LiquidationView):
+        super().__init__(
+            style=ntd.ButtonStyle.blurple,
+            label="輸入原房地價",
+            emoji="🪙",
+            row=1
+        )
+        self.original_view = original_view
+    
+    async def callback(self, interaction: ntd.Interaction):
+        await interaction.response.send_modal(AmountInput(self.original_view))
+
 
 class AmountInput(ui.Modal):
     """金額輸入視窗。
@@ -1351,7 +1621,7 @@ class AmountInput(ui.Modal):
 
     def __init__(
             self,
-            original_view: DepositChangeView | DepositTransferView,
+            original_view: DepositChangeView | DepositTransferView | LiquidationView,
             default_value: str | None = None
     ):
         super().__init__(title="請輸入金額")
@@ -1371,11 +1641,12 @@ class AmountInput(ui.Modal):
 
     async def callback(self, interaction: ntd.Interaction):
         try:
-            self.original_view.amount = int(self.amount.value)
+            temp_amount = int(self.amount.value)
             
-            if(self.original_view.amount < 0):
+            if(temp_amount < 0):
                 raise ValueError
             
+            self.original_view.amount = temp_amount
             await interaction.response.edit_message(
                 embed=self.original_view.status_embed()
             )
@@ -1712,8 +1983,8 @@ class DiscordUI(commands.Cog):
             guild_ids=[1218130958536937492]
     )
     async def test_ui(self, interaction: ntd.Interaction):
-        DepositFunctionView.add_transfering_user(interaction.user.id)
-        view = DepositTransferView(
+        AssetFunctionView.add_liquidating_user(interaction.user.id)
+        view = LiquidationView(
             user_name=interaction.user.display_name,
             user_icon=interaction.user.display_avatar,
             bot=self.bot
@@ -1764,7 +2035,7 @@ class DiscordUI(commands.Cog):
         message = await channel.fetch_message(
             self.MESSAGE_IDS["CHANGE_DEPOSIT"]
         )
-        view = DepositFunctionView(self.bot)
+        view = AssetFunctionView(self.bot)
         await message.edit(
             embed=view.embed_message(),
             view=view

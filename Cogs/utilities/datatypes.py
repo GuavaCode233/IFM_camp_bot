@@ -218,9 +218,6 @@ TradeType = Literal["買進", "賣出"]
 """交易類別(買進、賣出)。
 """
 
-LiquidationType = Literal["房屋及土地", "股票"]
-"""清算類別(房屋及土地、股票)。
-"""
 
 class News(TypedDict):
     """個別新聞資料。
