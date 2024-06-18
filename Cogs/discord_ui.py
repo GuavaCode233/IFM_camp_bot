@@ -18,6 +18,7 @@ from .utilities.datatypes import (
     InitialStockData,
     LogData,
     LogType,
+    LiquidationType,
     MessageIDs,
     RawStockData,
     StockDict,
@@ -1313,8 +1314,44 @@ class LiquidationView(ui.View):
         self.user_name = user_name
         self.user_icon = user_icon
         # Select status
+        self.select_team: int = None
+        self.liquidation_type_select = None
+        self.liquidation_type: LiquidationType = None
         # Bot
         self.bot = bot
+
+    @ui.select(
+        placeholder="選擇小隊",
+                options=[
+            ntd.SelectOption(
+                label=f"第{t}小隊",
+                value=str(t)
+            )
+            for t in range(1, NUMBER_OF_TEAMS+2)   # +1 (Testing team)
+        ],
+        row=0
+    )
+    async def team_select_callback(
+        self,
+        select: ui.StringSelect,
+        interaction: ntd.Interaction
+    ):
+        self.remove_item(self.liquidation_type_select)
+        self.liquidation_type_select = LiquidationTypeSelect(self)
+        self.add_item(self.liquidation_type_select)
+        
+
+class LiquidationTypeSelect(ui.StringSelect):
+    """選擇清算類別。
+    """
+
+    __slots__ = ("original_view")
+
+    def __init__(
+            self,
+            original_view: LiquidationView
+    ):
+        self.original_view = original_view
 
 
 class AmountInput(ui.Modal):
