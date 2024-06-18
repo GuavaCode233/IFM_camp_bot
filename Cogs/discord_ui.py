@@ -1336,23 +1336,12 @@ class LiquidationView(ui.View):
         select: ui.StringSelect,
         interaction: ntd.Interaction
     ):
-        self.remove_item(self.liquidation_type_select)
-        self.liquidation_type_select = LiquidationTypeSelect(self)
-        self.add_item(self.liquidation_type_select)
+        """小隊 select callback。
+        """
+
+        # 選完小隊後判斷該小隊是否可以賣股票，是則進行賣股票，
+        # 否則賣資產或資產歸零
         
-
-class LiquidationTypeSelect(ui.StringSelect):
-    """選擇清算類別。
-    """
-
-    __slots__ = ("original_view")
-
-    def __init__(
-            self,
-            original_view: LiquidationView
-    ):
-        self.original_view = original_view
-
 
 class AmountInput(ui.Modal):
     """金額輸入視窗。
