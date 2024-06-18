@@ -3,8 +3,9 @@ from nextcord.ext import commands
 from nextcord import ui
 import nextcord as ntd
 
+from typing import Callable, Dict, List, Literal, Tuple
 from datetime import datetime
-from typing import Coroutine, Dict, List, Literal, Tuple
+import re
 
 from .assets_manager import AssetsManager
 from .utilities import access_file
@@ -1992,6 +1993,51 @@ class DiscordUI(commands.Cog):
         await interaction.response.send_message(
             embed=view.status_embed(),
             view=view,
+            ephemeral=True
+        )
+    
+    @ntd.slash_command(
+            name="clear_user_state",
+            description="如果不小心點到關閉選單而無法重新開啟使用",
+            guild_ids=[1218130958536937492]
+    )
+    async def clear_user_state(
+        self,
+        interaction: ntd.Interaction,
+        user: str = None
+    ):
+        if(user is None):
+            user_id: int = interaction.user.id
+        elif(re.match(r"^<@(\d+)>$", user) is None):
+            await interaction.response.send_message(
+                content="請標註 user",
+                delete_after=5,
+                ephemeral=True
+            )
+            return
+        else:
+            user_id: int = int(user.lstrip("<@").rstrip(">"))
+        function_id_records: List[List[int]] = [
+            MarketFunctionView.querying_user_ids,
+            MarketFunctionView.trading_user_ids,
+            AssetFunctionView.changing_user_ids,
+            AssetFunctionView.transfering_user_ids,
+            AssetFunctionView.liquidating_user_ids
+        ]
+        remove_id_functions: List[Callable] = [
+            MarketFunctionView.remove_querying_user,
+            MarketFunctionView.remove_trading_user,
+            AssetFunctionView.remove_changing_user,
+            AssetFunctionView.remove_transfering_user,
+            AssetFunctionView.remove_liquidating_user
+        ]
+        for record, remove_func in zip(function_id_records, remove_id_functions):
+            if(user_id in record):
+                remove_func(user_id)
+
+        await interaction.response.send_message(
+            content=f"{user} 現在可正常使用功能",
+            delete_after=5,
             ephemeral=True
         )
     
