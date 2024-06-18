@@ -244,7 +244,7 @@ class TradeView(ui.View):
         self.quantity_field_value: str | int = "請輸入張數" # quantity
         # select status
         self.trade_type: TradeType = None
-        self.stock_select: StockSelect = None # 紀錄股票選取下拉選單
+        self.stock_select: TradeStockSelect = None # 紀錄股票選取下拉選單
         self.selected_stock_index: int = None
     
     def status_embed(self) -> ntd.Embed:
@@ -317,7 +317,7 @@ class TradeView(ui.View):
             self.trade_field_value = "請選擇商品"
             self.quantity_field_name = "買進張數"
             
-            self.stock_select = StockSelect(self)
+            self.stock_select = TradeStockSelect(self)
             self.add_item(self.stock_select)
         elif(self.trade_type == "賣出"):
             self.embed_title = "賣出 股票交易"
@@ -330,7 +330,7 @@ class TradeView(ui.View):
                 self.trade_field_value = inventory_to_string(
                     self.stock_inv
                 )
-                self.stock_select = StockSelect(self)
+                self.stock_select = TradeStockSelect(self)
                 self.add_item(self.stock_select)
             
         await interaction.response.edit_message(
@@ -451,7 +451,7 @@ class TradeView(ui.View):
         self.stop()
 
 
-class StockSelect(ui.StringSelect):
+class TradeStockSelect(ui.StringSelect):
     """選取買賣別後選取商品。
     """
 
@@ -1045,6 +1045,8 @@ class DepositChangeView(ui.View):
 
 
 class DepositTransferView(ui.View):
+    """轉帳功能 View。
+    """
 
     __slots__ = (
         "user_name",
@@ -1289,6 +1291,30 @@ class DepositTransferView(ui.View):
             view=self
         )
         self.stop()
+
+
+class LiquidationView(ui.View):
+    """清算功能 View。
+    """
+
+    __slots__ = (
+        "user_name",
+        "user_icon"
+    )
+
+    def __init__(
+            self,
+            *,
+            user_name: str,
+            user_icon: ntd.Asset,
+            bot: commands.Bot
+    ):
+        super().__init__(timeout=None)
+        self.user_name = user_name
+        self.user_icon = user_icon
+        # Select status
+        # Bot
+        self.bot = bot
 
 
 class AmountInput(ui.Modal):
