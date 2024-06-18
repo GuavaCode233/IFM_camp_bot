@@ -2037,8 +2037,7 @@ class DiscordUI(commands.Cog):
 
         await interaction.response.send_message(
             content=f"{user} 現在可正常使用功能",
-            delete_after=5,
-            ephemeral=True
+            delete_after=5
         )
     
     @staticmethod
