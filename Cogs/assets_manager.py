@@ -176,7 +176,7 @@ class AssetsManager(commands.Cog):
             for t in range(1, self.CONFIG["NUMBER_OF_TEAMS"]+2) # +1 (Testing team)
         ]
         
-    def save_assets(self, team_number: str | int | None = None):
+    def save_assets(self, team_number: int| str | None = None):
         """儲存所有或指定小隊資產資料至`team_assets.json`。
         """
 
@@ -216,6 +216,7 @@ class AssetsManager(commands.Cog):
             change_mode: ChangeMode,
             amount: int,
             user: str,
+            liquidation: bool = False
     ):
         """改變小隊存款額並記錄log。
 
@@ -233,24 +234,32 @@ class AssetsManager(commands.Cog):
             變更量。
         user: `str`
             變更者。
+        liquidation: `Optional[bool]` = False
+            是否為清算所獲收入，是則不計入總收入。
         """
         
-        original = self.team_assets[team-1].deposit # 原餘額     
+        original_deposit = self.team_assets[team-1].deposit # 原餘額     
 
     
         if(change_mode == "Deposit"):
             self.team_assets[team-1].deposit += amount
+            if(not liquidation):
+                self.increment_revenue(team, amount)
         elif(change_mode == "Withdraw"):
             self.team_assets[team-1].deposit -= amount
         elif(change_mode == "Change"):
             self.team_assets[team-1].deposit = amount
-        
+            if(amount > original_deposit):  # 更改存款大於原存款時，差額補上總收益
+                self.increment_revenue(team, amount-original_deposit)
+            elif(amount < original_deposit):    # 更改存款大於原存款時，總收益減掉差額
+                self.decreese_revenue(team, original_deposit-amount)
+                
         # 儲存紀錄
         log(
             log_type="DepositChange",
             user=user,
             team=str(team),
-            original_deposit=original,
+            original_deposit=original_deposit,
             changed_deposit=self.team_assets[team-1].deposit
         )
         # 儲存資料
@@ -297,7 +306,7 @@ class AssetsManager(commands.Cog):
         self.save_assets(transfer_team)
         self.save_assets(deposit_team)
         
-    async def stock_trade(
+    def stock_trade(
             self,
             *,
             team: int,
@@ -346,6 +355,8 @@ class AssetsManager(commands.Cog):
         elif(trade_type == "賣出"):
             # 計算金額 賣出->投資損益
             display_value = (value * quantity) - sum(stock_inv[f"{stock_index}"][:quantity])
+            if(display_value > 0):  # 若有資本利得則算入總收益
+                self.increment_revenue(team, display_value)
             # 以股票當前市場價歸還此小隊，從先買的股票賣。
             self.team_assets[team-1].stock_inv[f"{stock_index}"] = stock_inv[f"{stock_index}"][quantity:]
             self.team_assets[team-1].deposit += value * quantity
@@ -366,6 +377,20 @@ class AssetsManager(commands.Cog):
 
         self.save_assets(team)
         return display_value
+    
+    def increment_revenue(self, team: int, amount: int):
+        """增加小隊的總收入。
+        """
+
+        self.team_assets[team-1].revenue += amount
+        self.save_assets(team)
+
+    def decreese_revenue(self, team: int, amount: int):
+        """減少小隊的總收入(通常只有在存款記錯更改後才會用到)。
+        """
+
+        self.team_assets[team-1].revenue -= amount
+        self.save_assets(team)
 
     # Deprecated
     # @ntd.slash_command(

@@ -406,7 +406,7 @@ class TradeView(ui.View):
         self.stop()
         # stock_trade, update_log
         assets_manager: AssetsManager = self.bot.get_cog("AssetsManager")
-        display_value = await assets_manager.stock_trade(
+        display_value = assets_manager.stock_trade(
             team=self.team,
             trade_type=self.trade_type,
             stock_index=self.selected_stock_index,
@@ -425,7 +425,7 @@ class TradeView(ui.View):
             display_value=display_value
         )
         await discord_ui.update_alteration_log()
-        await discord_ui.update_asset_ui(team=self.team)
+        await discord_ui.update_asset_ui(self.team)
 
     @ui.button(
         label="取消交易",
@@ -1503,7 +1503,7 @@ class LiquidationView(ui.View):
         assets_manager: AssetsManager = self.bot.get_cog("AssetsManager")
         discord_ui: DiscordUI = self.bot.get_cog("DiscordUI")
         if(self.liquidation_type == "股票"):
-            display_value = await assets_manager.stock_trade(
+            display_value = assets_manager.stock_trade(
                 team=self.selected_team,
                 trade_type="賣出",
                 stock_index=self.selected_stock_index,
@@ -1996,11 +1996,11 @@ class DiscordUI(commands.Cog):
         )
     
     @ntd.slash_command(
-            name="clear_user_state",
+            name="clear_user_record",
             description="如果不小心點到關閉選單而無法重新開啟使用",
             guild_ids=[1218130958536937492]
     )
-    async def clear_user_state(
+    async def clear_user_record(
         self,
         interaction: ntd.Interaction,
         user: str = None
@@ -2035,7 +2035,7 @@ class DiscordUI(commands.Cog):
                 ephemeral=True
             )
             return
-        remove_id_functions: List[Callable] = [
+        remove_id_functions: List[Callable[[int], None]] = [
             MarketFunctionView.remove_querying_user,
             MarketFunctionView.remove_trading_user,
             AssetFunctionView.remove_changing_user,
