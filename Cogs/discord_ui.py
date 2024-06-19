@@ -1,4 +1,3 @@
-from discord import Interaction
 from nextcord.ext import commands
 from nextcord import ui
 import nextcord as ntd
@@ -2006,6 +2005,9 @@ class DiscordUI(commands.Cog):
         interaction: ntd.Interaction,
         user: str = None
     ):
+        """如果不小心點到關閉選單而無法重新開啟使用，已清除在各選單中紀錄的使用者id。
+        """
+
         if(user is None):
             user_id: int = interaction.user.id
         elif(re.match(r"^<@(\d+)>$", user) is None):
@@ -2017,6 +2019,8 @@ class DiscordUI(commands.Cog):
             return
         else:
             user_id: int = int(user.lstrip("<@").rstrip(">"))
+        user: str = interaction.user.display_name
+
         function_id_records: List[List[int]] = [
             MarketFunctionView.querying_user_ids,
             MarketFunctionView.trading_user_ids,
@@ -2024,6 +2028,13 @@ class DiscordUI(commands.Cog):
             AssetFunctionView.transfering_user_ids,
             AssetFunctionView.liquidating_user_ids
         ]
+        if(not any(function_id_records)):
+            await interaction.response.send_message(
+                content=f"{user} 無佔存紀錄",
+                delete_after=5,
+                ephemeral=True
+            )
+            return
         remove_id_functions: List[Callable] = [
             MarketFunctionView.remove_querying_user,
             MarketFunctionView.remove_trading_user,
@@ -2036,8 +2047,9 @@ class DiscordUI(commands.Cog):
                 remove_func(user_id)
 
         await interaction.response.send_message(
-            content=f"{user} 現在可正常使用功能",
-            delete_after=5
+            content=f"已清除紀錄，{user} 可正常使用功能",
+            delete_after=5,
+            ephemeral=True
         )
     
     @staticmethod
