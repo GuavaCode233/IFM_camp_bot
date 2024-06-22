@@ -1814,7 +1814,7 @@ class TeamAssetEmbed(ntd.Embed):
     def __init__(self, team: int):
         super().__init__(
             color=PURPLE,
-            title=f"第{team}小隊 F-pay帳戶"
+            title=f"第{team}小隊 F-Pay帳戶"
         )
         self.deposit_embed_format(team)
         self.stock_embed_format(team)
