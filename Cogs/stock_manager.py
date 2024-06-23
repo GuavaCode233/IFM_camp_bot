@@ -90,12 +90,12 @@ class StockManager(commands.Cog):
         `CONVERT_RAW_STOCK_DATA`
         將Excel原始股票資料轉換為JSON檔案。
 
-        `NEW_GAME`
+        `RESET_ALL`
         清除股票資料並重新抓取股票資料，
         如果資料有遺失，重新抓取股票資料。
         """
 
-        NEW_GAME = self.CONFIG["NEW_GAME"]
+        RESET_ALL = self.CONFIG["RESET_ALL"]
         CONVERT_RAW_STOCK_DATA = self.CONFIG["CONVERT_RAW_STOCK_DATA"]
         CONVERT_RAW_NEWS_DATA = self.CONFIG["CONVERT_RAW_NEWS_DATA"]
 
@@ -105,7 +105,7 @@ class StockManager(commands.Cog):
         if(CONVERT_RAW_NEWS_DATA):
             self.convert_news_data()
 
-        if(NEW_GAME):
+        if(RESET_ALL):
             self.reset_market_data()
             discord_ui: DiscordUI = self.bot.get_cog("DiscordUI")
             await discord_ui.clear_news()

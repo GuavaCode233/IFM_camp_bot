@@ -41,13 +41,17 @@ class Config(TypedDict):
 
     初始常數
     ---------
-    NEW_GAME: `bool`
-        新遊戲，刷新所有遊戲資料。
+    RESET_ALL: `bool`
+        刷新所有遊戲資料。
+    IN_GAME: `bool`
+        是否在遊戲裡旗標，決定機器人重開時是否將`RESET_ALL`設為`True`。
     MAINTENANCE: `bool`
-        維護模式，不將初始常數設為正常值。
+        維護模式，不將初始常數設為正常值，`RESET_ALL` = `True`
+        否則開新遊戲，將初始常數設為正常值並刷新所有遊戲資料，刷新完成將`RESET_ALL`設為`False`並將`IN_GAME`設為`True`
+        啟用資料保護，防止機器人重啟後遺失資料。
 
         正式狀態的常數值:
-        - NEW_GAME
+        - RESET_ALL
             開始設為`True`直到所有Cogs初始化變回False。
         - RESET_UI
             `True`。
@@ -87,7 +91,9 @@ class Config(TypedDict):
         存放「小隊收支」、「收支動態」以及各小隊「資產」與「即時通知」訊息ID。
     """
 
-    NEW_GAME: bool
+    RESET_ALL: bool
+    IN_GAME: bool
+    MAINTENANCE: bool
     RESET_UI: bool
     CLEAR_LOG: bool
     UPDATE_ASSET: bool

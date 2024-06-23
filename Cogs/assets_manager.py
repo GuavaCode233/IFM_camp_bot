@@ -132,13 +132,13 @@ class AssetsManager(commands.Cog):
     async def on_ready(self):
         """AssetManager啟動程序。
         
-        `NEW_GAME`
+        `RESET_ALL`
         清除全部小隊資產資料並重創銀行帳戶，
         如果資料有遺失，重新抓取資產資料。
         """
 
-        NEW_GAME: bool = self.CONFIG["NEW_GAME"]
-        if(NEW_GAME):   # 開新遊戲
+        RESET_ALL: bool = self.CONFIG["RESET_ALL"]
+        if(RESET_ALL):   # 開新遊戲
             self.reset_asset_data()
         elif(not self.team_assets): # 資料不對等
             self.fetch_assets()

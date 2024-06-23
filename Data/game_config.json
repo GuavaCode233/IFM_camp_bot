@@ -1,14 +1,20 @@
 {
-    "NEW_GAME": true,
     "MAINTENANCE": true,
+    "IN_GAME": false,
+    "RESET_ALL": true,
     "RESET_UI": true,
     "CLEAR_LOG": true,
     "UPDATE_ASSET": true,
     "CONVERT_RAW_STOCK_DATA": false,
     "CONVERT_RAW_NEWS_DATA": false,
-    "RELEASE_NEWS": false,
+    "RELEASE_NEWS": true,
     "STARTER_CASH": 10000,
-    "ROUND_TO_QUARTER": {"1": "Q4", "2": "Q1", "3": "Q2", "4": "Q3"},
+    "ROUND_TO_QUARTER": {
+        "1": "Q4",
+        "2": "Q1",
+        "3": "Q2",
+        "4": "Q3"
+    },
     "NUMBER_OF_TEAMS": 8,
     "channel_ids": {
         "NEWS_FEED": 1218189251716452452,
@@ -57,7 +63,7 @@
         "ALTERATION_LOG": 1225645557263896637,
         "STOCK_MARKET": 1238060821058158662,
         "TRADE_VIEW": 1238060822698135612,
-        "ASSET_MESSAGE_IDS":{
+        "ASSET_MESSAGE_IDS": {
             "TEAM_1": 1225472053487075401,
             "TEAM_2": 1225472058796802108,
             "TEAM_3": 1225472061808316438,
