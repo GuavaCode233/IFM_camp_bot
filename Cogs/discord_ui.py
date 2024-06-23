@@ -287,7 +287,7 @@ class TradeView(ui.View):
             return True
         
     @ui.select(
-        placeholder="選擇交易別",
+        placeholder="選擇買賣別",
         options=[
             ntd.SelectOption(
                 label="買進",
@@ -305,7 +305,7 @@ class TradeView(ui.View):
         select: ui.StringSelect,
         interaction: ntd.Interaction
     ):
-        """交易別選取選單callback。
+        """買賣別選取選單callback。
         """
         
         self.trade_type = select.values[0]
@@ -453,7 +453,7 @@ class TradeView(ui.View):
 
 
 class TradeStockSelect(ui.StringSelect):
-    """選取交易別後選取商品。
+    """選取買賣別後選取商品。
     """
 
     __slots__ = ("original_view", "stock_inv")

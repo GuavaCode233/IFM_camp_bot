@@ -44,8 +44,8 @@ class Config(TypedDict):
     NEW_GAME: `bool`
         新遊戲，刷新所有遊戲資料。
     MAINTENANCE: `bool`
-        維護模式，如果開啟則不會設定初始常數至正式狀態。
-        
+        維護模式，不將初始常數設為正常值。
+
         正式狀態的常數值:
         - NEW_GAME
             開始設為`True`直到所有Cogs初始化變回False。
@@ -88,7 +88,6 @@ class Config(TypedDict):
     """
 
     NEW_GAME: bool
-    MAINTENANCE: bool
     RESET_UI: bool
     CLEAR_LOG: bool
     UPDATE_ASSET: bool
@@ -262,8 +261,7 @@ GameState = TypedDict(
     {
         "round": int,
         "released_news_count": Dict[str, int],
-        "is_in_round": bool,
-        "cogs_state": Dict[str, bool]
+        "is_in_round": bool
     },
     total=True
 )

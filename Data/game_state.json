@@ -6,10 +6,5 @@
         "2": 0,
         "3": 0,
         "4": 0
-    },
-    "cogs_state": {
-        "AssetsManager": false,
-        "DiscordUI": false,
-        "StockManager": false
     }
 }
