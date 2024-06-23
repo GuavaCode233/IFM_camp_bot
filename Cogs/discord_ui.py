@@ -1941,6 +1941,24 @@ class DiscordUI(commands.Cog):
         if(RESET_UI):
             await self.reset_all_ui()
 
+        # temp
+        channel = self.bot.get_channel(1218140719269810237)
+        msg = await channel.fetch_message(1238336732567572551)
+        embed = ntd.Embed(
+            color=PURPLE,
+            title="領取身分組",
+            description="領取「資財營」身分組以開始使用「理財大富翁 F-Pay」。"
+        )
+        embed.set_author(
+            url="http://203.72.185.5/~1091303/traveler_logo.png"
+        )
+        embed.set_footer(
+            text="請擊下方銀河系🌌領取身分組"
+        )
+        await msg.edit(
+            embed=embed
+        )
+
         if(UPDATE_ASSET):
             await self.update_asset_ui()
         
