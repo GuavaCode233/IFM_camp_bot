@@ -3,7 +3,6 @@ from nextcord.ext import commands
 from dataclasses import dataclass, field
 from typing import List, Dict, Tuple
 from datetime import datetime
-from pprint import pprint
 import json
 
 from .utilities import access_file
@@ -40,8 +39,7 @@ def log(
     ) as json_file:
         dict_: Dict[str, int | List[LogData]] = json.load(json_file)
 
-    time = datetime.now()
-    time = time.strftime("%m/%d %I:%M%p")
+    time = datetime.now().strftime("%m/%d %I:%M%p")
     
     if(log_type == "Transfer"):
         transfer_team = team[0]
@@ -205,8 +203,6 @@ class AssetsManager(commands.Cog):
             )
 
         access_file.save_to("team_assets", dict_)
-        pprint(dict_)
-        print()
     
     def change_deposit(
             self,
@@ -390,86 +386,6 @@ class AssetsManager(commands.Cog):
 
         self.team_assets[team-1].revenue -= amount
         self.save_assets(team)
-
-    # Deprecated
-    # @ntd.slash_command(
-    #     name="change_deposit",
-    #     description="🛅針對指定小隊改變存款額。",
-    #     guild_ids=[1218130958536937492]
-    # )
-    # @application_checks.is_owner()
-    # async def change_deposit(
-    #     self,
-    #     interaction: ntd.Interaction,
-    #     team: int = ntd.SlashOption(
-    #         name="小隊",
-    #         description="輸入小隊阿拉伯數字",
-    #         choices={str(t):t for t in range(1, 9)}
-    #     ),
-    #     amount: int = ntd.SlashOption(
-    #         name="改變金額",
-    #         description="輸入金額阿拉伯數字(可為負數)",
-    #     )
-    # ):
-    #     """用指令改變指定小隊存款額。
-    #     """
-        
-    #     self.change_deposit(
-    #         team=team,
-    #         mode="1",
-    #         amount=amount,
-    #         user=interaction.user.display_name
-    #     )
-    #     # update_asset_ui 更新資產ui顯示
-    #     await interaction.response.send_message(
-    #         "**改變成功!!!**",
-    #         delete_after=3,
-    #         ephemeral=True
-    #     )
-    
-    # Deprecated
-    # @ntd.slash_command(
-    #     name="change_stock",
-    #     description="🛅針對指定小隊改變股票庫存。",
-    #     guild_ids=[1218130958536937492]
-    # )
-    # @application_checks.is_owner()
-    # async def change_stock(
-    #     self,
-    #     interaction: ntd.Interaction,
-    #     team: int = ntd.SlashOption(
-    #         name="小隊",
-    #         description="輸入小隊阿拉伯數字",
-    #         choices={str(t):t for t in range(1, 9)}
-    #     ),
-    #     trade_type: str = ntd.SlashOption(
-    #         name="交易別",
-    #         description="選擇交易別",
-    #         choices=["買進", "賣出"]
-    #     ),
-    #     stock: int = ntd.SlashOption(
-    #         name="股票index",
-    #         description="輸入股票index阿拉伯數字",
-    #         choices={str(t):t for t in range(10)}
-    #     ),
-    #     quantity: int = 1
-    # ):
-    #     """用指令改變指定小隊存款額。
-    #     """
-        
-    #     await self.stock_trade(
-    #         team=team,
-    #         trade_type=trade_type,
-    #         stock=stock,
-    #         quantity=quantity,
-    #         user=interaction.user.display_name
-    #     )
-    #     # update_asset_ui 更新資產ui顯示
-    #     await interaction.response.send_message(
-    #         "**改變成功!!!**",
-    #         delete_after=3,
-    #         ephemeral=True
-    #     )
 
 
 def setup(bot: commands.Bot):

@@ -66,7 +66,7 @@ def get_deposit(team: int | str) -> int:
     return access_file.read_file("team_assets")[f"{team}"]["deposit"]
 
 
-def inventory_to_string(
+def get_stock_inventory_string(
         stock_inv: Dict[str, List[int]],
         index_: str | int | None = None
     ) -> str:
@@ -93,6 +93,13 @@ def get_stock_price(stock_index: int | str) -> float:
     )[int(stock_index)]
 
     return stock_dict["price"]
+
+
+def get_time(format: str, /) -> str:
+    """取得現在時間並回傳格式化的`str`。
+    """
+
+    return datetime.now().strftime(format)
 
 
 class MarketFunctionView(ui.View):
@@ -253,8 +260,6 @@ class TradeView(ui.View):
         """
 
         self.deposit = get_deposit(self.team)   # 更新顯示的存款額
-        time = datetime.now()
-        time = time.strftime("%I:%M%p")
 
         embed = ntd.Embed(
             color=PURPLE,
@@ -270,7 +275,7 @@ class TradeView(ui.View):
             value=f"{self.quantity_field_value}\n*(1張 = 1000股)*"
         )
         embed.set_footer(
-            text=f"{self.user_name} | Today at {time}",
+            text=f"{self.user_name} | Today at {get_time("%I:%M%p")}",
             icon_url=self.user_avatar
         )
         return embed
@@ -279,12 +284,9 @@ class TradeView(ui.View):
         """檢查輸入資料是否完整。
         """
 
-        if(self.trade_type is None or
-           self.selected_stock_index is None or
-           isinstance(self.quantity_field_value, str)):
-            return False
-        else:
-            return True
+        return (self.trade_type is not None and
+                self.selected_stock_index is not None and
+                isinstance(self.quantity_field_value, int))
         
     @ui.select(
         placeholder="選擇買賣別",
@@ -328,7 +330,7 @@ class TradeView(ui.View):
             if(not self.stock_inv):
                 self.trade_field_value = "無股票庫存"
             else:
-                self.trade_field_value = inventory_to_string(
+                self.trade_field_value = get_stock_inventory_string(
                     self.stock_inv
                 )
                 self.stock_select = TradeStockSelect(self)
@@ -494,7 +496,7 @@ class TradeStockSelect(ui.StringSelect):
             )
         elif(self.original_view.trade_type == "賣出"):
             self.original_view.trade_field_name = "已選擇的庫存股票"
-            self.original_view.trade_field_value = inventory_to_string(
+            self.original_view.trade_field_value = get_stock_inventory_string(
                 self.original_view.stock_inv, self.values[0]
             )
         await interaction.response.edit_message(
@@ -703,9 +705,6 @@ class AssetFunctionView(ui.View):
         """嵌入訊息。
         """
 
-        time = datetime.now()
-        time = time.strftime("%m/%d %I:%M%p")
-
         embed = ntd.Embed(
             color=PURPLE,
             title="變更小隊存款"
@@ -727,7 +726,7 @@ class AssetFunctionView(ui.View):
                   "直接更改指定小隊的存款額"
         )
         embed.set_footer(
-            text=f"按下按鈕以變更小隊存款 • {time}"
+            text=f"按下按鈕以變更小隊存款 • {get_time("%m/%d %I:%M%p")}"
         )
 
         return embed
@@ -875,9 +874,6 @@ class DepositChangeView(ui.View):
         """用於編排選單狀態訊息。
         """
 
-        time = datetime.now()
-        time = time.strftime("%I:%M%p")
-
         embed = ntd.Embed(
             color=PURPLE,
             title=self.embed_title,
@@ -898,7 +894,7 @@ class DepositChangeView(ui.View):
                 value=f"{self.amount:,}"
             )
         embed.set_footer(
-            text=f"{self.user_name} | Today at {time}",
+            text=f"{self.user_name} | Today at {get_time("%I:%M%p")}",
             icon_url=self.user_icon
         )
 
@@ -908,13 +904,9 @@ class DepositChangeView(ui.View):
         """檢查輸入資料是否完整。
         """
 
-        if(self.selected_team is None or
-           self.selected_mode is None or
-           isinstance(self.amount, str)
-        ):
-            return False
-        else:
-            return True
+        return (self.selected_team is not None and
+                self.selected_mode is not None and
+                isinstance(self.amount, int))
 
     @ui.select(
         placeholder="選擇小隊",
@@ -1130,8 +1122,6 @@ class DepositTransferView(ui.View):
         """用於編排選單狀態訊息。
         """
 
-        time = datetime.now().strftime("%I:%M%p")
-
         embed = ntd.Embed(
             color=PURPLE,
             title="過路費轉帳"
@@ -1163,7 +1153,7 @@ class DepositTransferView(ui.View):
             inline=False
         )
         embed.set_footer(
-            text=f"{self.user_name} | Today at {time}",
+            text=f"{self.user_name} | Today at {get_time("%I:%M%p")}",
             icon_url=self.user_icon
         )
         return embed
@@ -1172,14 +1162,10 @@ class DepositTransferView(ui.View):
         """檢查輸入資料是否完整。
         """
 
-        if(self.d_team_deposit is None or
-           self.t_team_deposit is None or 
-           isinstance(self.amount, str) or
-           self.amount == 0 # 轉帳金額不可為0
-        ):
-            return False
-        else:
-            return True
+        return (self.d_team_deposit is not None and
+                self.t_team_deposit is not None and
+                isinstance(self.amount, int) and
+                self.amount != 0) # 轉帳金額不可為0
 
     @ui.select(
         placeholder="選擇轉出小隊",
@@ -1380,15 +1366,13 @@ class LiquidationView(ui.View):
         """用於編排選單狀態訊息。
         """
 
-        time = datetime.now().strftime("%I:%M%p")
-
         embed = ntd.Embed(
             color=PURPLE,
             title="小隊清算",
             description=self.embed_description
         )
         embed.set_footer(
-            text=f"{self.user_name} | Today at {time}",
+            text=f"{self.user_name} | Today at {get_time("%I:%M%p")}",
             icon_url=self.user_icon
         )
         if(self.selected_team is None): # 尚未選擇小隊
@@ -1705,7 +1689,7 @@ class LogEmbed(ntd.Embed):
             )
         
         self.set_footer(
-            text=f"資料更新時間: {datetime.now().strftime("%m/%d %I:%M%p")}"
+            text=f"資料更新時間: {get_time("%m/%d %I:%M%p")}"
         )
 
 
@@ -1738,7 +1722,7 @@ class DepositChangeNotificationEmbed(ntd.Embed):
             description=description
         )
         self.set_footer(
-            text=f"{datetime.now().strftime("%m/%d %I:%M%p")}"
+            text=f"{get_time("%m/%d %I:%M%p")}"
         )
 
 
@@ -1771,7 +1755,7 @@ class TransferNotificationEmbed(ntd.Embed):
             description=description
         )
         self.set_footer(
-            text=f"{datetime.now().strftime("%m/%d %I:%M%p")}"
+            text=f"{get_time("%m/%d %I:%M%p")}"
         )
 
 
@@ -1803,7 +1787,7 @@ class StockChangeNoticeEmbed(ntd.Embed):
             description=description
         )
         self.set_footer(
-            text=f"{datetime.now().strftime("%m/%d %I:%M%p")}"
+            text=f"{get_time("%m/%d %I:%M%p")}"
         )
 
 

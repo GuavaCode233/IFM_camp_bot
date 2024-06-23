@@ -4,7 +4,6 @@ import pandas as pd
 
 from typing import List, Dict, ClassVar
 from dataclasses import dataclass
-from pprint import pprint
 import asyncio
 import json
 
@@ -213,14 +212,11 @@ class StockManager(commands.Cog):
         
         stock_data: MarketData = access_file.read_file("market_data")
 
-        print(f"Iteration: {self.price_change_loop.current_loop}")
         for stock, stock_dict in zip(self.stocks, stock_data):
             # 改變該股股價
             stock.change_price()
-            print(stock.get_price())
             # 儲存股價
             stock_dict.update({"price": stock.price})
-        print()
 
         access_file.save_to("market_data", stock_data)  # 儲存所有變動後資料
         # 更新市場資料

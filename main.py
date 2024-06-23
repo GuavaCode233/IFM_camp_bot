@@ -33,7 +33,6 @@ def set_game_config():
             `10_000`
         """
 
-        
         CONFIG["RESET_ALL"] = False if CONFIG["IN_GAME"] else True
         CONFIG["RESET_UI"] = True
         CONFIG["CLEAR_LOG"] = True
@@ -85,6 +84,7 @@ def main():
     access_file.save_to("game_config", CONFIG)
 
     bot.run(os.environ.get("TOKEN"))
+
 
 if(__name__ == "__main__"):
     main()
