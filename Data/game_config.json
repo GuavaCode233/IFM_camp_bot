@@ -1,5 +1,6 @@
 {
     "NEW_GAME": true,
+    "MAINTAINANCE": true,
     "RESET_UI": true,
     "CLEAR_LOG": true,
     "UPDATE_ASSET": true,

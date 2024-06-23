@@ -1,5 +1,4 @@
-from nextcord.ext import commands, application_checks
-import nextcord as ntd
+from nextcord.ext import commands
 
 from dataclasses import dataclass, field
 from typing import List, Dict, Tuple
