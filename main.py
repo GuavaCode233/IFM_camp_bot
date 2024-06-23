@@ -67,6 +67,7 @@ def main():
         CONFIG["IN_GAME"] = False
         CONFIG["RESET_ALL"] = True
         CONFIG["CLEAR_LOG"] = True
+        CONFIG["RELEASE_NEWS"] = False
     else:
         set_game_config()
         CONFIG["IN_GAME"] = True
