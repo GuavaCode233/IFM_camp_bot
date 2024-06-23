@@ -1,4 +1,3 @@
-import re
+lst = [("1", "1"), ("2", "2")]
 
-user = "<@601014917746786335>"
-print(re.match(r"^<@(\d+)>", user) is None)
+print(dict(lst))

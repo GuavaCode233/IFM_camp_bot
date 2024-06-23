@@ -85,6 +85,5 @@ def main():
 
     bot.run(os.environ.get("TOKEN"))
 
-
 if(__name__ == "__main__"):
     main()

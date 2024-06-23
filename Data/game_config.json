@@ -16,6 +16,7 @@
         "4": "Q3"
     },
     "NUMBER_OF_TEAMS": 8,
+    "TL_ID_TO_TEAM": {},
     "channel_ids": {
         "NEWS_FEED": 1218189251716452452,
         "CHANGE_DEPOSIT": 1218186135264821298,

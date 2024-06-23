@@ -316,7 +316,7 @@ class StockManager(commands.Cog):
             
     @ntd.slash_command(
         name="open_round",
-        description="開始下一回合(回合未關閉無法使用)"
+        description="開始下一回合(回合未關閉無法使用)",
     )
     @application_checks.is_owner()
     async def open_round(self, interaction: ntd.Interaction):
@@ -396,6 +396,19 @@ class StockManager(commands.Cog):
         await interaction.response.send_message(
             f"回合{self.game_state["round"]}結束!",
             delete_after=3,
+            ephemeral=True
+        )
+
+    @open_round.error
+    @close_round.error
+    async def not_owner_error_handler(
+        self,
+        interaction: ntd.Interaction,
+        error: application_checks.ApplicationNotOwner
+    ):
+        await interaction.response.send_message(
+            content="**你沒有權限使用此指令!!!**",
+            delete_after=5,
             ephemeral=True
         )
 

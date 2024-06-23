@@ -82,6 +82,8 @@ class Config(TypedDict):
         回合與季對照表("round": "quarter")。
     NUMBER_OF_TEAMS: `int`
         總小隊數量。
+    TL_ID_TO_TEAM: `dict[str, int]`
+        隊輔id與小隊對照表("TL_ID": team)。
     
     頻道及訊息ID
     -----------
@@ -103,6 +105,7 @@ class Config(TypedDict):
     STARTER_CASH: int
     ROUND_TO_QUARTER: Dict[str, str]
     NUMBER_OF_TEAMS: int
+    TL_ID_TO_TEAM: Dict[str, int]
     channel_ids: ChannelIDs
     message_ids: MessageIDs
 

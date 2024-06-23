@@ -1,4 +1,4 @@
-from nextcord.ext import commands
+from nextcord.ext import commands, application_checks
 from nextcord import ui
 import nextcord as ntd
 
@@ -1951,33 +1951,63 @@ class DiscordUI(commands.Cog):
 
         print("Loaded discord_ui")
 
-    @commands.command()
-    async def test_ui_com(self, ctx: commands.Context):
-
-        channel = self.bot.get_channel(1243503969032998973)
-        # delete old message
-        await channel.purge(limit=1)
-        # prompt
-        await channel.send("message")
-        
-
     @ntd.slash_command(
             name="test_ui",
             description="For testing UIs",
             guild_ids=[1218130958536937492]
     )
+    @application_checks.is_owner()
     async def test_ui(self, interaction: ntd.Interaction):
-        AssetFunctionView.add_liquidating_user(interaction.user.id)
-        view = LiquidationView(
-            user_name=interaction.user.display_name,
-            user_icon=interaction.user.display_avatar,
-            bot=self.bot
-        )
+        guild = self.bot.get_guild(1218130958536937492)
+        TEAM_LEADER_ROLE_ID = 1218181864783609928
+        CHAR_TO_INT = {
+            "一": 1,
+            "二": 2,
+            "三": 3,
+            "四": 4,
+            "五": 5,
+            "六": 6,
+            "七": 7,
+            "八": 8
+        }
+        TL_ID_TO_TEAM: List[Tuple[str, int]] = []
+        for member in guild.members:
+
+            if(member.get_role(TEAM_LEADER_ROLE_ID) is None):   # 不是隊輔跳過
+                continue
+
+            for role in member.roles:
+                if(re.match(r"^第(.)小隊$", role.name) is None):
+                    continue
+                
+                team = CHAR_TO_INT[role.name[1]]
+                TL_ID_TO_TEAM.append((f"{member.id}", team))
+            
+        TL_ID_TO_TEAM.sort(key=lambda x: x[1])
+        self.CONFIG["TL_ID_TO_TEAM"] = TL_ID_TO_TEAM
+        access_file.save_to("game_config", self.CONFIG)
+
         await interaction.response.send_message(
-            embed=view.status_embed(),
-            view=view,
+            content="Testing UI.",
+            delete_after=5,
             ephemeral=True
         )
+
+    @test_ui.error
+    async def test_ui_error(
+        self,
+        interaction: ntd.Interaction,
+        error
+    ):
+        """非機器人所有者使用此指令將 raise `ApplicationNotOwner` Error。
+        """
+
+        if(isinstance(error, application_checks.ApplicationNotOwner)):
+            await interaction.response.send_message(
+                content="**你沒有權限使用此指令!!!**",
+                delete_after=5,
+                ephemeral=True
+            )
     
     @ntd.slash_command(
             name="clear_user_record",
