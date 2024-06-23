@@ -74,6 +74,8 @@ class Config(TypedDict):
         將Excel原始股票資料轉換為JSON檔案。
     CONVERT_RAW_NEWS_DATA: `bool`
         將Excel原始新聞資料轉換為JSON檔案。
+    FETCH_TL_IDS: `bool`
+        自動抓取隊輔並製作隊輔id與小隊對照表。
     RELEASE_NEWS: `bool`
         是否發送新聞(測試使用)。
     STARTER_CASH: `int`
@@ -101,6 +103,7 @@ class Config(TypedDict):
     UPDATE_ASSET: bool
     CONVERT_RAW_STOCK_DATA: bool
     CONVERT_RAW_NEWS_DATA: bool
+    FETCH_TL_IDS: bool
     RELEASE_NEWS: bool
     STARTER_CASH: int
     ROUND_TO_QUARTER: Dict[str, str]

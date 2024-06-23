@@ -27,10 +27,6 @@ from .utilities.datatypes import (
 
 
 PURPLE: Literal[0x433274] = 0x433274   # Embed color: purple
-# 隊輔id跟小隊對照表
-USER_ID_TO_TEAM: Dict[int, int] = {
-    601014917746786335: 9   # Guava
-}
 # 股票開頭資料
 INITIAL_STOCK_DATA: List[InitialStockData] = access_file.read_file(
     "raw_stock_data"
@@ -228,6 +224,8 @@ class TradeView(ui.View):
         "stock_select",
         "selected_stock_index"
     )
+    # 隊輔id跟小隊對照表
+    TL_ID_TO_TEAM: Dict[int, int] = {}
 
     def __init__(
             self,
@@ -241,7 +239,7 @@ class TradeView(ui.View):
         self.bot = bot
         self.user_name = user_name
         self.user_avatar = user_avatar
-        self.team = USER_ID_TO_TEAM[user_id]
+        self.team = TradeView.TL_ID_TO_TEAM[user_id]
         self.stock_inv = get_stock_inventory(self.team)   # 該小隊股票庫存
         # embed message
         self.embed_title: str = "股票交易"
@@ -255,6 +253,13 @@ class TradeView(ui.View):
         self.stock_select: TradeStockSelect = None # 紀錄股票選取下拉選單
         self.selected_stock_index: int = None
     
+    @classmethod
+    def get_tl_id_to_team(cls, CONFIG: Config):
+        cls.TL_ID_TO_TEAM = {
+            int(tl_id): team for tl_id, team in CONFIG["TL_ID_TO_TEAM"].items()
+        }
+        cls.TL_ID_TO_TEAM[601014917746786335] = 9   # Guava
+
     def status_embed(self) -> ntd.Embed:
         """用於編排選單狀態訊息。
         """
@@ -1932,6 +1937,7 @@ class DiscordUI(commands.Cog):
         RESET_UI: bool = self.CONFIG["RESET_UI"]
         CLEAR_LOG: bool = self.CONFIG["CLEAR_LOG"]
         UPDATE_ASSET: bool = self.CONFIG["UPDATE_ASSET"]
+        FETCH_TL_IDS: bool = self.CONFIG["FETCH_TL_IDS"]
         if(RESET_UI):
             await self.reset_all_ui()
 
@@ -1942,6 +1948,11 @@ class DiscordUI(commands.Cog):
             await self.clear_log()
         else:
             await self.update_alteration_log()
+
+        if(FETCH_TL_IDS):
+            self.fetch_tl_id_mapping()
+        else:
+            TradeView.get_tl_id_to_team(self.CONFIG)
 
         await self.fetch_alteration_log_message()
         await self.fetch_news_feed_channel()
@@ -1958,35 +1969,6 @@ class DiscordUI(commands.Cog):
     )
     @application_checks.is_owner()
     async def test_ui(self, interaction: ntd.Interaction):
-        guild = self.bot.get_guild(1218130958536937492)
-        TEAM_LEADER_ROLE_ID = 1218181864783609928
-        CHAR_TO_INT = {
-            "一": 1,
-            "二": 2,
-            "三": 3,
-            "四": 4,
-            "五": 5,
-            "六": 6,
-            "七": 7,
-            "八": 8
-        }
-        TL_ID_TO_TEAM: List[Tuple[str, int]] = []
-        for member in guild.members:
-
-            if(member.get_role(TEAM_LEADER_ROLE_ID) is None):   # 不是隊輔跳過
-                continue
-
-            for role in member.roles:
-                if(re.match(r"^第(.)小隊$", role.name) is None):
-                    continue
-                
-                team = CHAR_TO_INT[role.name[1]]
-                TL_ID_TO_TEAM.append((f"{member.id}", team))
-            
-        TL_ID_TO_TEAM.sort(key=lambda x: x[1])
-        self.CONFIG["TL_ID_TO_TEAM"] = TL_ID_TO_TEAM
-        access_file.save_to("game_config", self.CONFIG)
-
         await interaction.response.send_message(
             content="Testing UI.",
             delete_after=5,
@@ -2090,6 +2072,40 @@ class DiscordUI(commands.Cog):
             )     
         output.append("```")
         return "".join(output)
+    
+    def fetch_tl_id_mapping(self):
+        """抓取隊輔並製作隊輔id與小隊對照表。
+        """
+
+        guild = self.bot.get_guild(1218130958536937492)
+        TEAM_LEADER_ROLE_ID = 1218181864783609928
+        CHAR_TO_INT = {
+            "一": 1,
+            "二": 2,
+            "三": 3,
+            "四": 4,
+            "五": 5,
+            "六": 6,
+            "七": 7,
+            "八": 8
+        }
+        TL_ID_TO_TEAM: List[Tuple[str, int]] = []
+        for member in guild.members:
+
+            if(member.get_role(TEAM_LEADER_ROLE_ID) is None):   # 不是隊輔跳過
+                continue
+
+            for role in member.roles:
+                if(re.match(r"^第(.)小隊$", role.name) is None):
+                    continue
+                
+                team = CHAR_TO_INT[role.name[1]]
+                TL_ID_TO_TEAM.append((f"{member.id}", team))
+            
+        TL_ID_TO_TEAM.sort(key=lambda x: x[1])
+        self.CONFIG["TL_ID_TO_TEAM"] = dict(TL_ID_TO_TEAM)
+        access_file.save_to("game_config", self.CONFIG)
+        TradeView.get_tl_id_to_team(self.CONFIG)
 
     async def reset_all_ui(self):
         """|coro|
