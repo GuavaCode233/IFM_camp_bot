@@ -40,8 +40,8 @@
         "revenue": 0
     },
     "9": {
-        "deposit": 10000,
+        "deposit": 1009999,
         "stock_inv": {},
-        "revenue": 0
+        "revenue": 999999
     }
 }

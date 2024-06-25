@@ -8,7 +8,7 @@
     "CONVERT_RAW_STOCK_DATA": false,
     "CONVERT_RAW_NEWS_DATA": false,
     "FETCH_TL_IDS": false,
-    "RELEASE_NEWS": true,
+    "RELEASE_NEWS": false,
     "STARTER_CASH": 10000,
     "ROUND_TO_QUARTER": {
         "1": "Q4",

@@ -98,6 +98,13 @@ def get_time(format: str, /) -> str:
     return datetime.now().strftime(format)
 
 
+def is_in_round() -> bool:
+    """回傳是否在回合內。
+    """
+
+    return access_file.read_file("game_state").get("is_in_round")
+
+
 class MarketFunctionView(ui.View):
     """股市 View 放置交易功能按鈕及財務報表查詢按鈕。
     """
@@ -138,7 +145,7 @@ class MarketFunctionView(ui.View):
         """
 
         cls.querying_user_ids.remove(user_id)
-    
+
     @ui.button(
         label="股票交易",
         style=ntd.ButtonStyle.gray,
@@ -152,6 +159,14 @@ class MarketFunctionView(ui.View):
     ):
         """股票交易按鈕 callback。
         """
+
+        if(not is_in_round()): # 收盤期間不開放股票交易
+            await interaction.response.send_message(
+                content="**收盤期間不開放股票交易!!!**",
+                delete_after=5,
+                ephemeral=True
+            )
+            return
 
         if(interaction.user.id in MarketFunctionView.trading_user_ids):    # 防止重複呼叫功能
             await interaction.response.send_message(
@@ -375,6 +390,15 @@ class TradeView(ui.View):
     ):
         """確認送出按扭callback。
         """
+
+        if(not is_in_round()):  # 收盤期間不開放股票交易
+            await interaction.response.edit_message(
+                content="**已取消交易，\n收盤期間不開放股票交易!!!**",
+                embed=None,
+                view=None,
+                delete_after=5
+            )
+            return
 
         if(not self.input_check()): # 檢查資料都填齊
             await interaction.response.send_message(
@@ -1940,24 +1964,6 @@ class DiscordUI(commands.Cog):
         FETCH_TL_IDS: bool = self.CONFIG["FETCH_TL_IDS"]
         if(RESET_UI):
             await self.reset_all_ui()
-
-        # temp
-        channel = self.bot.get_channel(1218140719269810237)
-        msg = await channel.fetch_message(1238336732567572551)
-        embed = ntd.Embed(
-            color=PURPLE,
-            title="領取身分組",
-            description="領取「資財營」身分組以開始使用「理財大富翁 F-Pay」。"
-        )
-        embed.set_author(
-            url="http://203.72.185.5/~1091303/traveler_logo.png"
-        )
-        embed.set_footer(
-            text="請擊下方銀河系🌌領取身分組"
-        )
-        await msg.edit(
-            embed=embed
-        )
 
         if(UPDATE_ASSET):
             await self.update_asset_ui()
