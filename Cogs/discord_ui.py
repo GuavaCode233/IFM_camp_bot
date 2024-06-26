@@ -129,8 +129,11 @@ class MarketFunctionView(ui.View):
     def remove_trading_user(cls, user_id: int):
         """將交易結束的使用者從`trading_user_ids`中移除。
         """
-
-        cls.trading_user_ids.remove(user_id)
+        
+        try:
+            cls.trading_user_ids.remove(user_id)
+        except ValueError:
+            return
 
     @classmethod
     def add_querying_user(cls, user_id: int):
@@ -144,7 +147,10 @@ class MarketFunctionView(ui.View):
         """將查詢結束的使用者從`querying_user_ids`中移除。
         """
 
-        cls.querying_user_ids.remove(user_id)
+        try:
+            cls.querying_user_ids.remove(user_id)
+        except ValueError:
+            return
 
     @ui.button(
         label="股票交易",
@@ -700,7 +706,10 @@ class AssetFunctionView(ui.View):
         """將交易結束的使用者從`changing_user_ids`中移除。
         """
 
-        cls.changing_user_ids.remove(user_id)
+        try:
+            cls.changing_user_ids.remove(user_id)
+        except ValueError:
+            return
 
     @classmethod
     def add_transfering_user(cls, user_id: int):
@@ -714,7 +723,10 @@ class AssetFunctionView(ui.View):
         """將交易結束的使用者從`transfering_user_ids`中移除。
         """
 
-        cls.transfering_user_ids.remove(user_id)
+        try:
+            cls.transfering_user_ids.remove(user_id)
+        except ValueError:
+            return
 
     @classmethod
     def add_liquidating_user(cls, user_id: int):
@@ -728,7 +740,10 @@ class AssetFunctionView(ui.View):
         """將清算結束的使用者從`liquidating_user_ids`中移除。
         """
 
-        cls.liquidating_user_ids.remove(user_id)
+        try:
+            cls.liquidating_user_ids.remove(user_id)
+        except ValueError:
+            return
 
     def embed_message(self) -> ntd.Embed:
         """嵌入訊息。
