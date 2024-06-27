@@ -12,7 +12,7 @@
     "3": {
         "deposit": 10000,
         "stock_inv": {},
-        "revenue": 0
+        "revenue": 12500
     },
     "4": {
         "deposit": 10000,
@@ -20,28 +20,28 @@
         "revenue": 0
     },
     "5": {
-        "deposit": 10000,
+        "deposit": 634350,
         "stock_inv": {},
-        "revenue": 0
+        "revenue": 768190
     },
     "6": {
-        "deposit": 10000,
+        "deposit": 93270,
         "stock_inv": {},
-        "revenue": 0
+        "revenue": 175270
     },
     "7": {
-        "deposit": 10000,
+        "deposit": 136660,
         "stock_inv": {},
-        "revenue": 0
+        "revenue": 297660
     },
     "8": {
-        "deposit": 10000,
+        "deposit": 186990,
         "stock_inv": {},
-        "revenue": 0
+        "revenue": 367990
     },
     "9": {
-        "deposit": 10000,
+        "deposit": 310000,
         "stock_inv": {},
-        "revenue": 0
+        "revenue": 300000
     }
 }

@@ -61,7 +61,7 @@ class StockManager(commands.Cog):
         "INITIAL_STOCK_DATA",
     )
     # 股價變動頻率(秒)
-    PRICE_CHANGE_FREQUENCY: ClassVar[float] = 3.0
+    PRICE_CHANGE_FREQUENCY: ClassVar[float] = 20.0
     # 發送新聞間隔(秒)
     TIME_BETWEEN_NEWS: ClassVar[float] = 120.0
 
@@ -271,6 +271,7 @@ class StockManager(commands.Cog):
                 self.news_loop.cancel()    
             else:   # 資料遺失    
                 self.fetch_round_news()
+            return
 
         news = self.pending_news.pop(0)
 

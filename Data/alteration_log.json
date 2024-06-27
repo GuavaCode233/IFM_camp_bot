@@ -1,3 +1,1264 @@
 {
-    "serial": 0
+    "serial": 132,
+    "6": [
+        {
+            "log_type": "DepositChange",
+            "time": "06/27 09:37AM",
+            "user": "zhangzhiwei6701",
+            "serial": 0,
+            "team": "6",
+            "original_deposit": 10000,
+            "changed_deposit": 15000
+        },
+        {
+            "log_type": "DepositChange",
+            "time": "06/27 09:40AM",
+            "user": "fenhongzhupeipei4989",
+            "serial": 7,
+            "team": "6",
+            "original_deposit": 15000,
+            "changed_deposit": 27500
+        },
+        {
+            "log_type": "DepositChange",
+            "time": "06/27 09:43AM",
+            "user": "justina.17",
+            "serial": 8,
+            "team": "6",
+            "original_deposit": 27500,
+            "changed_deposit": 35000
+        },
+        {
+            "log_type": "DepositChange",
+            "time": "06/27 09:45AM",
+            "user": "td3582",
+            "serial": 13,
+            "team": "6",
+            "original_deposit": 35000,
+            "changed_deposit": 40000
+        },
+        {
+            "log_type": "DepositChange",
+            "time": "06/27 09:49AM",
+            "user": "阿桑",
+            "serial": 18,
+            "team": "6",
+            "original_deposit": 40000,
+            "changed_deposit": 50000
+        },
+        {
+            "log_type": "DepositChange",
+            "time": "06/27 10:00AM",
+            "user": "030026645",
+            "serial": 28,
+            "team": "6",
+            "original_deposit": 50000,
+            "changed_deposit": 58000
+        },
+        {
+            "log_type": "DepositChange",
+            "time": "06/27 10:02AM",
+            "user": "zailaiyidianhaieel",
+            "serial": 31,
+            "team": "6",
+            "original_deposit": 58000,
+            "changed_deposit": 65500
+        },
+        {
+            "log_type": "DepositChange",
+            "time": "06/27 10:04AM",
+            "user": "摳叮面",
+            "serial": 35,
+            "team": "6",
+            "original_deposit": 65500,
+            "changed_deposit": 56500
+        },
+        {
+            "log_type": "DepositChange",
+            "time": "06/27 10:04AM",
+            "user": "摳叮面",
+            "serial": 36,
+            "team": "6",
+            "original_deposit": 56500,
+            "changed_deposit": 71500
+        },
+        {
+            "log_type": "DepositChange",
+            "time": "06/27 10:15AM",
+            "user": "摳叮面",
+            "serial": 51,
+            "team": "6",
+            "original_deposit": 71500,
+            "changed_deposit": 61500
+        },
+        {
+            "log_type": "DepositChange",
+            "time": "06/27 10:20AM",
+            "user": "td3582",
+            "serial": 57,
+            "team": "6",
+            "original_deposit": 61500,
+            "changed_deposit": 69000
+        },
+        {
+            "log_type": "DepositChange",
+            "time": "06/27 10:24AM",
+            "user": "fenhongzhupeipei4989",
+            "serial": 63,
+            "team": "6",
+            "original_deposit": 69000,
+            "changed_deposit": 81500
+        },
+        {
+            "log_type": "DepositChange",
+            "time": "06/27 10:26AM",
+            "user": "030026645",
+            "serial": 65,
+            "team": "6",
+            "original_deposit": 81500,
+            "changed_deposit": 89000
+        },
+        {
+            "log_type": "DepositChange",
+            "time": "06/27 10:28AM",
+            "user": "摳叮面",
+            "serial": 72,
+            "team": "6",
+            "original_deposit": 89000,
+            "changed_deposit": 78000
+        },
+        {
+            "log_type": "StockChange",
+            "time": "06/27 10:32AM",
+            "user": "yanyan_0222",
+            "serial": 79,
+            "team": "6",
+            "trade_type": "買進",
+            "stock": "互幫金 0507",
+            "quantity": 3
+        },
+        {
+            "log_type": "DepositChange",
+            "time": "06/27 10:32AM",
+            "user": "阿桑",
+            "serial": 81,
+            "team": "6",
+            "original_deposit": 69990,
+            "changed_deposit": 77990
+        },
+        {
+            "log_type": "DepositChange",
+            "time": "06/27 10:35AM",
+            "user": "企鵝",
+            "serial": 85,
+            "team": "6",
+            "original_deposit": 77990,
+            "changed_deposit": 67990
+        },
+        {
+            "log_type": "DepositChange",
+            "time": "06/27 10:37AM",
+            "user": "摳叮面",
+            "serial": 88,
+            "team": "6",
+            "original_deposit": 67990,
+            "changed_deposit": 47990
+        },
+        {
+            "log_type": "DepositChange",
+            "time": "06/27 10:40AM",
+            "user": "企鵝",
+            "serial": 94,
+            "team": "6",
+            "original_deposit": 47990,
+            "changed_deposit": 45990
+        },
+        {
+            "log_type": "DepositChange",
+            "time": "06/27 10:44AM",
+            "user": "zhangzhiwei6701",
+            "serial": 99,
+            "team": "6",
+            "original_deposit": 45990,
+            "changed_deposit": 55990
+        },
+        {
+            "log_type": "DepositChange",
+            "time": "06/27 10:46AM",
+            "user": "jiayou4015",
+            "serial": 102,
+            "team": "6",
+            "original_deposit": 55990,
+            "changed_deposit": 68490
+        },
+        {
+            "log_type": "DepositChange",
+            "time": "06/27 10:49AM",
+            "user": "hahac.",
+            "serial": 107,
+            "team": "6",
+            "original_deposit": 68490,
+            "changed_deposit": 83490
+        },
+        {
+            "log_type": "StockChange",
+            "time": "06/27 10:51AM",
+            "user": "yanyan_0222",
+            "serial": 111,
+            "team": "6",
+            "trade_type": "賣出",
+            "stock": "互幫金 0507",
+            "quantity": 3
+        },
+        {
+            "log_type": "DepositChange",
+            "time": "06/27 10:53AM",
+            "user": "zailaiyidianhaieel",
+            "serial": 117,
+            "team": "6",
+            "original_deposit": 108270,
+            "changed_deposit": 123270
+        },
+        {
+            "log_type": "DepositChange",
+            "time": "06/27 10:57AM",
+            "user": "摳叮面",
+            "serial": 121,
+            "team": "6",
+            "original_deposit": 123270,
+            "changed_deposit": 113270
+        },
+        {
+            "log_type": "DepositChange",
+            "time": "06/27 11:06AM",
+            "user": "摳叮面",
+            "serial": 130,
+            "team": "6",
+            "original_deposit": 113270,
+            "changed_deposit": 93270
+        }
+    ],
+    "8": [
+        {
+            "log_type": "DepositChange",
+            "time": "06/27 09:37AM",
+            "user": "阿桑",
+            "serial": 1,
+            "team": "8",
+            "original_deposit": 10000,
+            "changed_deposit": 16000
+        },
+        {
+            "log_type": "DepositChange",
+            "time": "06/27 09:39AM",
+            "user": "td3582",
+            "serial": 4,
+            "team": "8",
+            "original_deposit": 16000,
+            "changed_deposit": 31000
+        },
+        {
+            "log_type": "DepositChange",
+            "time": "06/27 09:44AM",
+            "user": "daizirong",
+            "serial": 10,
+            "team": "8",
+            "original_deposit": 31000,
+            "changed_deposit": 48500
+        },
+        {
+            "log_type": "DepositChange",
+            "time": "06/27 09:47AM",
+            "user": "030026645",
+            "serial": 16,
+            "team": "8",
+            "original_deposit": 48500,
+            "changed_deposit": 56500
+        },
+        {
+            "log_type": "DepositChange",
+            "time": "06/27 09:53AM",
+            "user": "摳叮面",
+            "serial": 21,
+            "team": "8",
+            "original_deposit": 56500,
+            "changed_deposit": 26500
+        },
+        {
+            "log_type": "Transfer",
+            "time": "06/27 09:55AM",
+            "user": "摳叮面",
+            "serial": 24,
+            "team": [
+                "8",
+                "5"
+            ],
+            "original_deposit": [
+                26500,
+                32500
+            ],
+            "changed_deposit": [
+                22500,
+                36500
+            ]
+        },
+        {
+            "log_type": "StockChange",
+            "time": "06/27 09:58AM",
+            "user": "摩阿提巴",
+            "serial": 26,
+            "team": "8",
+            "trade_type": "買進",
+            "stock": "躁瘋金 0823",
+            "quantity": 1
+        },
+        {
+            "log_type": "DepositChange",
+            "time": "06/27 10:01AM",
+            "user": "zhangzhiwei6701",
+            "serial": 29,
+            "team": "8",
+            "original_deposit": 10770,
+            "changed_deposit": 25770
+        },
+        {
+            "log_type": "DepositChange",
+            "time": "06/27 10:05AM",
+            "user": "jiayou4015",
+            "serial": 38,
+            "team": "8",
+            "original_deposit": 25770,
+            "changed_deposit": 33770
+        },
+        {
+            "log_type": "DepositChange",
+            "time": "06/27 10:06AM",
+            "user": "justina.17",
+            "serial": 40,
+            "team": "8",
+            "original_deposit": 33770,
+            "changed_deposit": 43770
+        },
+        {
+            "log_type": "DepositChange",
+            "time": "06/27 10:09AM",
+            "user": "摳叮面",
+            "serial": 45,
+            "team": "8",
+            "original_deposit": 43770,
+            "changed_deposit": 28770
+        },
+        {
+            "log_type": "StockChange",
+            "time": "06/27 10:10AM",
+            "user": "摩阿提巴",
+            "serial": 47,
+            "team": "8",
+            "trade_type": "賣出",
+            "stock": "躁瘋金 0823",
+            "quantity": 1
+        },
+        {
+            "log_type": "StockChange",
+            "time": "06/27 10:11AM",
+            "user": "摩阿提巴",
+            "serial": 49,
+            "team": "8",
+            "trade_type": "買進",
+            "stock": "台椅子馬你 0907",
+            "quantity": 1
+        },
+        {
+            "log_type": "DepositChange",
+            "time": "06/27 10:16AM",
+            "user": "摳叮面",
+            "serial": 52,
+            "team": "8",
+            "original_deposit": 45110,
+            "changed_deposit": 35110
+        },
+        {
+            "log_type": "StockChange",
+            "time": "06/27 10:18AM",
+            "user": "摩阿提巴",
+            "serial": 55,
+            "team": "8",
+            "trade_type": "買進",
+            "stock": "台椅子馬你 0907",
+            "quantity": 1
+        },
+        {
+            "log_type": "DepositChange",
+            "time": "06/27 10:22AM",
+            "user": "030026645",
+            "serial": 59,
+            "team": "8",
+            "original_deposit": 20610,
+            "changed_deposit": 28110
+        },
+        {
+            "log_type": "DepositChange",
+            "time": "06/27 10:25AM",
+            "user": "zailaiyidianhaieel",
+            "serial": 64,
+            "team": "8",
+            "original_deposit": 28110,
+            "changed_deposit": 43110
+        },
+        {
+            "log_type": "DepositChange",
+            "time": "06/27 10:26AM",
+            "user": "hahac.",
+            "serial": 67,
+            "team": "8",
+            "original_deposit": 43110,
+            "changed_deposit": 58110
+        },
+        {
+            "log_type": "DepositChange",
+            "time": "06/27 10:28AM",
+            "user": "td3582",
+            "serial": 75,
+            "team": "8",
+            "original_deposit": 58110,
+            "changed_deposit": 75610
+        },
+        {
+            "log_type": "DepositChange",
+            "time": "06/27 10:32AM",
+            "user": "fenhongzhupeipei4989",
+            "serial": 82,
+            "team": "8",
+            "original_deposit": 75610,
+            "changed_deposit": 83110
+        },
+        {
+            "log_type": "DepositChange",
+            "time": "06/27 10:33AM",
+            "user": "摳叮面",
+            "serial": 84,
+            "team": "8",
+            "original_deposit": 83110,
+            "changed_deposit": 78110
+        },
+        {
+            "log_type": "DepositChange",
+            "time": "06/27 10:36AM",
+            "user": "摳叮面",
+            "serial": 86,
+            "team": "8",
+            "original_deposit": 78110,
+            "changed_deposit": 48110
+        },
+        {
+            "log_type": "DepositChange",
+            "time": "06/27 10:38AM",
+            "user": "摳叮面",
+            "serial": 89,
+            "team": "8",
+            "original_deposit": 48110,
+            "changed_deposit": 38110
+        },
+        {
+            "log_type": "StockChange",
+            "time": "06/27 10:40AM",
+            "user": "摩阿提巴",
+            "serial": 93,
+            "team": "8",
+            "trade_type": "買進",
+            "stock": "綠海 0218",
+            "quantity": 5
+        },
+        {
+            "log_type": "DepositChange",
+            "time": "06/27 10:45AM",
+            "user": "阿桑",
+            "serial": 101,
+            "team": "8",
+            "original_deposit": 110,
+            "changed_deposit": 18110
+        },
+        {
+            "log_type": "DepositChange",
+            "time": "06/27 10:49AM",
+            "user": "fenhongzhupeipei4989",
+            "serial": 105,
+            "team": "8",
+            "original_deposit": 18110,
+            "changed_deposit": 25610
+        },
+        {
+            "log_type": "StockChange",
+            "time": "06/27 10:49AM",
+            "user": "摩阿提巴",
+            "serial": 106,
+            "team": "8",
+            "trade_type": "賣出",
+            "stock": "台椅子馬你 0907",
+            "quantity": 2
+        },
+        {
+            "log_type": "DepositChange",
+            "time": "06/27 10:52AM",
+            "user": "jiayou4015",
+            "serial": 112,
+            "team": "8",
+            "original_deposit": 58990,
+            "changed_deposit": 73990
+        },
+        {
+            "log_type": "StockChange",
+            "time": "06/27 10:52AM",
+            "user": "摩阿提巴",
+            "serial": 113,
+            "team": "8",
+            "trade_type": "賣出",
+            "stock": "綠海 0218",
+            "quantity": 5
+        },
+        {
+            "log_type": "DepositChange",
+            "time": "06/27 10:53AM",
+            "user": "摳叮面",
+            "serial": 119,
+            "team": "8",
+            "original_deposit": 273990,
+            "changed_deposit": 236990
+        },
+        {
+            "log_type": "DepositChange",
+            "time": "06/27 10:58AM",
+            "user": "摳叮面",
+            "serial": 122,
+            "team": "8",
+            "original_deposit": 236990,
+            "changed_deposit": 216990
+        },
+        {
+            "log_type": "DepositChange",
+            "time": "06/27 11:04AM",
+            "user": "摳叮面",
+            "serial": 127,
+            "team": "8",
+            "original_deposit": 216990,
+            "changed_deposit": 206990
+        },
+        {
+            "log_type": "DepositChange",
+            "time": "06/27 11:06AM",
+            "user": "摳叮面",
+            "serial": 131,
+            "team": "8",
+            "original_deposit": 206990,
+            "changed_deposit": 186990
+        }
+    ],
+    "7": [
+        {
+            "log_type": "DepositChange",
+            "time": "06/27 09:38AM",
+            "user": "030026645",
+            "serial": 2,
+            "team": "7",
+            "original_deposit": 10000,
+            "changed_deposit": 17500
+        },
+        {
+            "log_type": "DepositChange",
+            "time": "06/27 09:40AM",
+            "user": "jiayou4015",
+            "serial": 5,
+            "team": "7",
+            "original_deposit": 17500,
+            "changed_deposit": 30000
+        },
+        {
+            "log_type": "DepositChange",
+            "time": "06/27 09:44AM",
+            "user": "hahac.",
+            "serial": 9,
+            "team": "7",
+            "original_deposit": 30000,
+            "changed_deposit": 45000
+        },
+        {
+            "log_type": "DepositChange",
+            "time": "06/27 09:45AM",
+            "user": "zhangzhiwei6701",
+            "serial": 12,
+            "team": "7",
+            "original_deposit": 45000,
+            "changed_deposit": 52500
+        },
+        {
+            "log_type": "DepositChange",
+            "time": "06/27 09:47AM",
+            "user": "企鵝",
+            "serial": 15,
+            "team": "7",
+            "original_deposit": 52500,
+            "changed_deposit": 48500
+        },
+        {
+            "log_type": "DepositChange",
+            "time": "06/27 09:48AM",
+            "user": "企鵝",
+            "serial": 17,
+            "team": "7",
+            "original_deposit": 48500,
+            "changed_deposit": 35500
+        },
+        {
+            "log_type": "DepositChange",
+            "time": "06/27 09:53AM",
+            "user": "企鵝",
+            "serial": 22,
+            "team": "7",
+            "original_deposit": 35500,
+            "changed_deposit": 15500
+        },
+        {
+            "log_type": "DepositChange",
+            "time": "06/27 09:55AM",
+            "user": "企鵝",
+            "serial": 25,
+            "team": "7",
+            "original_deposit": 15500,
+            "changed_deposit": 5500
+        },
+        {
+            "log_type": "DepositChange",
+            "time": "06/27 09:59AM",
+            "user": "fenhongzhupeipei4989",
+            "serial": 27,
+            "team": "7",
+            "original_deposit": 5500,
+            "changed_deposit": 18000
+        },
+        {
+            "log_type": "DepositChange",
+            "time": "06/27 10:01AM",
+            "user": "justina.17",
+            "serial": 30,
+            "team": "7",
+            "original_deposit": 18000,
+            "changed_deposit": 26000
+        },
+        {
+            "log_type": "StockChange",
+            "time": "06/27 10:03AM",
+            "user": "fantastic_cheetah_01599",
+            "serial": 34,
+            "team": "7",
+            "trade_type": "買進",
+            "stock": "志明金 0613",
+            "quantity": 1
+        },
+        {
+            "log_type": "DepositChange",
+            "time": "06/27 10:05AM",
+            "user": "td3582",
+            "serial": 37,
+            "team": "7",
+            "original_deposit": 15770,
+            "changed_deposit": 28270
+        },
+        {
+            "log_type": "DepositChange",
+            "time": "06/27 10:07AM",
+            "user": "fenhongzhupeipei4989",
+            "serial": 41,
+            "team": "7",
+            "original_deposit": 28270,
+            "changed_deposit": 40770
+        },
+        {
+            "log_type": "DepositChange",
+            "time": "06/27 10:09AM",
+            "user": "企鵝",
+            "serial": 43,
+            "team": "7",
+            "original_deposit": 40770,
+            "changed_deposit": 30770
+        },
+        {
+            "log_type": "StockChange",
+            "time": "06/27 10:09AM",
+            "user": "fantastic_cheetah_01599",
+            "serial": 44,
+            "team": "7",
+            "trade_type": "買進",
+            "stock": "志明金 0613",
+            "quantity": 1
+        },
+        {
+            "log_type": "Transfer",
+            "time": "06/27 10:14AM",
+            "user": "企鵝",
+            "serial": 50,
+            "team": [
+                "7",
+                "5"
+            ],
+            "original_deposit": [
+                16440,
+                30390
+            ],
+            "changed_deposit": [
+                12440,
+                34390
+            ]
+        },
+        {
+            "log_type": "Transfer",
+            "time": "06/27 10:17AM",
+            "user": "企鵝",
+            "serial": 53,
+            "team": [
+                "7",
+                "5"
+            ],
+            "original_deposit": [
+                12440,
+                34390
+            ],
+            "changed_deposit": [
+                8440,
+                38390
+            ]
+        },
+        {
+            "log_type": "DepositChange",
+            "time": "06/27 10:22AM",
+            "user": "阿桑",
+            "serial": 60,
+            "team": "7",
+            "original_deposit": 8440,
+            "changed_deposit": 20440
+        },
+        {
+            "log_type": "DepositChange",
+            "time": "06/27 10:24AM",
+            "user": "zhangzhiwei6701",
+            "serial": 62,
+            "team": "7",
+            "original_deposit": 20440,
+            "changed_deposit": 30440
+        },
+        {
+            "log_type": "DepositChange",
+            "time": "06/27 10:27AM",
+            "user": "daizirong",
+            "serial": 70,
+            "team": "7",
+            "original_deposit": 30440,
+            "changed_deposit": 35440
+        },
+        {
+            "log_type": "StockChange",
+            "time": "06/27 10:27AM",
+            "user": "fantastic_cheetah_01599",
+            "serial": 71,
+            "team": "7",
+            "trade_type": "賣出",
+            "stock": "志明金 0613",
+            "quantity": 2
+        },
+        {
+            "log_type": "StockChange",
+            "time": "06/27 10:28AM",
+            "user": "fantastic_cheetah_01599",
+            "serial": 73,
+            "team": "7",
+            "trade_type": "買進",
+            "stock": "贖金 0625",
+            "quantity": 2
+        },
+        {
+            "log_type": "DepositChange",
+            "time": "06/27 10:31AM",
+            "user": "zailaiyidianhaieel",
+            "serial": 78,
+            "team": "7",
+            "original_deposit": 29120,
+            "changed_deposit": 36620
+        },
+        {
+            "log_type": "DepositChange",
+            "time": "06/27 10:33AM",
+            "user": "fenhongzhupeipei4989",
+            "serial": 83,
+            "team": "7",
+            "original_deposit": 36620,
+            "changed_deposit": 44120
+        },
+        {
+            "log_type": "DepositChange",
+            "time": "06/27 10:37AM",
+            "user": "企鵝",
+            "serial": 87,
+            "team": "7",
+            "original_deposit": 44120,
+            "changed_deposit": 34120
+        },
+        {
+            "log_type": "DepositChange",
+            "time": "06/27 10:38AM",
+            "user": "企鵝",
+            "serial": 90,
+            "team": "7",
+            "original_deposit": 34120,
+            "changed_deposit": 14120
+        },
+        {
+            "log_type": "StockChange",
+            "time": "06/27 10:40AM",
+            "user": "fantastic_cheetah_01599",
+            "serial": 92,
+            "team": "7",
+            "trade_type": "買進",
+            "stock": "綠海 0218",
+            "quantity": 2
+        },
+        {
+            "log_type": "DepositChange",
+            "time": "06/27 10:42AM",
+            "user": "jiayou4015",
+            "serial": 95,
+            "team": "7",
+            "original_deposit": 720,
+            "changed_deposit": 10720
+        },
+        {
+            "log_type": "StockChange",
+            "time": "06/27 10:42AM",
+            "user": "fantastic_cheetah_01599",
+            "serial": 96,
+            "team": "7",
+            "trade_type": "賣出",
+            "stock": "贖金 0625",
+            "quantity": 2
+        },
+        {
+            "log_type": "DepositChange",
+            "time": "06/27 10:45AM",
+            "user": "justina.17",
+            "serial": 100,
+            "team": "7",
+            "original_deposit": 83760,
+            "changed_deposit": 96260
+        },
+        {
+            "log_type": "DepositChange",
+            "time": "06/27 10:47AM",
+            "user": "td3582",
+            "serial": 103,
+            "team": "7",
+            "original_deposit": 96260,
+            "changed_deposit": 101260
+        },
+        {
+            "log_type": "DepositChange",
+            "time": "06/27 10:50AM",
+            "user": "030026645",
+            "serial": 108,
+            "team": "7",
+            "original_deposit": 101260,
+            "changed_deposit": 116260
+        },
+        {
+            "log_type": "StockChange",
+            "time": "06/27 10:51AM",
+            "user": "fantastic_cheetah_01599",
+            "serial": 110,
+            "team": "7",
+            "trade_type": "賣出",
+            "stock": "綠海 0218",
+            "quantity": 2
+        },
+        {
+            "log_type": "DepositChange",
+            "time": "06/27 10:53AM",
+            "user": "hahac.",
+            "serial": 116,
+            "team": "7",
+            "original_deposit": 192660,
+            "changed_deposit": 212660
+        },
+        {
+            "log_type": "DepositChange",
+            "time": "06/27 10:54AM",
+            "user": "企鵝",
+            "serial": 120,
+            "team": "7",
+            "original_deposit": 212660,
+            "changed_deposit": 196660
+        },
+        {
+            "log_type": "DepositChange",
+            "time": "06/27 10:58AM",
+            "user": "企鵝",
+            "serial": 123,
+            "team": "7",
+            "original_deposit": 196660,
+            "changed_deposit": 166660
+        },
+        {
+            "log_type": "DepositChange",
+            "time": "06/27 11:03AM",
+            "user": "企鵝",
+            "serial": 125,
+            "team": "7",
+            "original_deposit": 166660,
+            "changed_deposit": 156660
+        },
+        {
+            "log_type": "DepositChange",
+            "time": "06/27 11:05AM",
+            "user": "企鵝",
+            "serial": 128,
+            "team": "7",
+            "original_deposit": 156660,
+            "changed_deposit": 136660
+        }
+    ],
+    "3": [
+        {
+            "log_type": "DepositChange",
+            "time": "06/27 09:39AM",
+            "user": "justina.17",
+            "serial": 3,
+            "team": "3",
+            "original_deposit": 10000,
+            "changed_deposit": 22500
+        },
+        {
+            "log_type": "Transfer",
+            "time": "06/27 09:40AM",
+            "user": "企鵝",
+            "serial": 6,
+            "team": [
+                "3",
+                "5"
+            ],
+            "original_deposit": [
+                22500,
+                10000
+            ],
+            "changed_deposit": [
+                10000,
+                22500
+            ]
+        }
+    ],
+    "5": [
+        {
+            "log_type": "DepositChange",
+            "time": "06/27 09:45AM",
+            "user": "zailaiyidianhaieel",
+            "serial": 11,
+            "team": "5",
+            "original_deposit": 22500,
+            "changed_deposit": 32500
+        },
+        {
+            "log_type": "DepositChange",
+            "time": "06/27 09:46AM",
+            "user": "jiayou4015",
+            "serial": 14,
+            "team": "5",
+            "original_deposit": 32500,
+            "changed_deposit": 37500
+        },
+        {
+            "log_type": "DepositChange",
+            "time": "06/27 09:49AM",
+            "user": "fenhongzhupeipei4989",
+            "serial": 19,
+            "team": "5",
+            "original_deposit": 37500,
+            "changed_deposit": 52500
+        },
+        {
+            "log_type": "DepositChange",
+            "time": "06/27 09:52AM",
+            "user": "企鵝",
+            "serial": 20,
+            "team": "5",
+            "original_deposit": 52500,
+            "changed_deposit": 42500
+        },
+        {
+            "log_type": "DepositChange",
+            "time": "06/27 09:54AM",
+            "user": "企鵝",
+            "serial": 23,
+            "team": "5",
+            "original_deposit": 42500,
+            "changed_deposit": 32500
+        },
+        {
+            "log_type": "DepositChange",
+            "time": "06/27 10:03AM",
+            "user": "hahac.",
+            "serial": 32,
+            "team": "5",
+            "original_deposit": 36500,
+            "changed_deposit": 49000
+        },
+        {
+            "log_type": "StockChange",
+            "time": "06/27 10:03AM",
+            "user": "焦糖",
+            "serial": 33,
+            "team": "5",
+            "trade_type": "買進",
+            "stock": "躁瘋金 0823",
+            "quantity": 2
+        },
+        {
+            "log_type": "DepositChange",
+            "time": "06/27 10:06AM",
+            "user": "daizirong",
+            "serial": 39,
+            "team": "5",
+            "original_deposit": 9280,
+            "changed_deposit": 14280
+        },
+        {
+            "log_type": "DepositChange",
+            "time": "06/27 10:08AM",
+            "user": "030026645",
+            "serial": 42,
+            "team": "5",
+            "original_deposit": 14280,
+            "changed_deposit": 21780
+        },
+        {
+            "log_type": "StockChange",
+            "time": "06/27 10:09AM",
+            "user": "焦糖",
+            "serial": 46,
+            "team": "5",
+            "trade_type": "賣出",
+            "stock": "躁瘋金 0823",
+            "quantity": 1
+        },
+        {
+            "log_type": "DepositChange",
+            "time": "06/27 10:10AM",
+            "user": "企鵝",
+            "serial": 48,
+            "team": "5",
+            "original_deposit": 51390,
+            "changed_deposit": 30390
+        },
+        {
+            "log_type": "StockChange",
+            "time": "06/27 10:18AM",
+            "user": "焦糖",
+            "serial": 54,
+            "team": "5",
+            "trade_type": "賣出",
+            "stock": "躁瘋金 0823",
+            "quantity": 1
+        },
+        {
+            "log_type": "DepositChange",
+            "time": "06/27 10:20AM",
+            "user": "zhangzhiwei6701",
+            "serial": 56,
+            "team": "5",
+            "original_deposit": 71690,
+            "changed_deposit": 76690
+        },
+        {
+            "log_type": "StockChange",
+            "time": "06/27 10:20AM",
+            "user": "焦糖",
+            "serial": 58,
+            "team": "5",
+            "trade_type": "買進",
+            "stock": "互幫金 0507",
+            "quantity": 1
+        },
+        {
+            "log_type": "DepositChange",
+            "time": "06/27 10:24AM",
+            "user": "td3582",
+            "serial": 61,
+            "team": "5",
+            "original_deposit": 73500,
+            "changed_deposit": 76000
+        },
+        {
+            "log_type": "DepositChange",
+            "time": "06/27 10:26AM",
+            "user": "jiayou4015",
+            "serial": 66,
+            "team": "5",
+            "original_deposit": 76000,
+            "changed_deposit": 91000
+        },
+        {
+            "log_type": "DepositChange",
+            "time": "06/27 10:27AM",
+            "user": "阿桑",
+            "serial": 68,
+            "team": "5",
+            "original_deposit": 91000,
+            "changed_deposit": 99000
+        },
+        {
+            "log_type": "StockChange",
+            "time": "06/27 10:27AM",
+            "user": "焦糖",
+            "serial": 69,
+            "team": "5",
+            "trade_type": "買進",
+            "stock": "贖金 0625",
+            "quantity": 1
+        },
+        {
+            "log_type": "StockChange",
+            "time": "06/27 10:28AM",
+            "user": "焦糖",
+            "serial": 74,
+            "team": "5",
+            "trade_type": "賣出",
+            "stock": "互幫金 0507",
+            "quantity": 1
+        },
+        {
+            "log_type": "DepositChange",
+            "time": "06/27 10:29AM",
+            "user": "企鵝",
+            "serial": 76,
+            "team": "5",
+            "original_deposit": 80210,
+            "changed_deposit": 59210
+        },
+        {
+            "log_type": "DepositChange",
+            "time": "06/27 10:32AM",
+            "user": "zhangzhiwei6701",
+            "serial": 80,
+            "team": "5",
+            "original_deposit": 59210,
+            "changed_deposit": 69210
+        },
+        {
+            "log_type": "StockChange",
+            "time": "06/27 10:39AM",
+            "user": "焦糖",
+            "serial": 91,
+            "team": "5",
+            "trade_type": "買進",
+            "stock": "綠海 0218",
+            "quantity": 15
+        },
+        {
+            "log_type": "DepositChange",
+            "time": "06/27 10:42AM",
+            "user": "fenhongzhupeipei4989",
+            "serial": 97,
+            "team": "5",
+            "original_deposit": 9210,
+            "changed_deposit": 24210
+        },
+        {
+            "log_type": "DepositChange",
+            "time": "06/27 10:44AM",
+            "user": "030026645",
+            "serial": 98,
+            "team": "5",
+            "original_deposit": 24210,
+            "changed_deposit": 34210
+        },
+        {
+            "log_type": "DepositChange",
+            "time": "06/27 10:47AM",
+            "user": "zailaiyidianhaieel",
+            "serial": 104,
+            "team": "5",
+            "original_deposit": 34210,
+            "changed_deposit": 39210
+        },
+        {
+            "log_type": "DepositChange",
+            "time": "06/27 10:51AM",
+            "user": "daizirong",
+            "serial": 109,
+            "team": "5",
+            "original_deposit": 39210,
+            "changed_deposit": 54210
+        },
+        {
+            "log_type": "StockChange",
+            "time": "06/27 10:52AM",
+            "user": "焦糖",
+            "serial": 114,
+            "team": "5",
+            "trade_type": "賣出",
+            "stock": "贖金 0625",
+            "quantity": 1
+        },
+        {
+            "log_type": "DepositChange",
+            "time": "06/27 10:53AM",
+            "user": "企鵝",
+            "serial": 115,
+            "team": "5",
+            "original_deposit": 99850,
+            "changed_deposit": 83850
+        },
+        {
+            "log_type": "StockChange",
+            "time": "06/27 10:53AM",
+            "user": "焦糖",
+            "serial": 118,
+            "team": "5",
+            "trade_type": "賣出",
+            "stock": "綠海 0218",
+            "quantity": 15
+        },
+        {
+            "log_type": "DepositChange",
+            "time": "06/27 10:59AM",
+            "user": "企鵝",
+            "serial": 124,
+            "team": "5",
+            "original_deposit": 724350,
+            "changed_deposit": 694350
+        },
+        {
+            "log_type": "DepositChange",
+            "time": "06/27 11:03AM",
+            "user": "企鵝",
+            "serial": 126,
+            "team": "5",
+            "original_deposit": 694350,
+            "changed_deposit": 664350
+        },
+        {
+            "log_type": "DepositChange",
+            "time": "06/27 11:05AM",
+            "user": "企鵝",
+            "serial": 129,
+            "team": "5",
+            "original_deposit": 664350,
+            "changed_deposit": 634350
+        }
+    ],
+    "9": [
+        {
+            "log_type": "DepositChange",
+            "time": "06/27 10:30AM",
+            "user": "jiayou4015",
+            "serial": 77,
+            "team": "9",
+            "original_deposit": 10000,
+            "changed_deposit": 310000
+        }
+    ]
 }
