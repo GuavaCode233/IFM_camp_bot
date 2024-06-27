@@ -7,7 +7,7 @@
     "UPDATE_ASSET": true,
     "CONVERT_RAW_STOCK_DATA": false,
     "CONVERT_RAW_NEWS_DATA": false,
-    "FETCH_TL_IDS": false,
+    "FETCH_TL_IDS": true,
     "RELEASE_NEWS": false,
     "STARTER_CASH": 10000,
     "ROUND_TO_QUARTER": {
@@ -24,6 +24,7 @@
         "1146373720282238976": 2,
         "575275408086269953": 3,
         "480666364046999553": 3,
+        "661775651958816778": 4,
         "758727224152031273": 4,
         "1163473695625457725": 5,
         "460732078644789258": 5,
