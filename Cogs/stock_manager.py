@@ -7,7 +7,7 @@ from dataclasses import dataclass
 import asyncio
 import json
 
-from .discord_ui import DiscordUI, get_stock_inventory
+from .discord_ui import DiscordUI, get_stock_inventory, query_revenue_embed
 from .utilities import access_file
 from .utilities.datatypes import (
     Config,
@@ -334,7 +334,7 @@ class StockManager(commands.Cog):
         if(self.price_change_loop.is_running()):
             await interaction.response.send_message(
                 "**回合已開始!**",
-                delete_after=3,
+                delete_after=3.0,
                 ephemeral=True
             )
             return
@@ -343,8 +343,12 @@ class StockManager(commands.Cog):
         if(not self.game_state["is_in_round"]):
             self.game_state["round"] += 1
 
-        if(self.game_state["round"] == 5): # 遊戲結束
-            pass 
+        if(self.game_state["round"] >= 5): # 遊戲結束
+            await interaction.response.send_message(
+                content="**遊戲已結束**",
+                embed=query_revenue_embed(),
+                ephemeral=True
+            )
             return
         
         if(self.game_state["round"] != 1):
@@ -361,7 +365,7 @@ class StockManager(commands.Cog):
 
         await interaction.response.send_message(
             f"回合{self.game_state["round"]}開始!",
-            delete_after=3,
+            delete_after=3.0,
             ephemeral=True
         )
     
@@ -382,7 +386,7 @@ class StockManager(commands.Cog):
         if(not self.price_change_loop.is_running()):
             await interaction.response.send_message(
                 "**回合未開啟!**",
-                delete_after=3,
+                delete_after=3.0,
                 ephemeral=True
             )
             return
@@ -395,7 +399,7 @@ class StockManager(commands.Cog):
 
         await interaction.response.send_message(
             f"回合{self.game_state["round"]}結束!",
-            delete_after=3,
+            delete_after=3.0,
             ephemeral=True
         )
 
