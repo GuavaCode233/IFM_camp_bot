@@ -343,14 +343,14 @@ class StockManager(commands.Cog):
         if(not self.game_state["is_in_round"]):
             self.game_state["round"] += 1
 
+        if(self.game_state["round"] == 5): # 遊戲結束
+            pass 
+            return
+        
         if(self.game_state["round"] != 1):
             self.update_market_and_stock_data()
             discord_ui: DiscordUI = self.bot.get_cog("DiscordUI")
             await discord_ui.update_market_ui()
-
-        if(self.game_state["round"] == 5):
-            pass # 遊戲結束
-            return
         
         self.game_state["is_in_round"] = True
         self.save_game_state()

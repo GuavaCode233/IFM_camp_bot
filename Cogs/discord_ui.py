@@ -80,6 +80,36 @@ def get_stock_inventory_string(
     return "".join(output)
 
 
+def query_revenue_embed(team: int = None) -> ntd.Embed:
+    """回傳所有小隊或指定小隊的總收益表。
+    """
+
+    embed = ntd.Embed(
+        color=PURPLE
+    )
+    if(team is None):
+        embed.title = "所有小隊總收益排名表"
+        asset_dicts: Dict[str, AssetDict] = access_file.read_file("team_assets")
+        revenues: List[Tuple[str, int]] = [(t, asset_dict["revenue"]) for t, asset_dict in asset_dicts.items()]
+        revenues.sort(key=lambda x: x[1], reverse=True)
+        for num, team_revenue in enumerate(revenues, start=1):
+            t, revenue = team_revenue
+            embed.add_field(
+                name="",
+                value=f"# {num} 第{t}小隊: {revenue:,}",
+                inline=False
+            )
+    else:
+        embed.title = f"第{team}小隊總收益"
+        revenue: int = access_file.read_file("team_assets")[f"{team}"]["revenue"]
+        embed.description = f"{revenue:,}"
+    
+    embed.set_footer(
+        text=f"{get_time("%m/%d %I:%M%p")}"
+    )
+    return embed
+
+
 def get_stock_price(stock_index: int | str) -> float:
     """擷取指定股票當下的價格。
     """
@@ -169,7 +199,7 @@ class MarketFunctionView(ui.View):
         if(not is_in_round()): # 收盤期間不開放股票交易
             await interaction.response.send_message(
                 content="**收盤期間不開放股票交易!!!**",
-                delete_after=5,
+                delete_after=5.0,
                 ephemeral=True
             )
             return
@@ -179,7 +209,7 @@ class MarketFunctionView(ui.View):
         except KeyError:
             await interaction.response.send_message(
                 content="**請找隊輔幫忙購買股票**",
-                delete_after=5,
+                delete_after=5.0,
                 ephemeral=True
             )
             return
@@ -187,7 +217,7 @@ class MarketFunctionView(ui.View):
         if(interaction.user.id in MarketFunctionView.trading_user_ids):    # 防止重複呼叫功能
             await interaction.response.send_message(
                 content="**已開啟交易選單!!!**",
-                delete_after=5,
+                delete_after=5.0,
                 ephemeral=True
             )
             return
@@ -222,7 +252,7 @@ class MarketFunctionView(ui.View):
         if(interaction.user.id in MarketFunctionView.querying_user_ids):    # 防止重複呼叫功能
             await interaction.response.send_message(
                 content="**已開啟查詢選單!!!**",
-                delete_after=5,
+                delete_after=5.0,
                 ephemeral=True
             )
             return
@@ -412,14 +442,14 @@ class TradeView(ui.View):
                 content="**已取消交易，\n收盤期間不開放股票交易!!!**",
                 embed=None,
                 view=None,
-                delete_after=5
+                delete_after=5.0
             )
             return
 
         if(not self.input_check()): # 檢查資料都填齊
             await interaction.response.send_message(
                     content="**輸入資料不完整!!!**",
-                    delete_after=5,
+                    delete_after=5.0,
                     ephemeral=True
                 )
             return
@@ -429,7 +459,7 @@ class TradeView(ui.View):
             * self.quantity_field_value * 1000 > self.deposit)):    # 餘額不足
             await interaction.response.send_message(
                 content="**存款餘額不足**",
-                delete_after=5,
+                delete_after=5.0,
                 ephemeral=True
             )
             return
@@ -437,7 +467,7 @@ class TradeView(ui.View):
              self.quantity_field_value > len(self.stock_inv[f"{self.selected_stock_index}"])):
             await interaction.response.send_message(
                 content=f"**{get_stock_name_symbol(self.selected_stock_index)} 持有張數不足**",
-                delete_after=5,
+                delete_after=5.0,
                 ephemeral=True
             )
             return
@@ -447,7 +477,7 @@ class TradeView(ui.View):
         await interaction.response.edit_message(
             content=f"**{self.trade_type}成功!!!**",
             embed=None,
-            delete_after=5,
+            delete_after=5.0,
             view=self
         )
         self.stop()
@@ -493,7 +523,7 @@ class TradeView(ui.View):
         await interaction.response.edit_message(
             content="**已取消交易**",
             embed=None,
-            delete_after=5,
+            delete_after=5.0,
             view=self
         )
         self.stop()
@@ -587,7 +617,7 @@ class TradeQuantityInput(ui.Modal):
         except ValueError:  # 防呆(輸入文字或負數)
             await interaction.response.send_message(
                 content="**張數請輸入正整數!!!**",
-                delete_after=5,
+                delete_after=5.0,
                 ephemeral=True
             )
         self.stop()
@@ -685,7 +715,7 @@ class FinancialStatementView(ui.View):
         await interaction.response.edit_message(
             content="已關閉查詢。",
             view=self,
-            delete_after=5
+            delete_after=5.0
         )
         self.stop()
 
@@ -799,7 +829,7 @@ class AssetFunctionView(ui.View):
         if(interaction.user.id in AssetFunctionView.changing_user_ids):    # 防止重複呼叫功能
             await interaction.response.send_message(
                 content="**已開啟變更小隊存款選單!!!**",
-                delete_after=5,
+                delete_after=5.0,
                 ephemeral=True
             )
             return
@@ -830,7 +860,7 @@ class AssetFunctionView(ui.View):
         if(interaction.user.id in AssetFunctionView.transfering_user_ids):    # 防止重複呼叫功能
             await interaction.response.send_message(
                 content="**已開啟轉帳選單!!!**",
-                delete_after=5,
+                delete_after=5.0,
                 ephemeral=True
             )
             return
@@ -861,7 +891,7 @@ class AssetFunctionView(ui.View):
         if(interaction.user.id in AssetFunctionView.liquidating_user_ids):    # 防止重複呼叫功能
             await interaction.response.send_message(
                 content="**已開啟清算選單!!!**",
-                delete_after=5,
+                delete_after=5.0,
                 ephemeral=True
             )
             return
@@ -1066,7 +1096,7 @@ class DepositChangeView(ui.View):
         if(not self.input_check()): # 檢查資料都填齊
             await interaction.response.send_message(
                     content="**輸入資料不完整!!!**",
-                    delete_after=5,
+                    delete_after=5.0,
                     ephemeral=True
                 )
             return
@@ -1076,7 +1106,7 @@ class DepositChangeView(ui.View):
             self.selected_team_deposit < self.amount):   # 此小隊金額不足扣繳
             await interaction.response.send_message(
                 content=f"**第{self.selected_team}小隊帳戶餘額不足!!!**",
-                delete_after=5,
+                delete_after=5.0,
                 ephemeral=True
             )
             return
@@ -1087,7 +1117,7 @@ class DepositChangeView(ui.View):
             content="**改變成功!!!**",
             embed=None,
             view=self,
-            delete_after=5,
+            delete_after=5.0,
         )
         AssetFunctionView.remove_changing_user(interaction.user.id)
         # 變更第n小隊存款
@@ -1132,7 +1162,7 @@ class DepositChangeView(ui.View):
         await interaction.response.edit_message(
             content="**已取消變更**",
             embed=None,
-            delete_after=5,
+            delete_after=5.0,
             view=self
         )
         self.stop()
@@ -1302,7 +1332,7 @@ class DepositTransferView(ui.View):
         if(not self.input_check()): # 檢查資料都填齊
             await interaction.response.send_message(
                     content="**輸入資料不完整!!!**",
-                    delete_after=5,
+                    delete_after=5.0,
                     ephemeral=True
                 )
             return
@@ -1311,7 +1341,7 @@ class DepositTransferView(ui.View):
         if(self.t_team_deposit < self.amount):
             await interaction.response.send_message(
                 content=f"**第{self.transfer_team}小隊帳戶餘額不足!!!**",
-                delete_after=5,
+                delete_after=5.0,
                 ephemeral=True
             )
             return
@@ -1319,7 +1349,7 @@ class DepositTransferView(ui.View):
         if(self.transfer_team == self.deposit_team):
             await interaction.response.send_message(
                 content="**不可轉帳給同個小隊!!!**",
-                delete_after=5,
+                delete_after=5.0,
                 ephemeral=True
             )
             return
@@ -1330,7 +1360,7 @@ class DepositTransferView(ui.View):
             content="**轉帳成功**",
             embed=None,
             view=self,
-            delete_after=5
+            delete_after=5.0
         )
         AssetFunctionView.remove_transfering_user(interaction.user.id)
         # Transfer
@@ -1374,7 +1404,7 @@ class DepositTransferView(ui.View):
         await interaction.response.edit_message(
             content="**已取消轉帳**",
             embed=None,
-            delete_after=5,
+            delete_after=5.0,
             view=self
         )
         self.stop()
@@ -1523,7 +1553,7 @@ class LiquidationView(ui.View):
         if(not self.input_check()): # 檢查資料都填齊
             await interaction.response.send_message(
                     content="**輸入資料不完整!!!**",
-                    delete_after=5,
+                    delete_after=5.0,
                     ephemeral=True
                 )
             return
@@ -1534,7 +1564,7 @@ class LiquidationView(ui.View):
             content="**清算成功!!!**",
             embed=None,
             view=self,
-            delete_after=5,
+            delete_after=5.0,
         )
         AssetFunctionView.remove_liquidating_user(interaction.user.id)
         # 清算
@@ -1596,7 +1626,7 @@ class LiquidationView(ui.View):
         await interaction.response.edit_message(
             content="**已取消清算**",
             embed=None,
-            delete_after=5,
+            delete_after=5.0,
             view=self
         )
         self.stop()
@@ -1691,7 +1721,7 @@ class AmountInput(ui.Modal):
         except ValueError:  # 防呆(輸入文字或負數)
             await interaction.response.send_message(
                 content="**金額請輸入正整數!!!**",
-                delete_after=5,
+                delete_after=5.0,
                 ephemeral=True
             )
         self.stop()
@@ -2020,7 +2050,8 @@ class DiscordUI(commands.Cog):
     async def test_ui(self, interaction: ntd.Interaction):
         await interaction.response.send_message(
             content="Testing UI.",
-            delete_after=5,
+            embed=query_revenue_embed(),
+            delete_after=5.0,
             ephemeral=True
         )
 
@@ -2036,13 +2067,13 @@ class DiscordUI(commands.Cog):
         if(isinstance(error, application_checks.ApplicationNotOwner)):
             await interaction.response.send_message(
                 content="**你沒有權限使用此指令!!!**",
-                delete_after=5,
+                delete_after=5.0,
                 ephemeral=True
             )
     
     @ntd.slash_command(
             name="clear_user_record",
-            description="如果不小心點到關閉選單而無法重新開啟使用",
+            description="如果無法開啟表單使用",
             guild_ids=[1218130958536937492]
     )
     async def clear_user_record(
@@ -2058,7 +2089,7 @@ class DiscordUI(commands.Cog):
         elif(re.match(r"^<@(\d+)>$", user) is None):
             await interaction.response.send_message(
                 content="請標註 user",
-                delete_after=5,
+                delete_after=5.0,
                 ephemeral=True
             )
             return
@@ -2076,7 +2107,7 @@ class DiscordUI(commands.Cog):
         if(not any(function_id_records)):
             await interaction.response.send_message(
                 content=f"{user} 無佔存紀錄",
-                delete_after=5,
+                delete_after=5.0,
                 ephemeral=True
             )
             return
@@ -2093,10 +2124,58 @@ class DiscordUI(commands.Cog):
 
         await interaction.response.send_message(
             content=f"已清除紀錄，{user} 可正常使用功能",
-            delete_after=5,
+            delete_after=5.0,
             ephemeral=True
         )
-    
+
+    @ntd.slash_command(
+            name="query_revenue",
+            description="查詢全部小隊或指定小隊的收益表",
+            guild_ids=[1218130958536937492]
+    )
+    @application_checks.has_any_role(
+        "最強大腦活動組", "最厲害的關主組", "大神等級幹部組"
+    )
+    async def query_revenue(
+        self,
+        interaction: ntd.Interaction,
+        team: int = None
+    ):
+        """查詢全部小隊或指定小隊的收益表。
+        """
+
+        if(team is None):
+            await interaction.response.send_message(
+                embed=query_revenue_embed(),
+                delete_after=30.0,
+                ephemeral=True
+            )
+        elif(1 <= team <= 9):
+            await interaction.response.send_message(
+                embed=query_revenue_embed(team),
+                delete_after=30.0,
+                ephemeral=True
+            )
+        else:
+            await interaction.response.send_message(
+                content="**請填入正確的小隊**",
+                delete_after=5.0,
+                ephemeral=True
+            )
+
+    @query_revenue.error
+    async def query_revenue_error(
+        self,
+        interaction: ntd.Interaction,
+        error
+    ):
+        if(isinstance(error, application_checks.ApplicationMissingAnyRole)):
+            await interaction.response.send_message(
+                content="**你沒有權限使用此指令!!!**",
+                delete_after=5.0,
+                ephemeral=True
+            )
+
     @staticmethod
     def stock_market_message() -> str:
         """市場動態訊息格式。

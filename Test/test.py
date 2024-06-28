@@ -1,3 +1,5 @@
-lst = [("1", "1"), ("2", "2")]
+lst = {"1": 5, "2": 7}
 
-print(dict(lst))
+nlst = {t: n for t, n in lst.items()}
+
+print(nlst)
