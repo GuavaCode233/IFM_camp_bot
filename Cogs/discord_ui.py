@@ -173,6 +173,16 @@ class MarketFunctionView(ui.View):
                 ephemeral=True
             )
             return
+        
+        try:    # 非隊輔不能使用此功能
+            team = TradeView.TL_ID_TO_TEAM[interaction.user.id]
+        except KeyError:
+            await interaction.response.send_message(
+                content="**請找隊輔幫忙購買股票**",
+                delete_after=5,
+                ephemeral=True
+            )
+            return
 
         if(interaction.user.id in MarketFunctionView.trading_user_ids):    # 防止重複呼叫功能
             await interaction.response.send_message(
@@ -187,7 +197,7 @@ class MarketFunctionView(ui.View):
             bot=self.bot,
             user_name=interaction.user.display_name,
             user_avatar=interaction.user.display_avatar,
-            user_id=interaction.user.id
+            team=team
         )
         await interaction.response.send_message(
             embed=view.status_embed(),
@@ -254,13 +264,13 @@ class TradeView(ui.View):
             bot: commands.Bot,
             user_name: str,
             user_avatar: ntd.Asset,
-            user_id: int
+            team: int
         ):
         super().__init__(timeout=None)
         self.bot = bot
         self.user_name = user_name
         self.user_avatar = user_avatar
-        self.team = TradeView.TL_ID_TO_TEAM[user_id]
+        self.team = team
         self.stock_inv = get_stock_inventory(self.team)   # 該小隊股票庫存
         # embed message
         self.embed_title: str = "股票交易"

@@ -1,6 +1,6 @@
 {
-    "round": 0,
-    "is_in_round": false,
+    "round": 1,
+    "is_in_round": true,
     "released_news_count": {
         "1": 0,
         "2": 0,

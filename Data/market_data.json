@@ -1,69 +1,69 @@
 [
     {
-        "price": 30,
+        "price": 31.875,
         "close": 30,
         "eps_qoq": 0.125,
         "adjust_ratio": 1.0,
         "random_ratio": 1
     },
     {
-        "price": 15,
+        "price": 16.071,
         "close": 15,
         "eps_qoq": 0.0714,
         "adjust_ratio": 1.0,
         "random_ratio": 1
     },
     {
-        "price": 10,
+        "price": 11.5,
         "close": 10,
         "eps_qoq": 0.1,
         "adjust_ratio": 1.0,
         "random_ratio": 1
     },
     {
-        "price": 25,
+        "price": 26.071,
         "close": 25,
         "eps_qoq": 0.0714,
         "adjust_ratio": 1.0,
         "random_ratio": 1
     },
     {
-        "price": 7,
+        "price": 6.2734,
         "close": 7,
         "eps_qoq": -0.1211,
         "adjust_ratio": 0.4,
         "random_ratio": 1
     },
     {
-        "price": 5,
+        "price": 5.882,
         "close": 5,
         "eps_qoq": 0.0588,
         "adjust_ratio": 1.0,
         "random_ratio": 1
     },
     {
-        "price": 8,
+        "price": 7.165025,
         "close": 8,
         "eps_qoq": -0.1237,
         "adjust_ratio": 0.45,
         "random_ratio": 1
     },
     {
-        "price": 6,
+        "price": 6.5175,
         "close": 6,
         "eps_qoq": 0.0345,
         "adjust_ratio": 1.0,
         "random_ratio": 1
     },
     {
-        "price": 9,
+        "price": 9.384,
         "close": 9,
         "eps_qoq": 0.0256,
         "adjust_ratio": 1.0,
         "random_ratio": 1
     },
     {
-        "price": 10,
+        "price": 10.8505,
         "close": 10,
         "eps_qoq": 0.0567,
         "adjust_ratio": 1.0,
