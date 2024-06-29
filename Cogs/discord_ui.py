@@ -2048,9 +2048,30 @@ class DiscordUI(commands.Cog):
     )
     @application_checks.is_owner()
     async def test_ui(self, interaction: ntd.Interaction):
+        channel = self.bot.get_channel(1218141508675440720)
+        await channel.purge(limit=1)
+        embed = ntd.Embed(  # 整體遊戲規則
+            color=PURPLE,
+            title="理財大富翁 遊戲規則",
+            description="""小遊戲最高可獲20,000，最低可獲2,000
+                        獲勝條件一：房子最多的，土地算一個房子
+                        獲勝條件二：總收益最多（賺的錢最多），
+                        總收益=遊戲收益+股票實現收益+其他收益（刮刮樂、輪盤或命運）
+                        房子跟土地的價值一樣，但蓋房子的時候可以便宜一點，如果走到同排可以選擇蓋房子，每塊土地限蓋一棟房子。（但必須捨棄所踩到之土地購買權）
+                        同排購屋規則：
+                        1.同一排沒有土地，只能買自己踩到的土地
+                        2.同一排有自己的土地可以選擇加蓋哪個
+                        3.雖踩到別人的土地（支付過路費），仍可以選擇加蓋同排自己所有的地
+                        破產解決方式（清算順序）：
+                        1.強制出售持有股票
+                        2.出售房屋，歸還房屋一半價值的錢（不計入總收入）
+                        3.出售土地，歸還一半價值的錢（不計入總收入）
+                        4.帳戶歸零
+                        """
+        )
+        await channel.send(embed=embed)
         await interaction.response.send_message(
             content="Testing UI.",
-            embed=query_revenue_embed(),
             delete_after=5.0,
             ephemeral=True
         )

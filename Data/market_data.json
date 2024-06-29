@@ -1,71 +1,71 @@
 [
     {
-        "price": 30.6155,
-        "close": 29.8155,
-        "eps_qoq": 1.0,
-        "adjust_ratio": 0.8,
-        "random_ratio": 1
-    },
-    {
-        "price": 15.54261,
-        "close": 15.1881,
-        "eps_qoq": 0.3939,
-        "adjust_ratio": 0.9,
-        "random_ratio": 1
-    },
-    {
-        "price": 10.76682,
-        "close": 9.86682,
-        "eps_qoq": 6.0,
-        "adjust_ratio": 0.15,
-        "random_ratio": 1
-    },
-    {
-        "price": 25.91577,
-        "close": 25.03369,
-        "eps_qoq": 1.1026,
-        "adjust_ratio": 0.8,
-        "random_ratio": 1
-    },
-    {
-        "price": 7.05559,
-        "close": 6.91015,
-        "eps_qoq": 0.0909,
-        "adjust_ratio": 1.6,
-        "random_ratio": 1
-    },
-    {
-        "price": 5.480985,
-        "close": 5.493485,
-        "eps_qoq": -0.0125,
+        "price": 30,
+        "close": 30,
+        "eps_qoq": 0.125,
         "adjust_ratio": 1.0,
         "random_ratio": 1
     },
     {
-        "price": 8.451785,
-        "close": 8.313685,
-        "eps_qoq": 0.1381,
+        "price": 15,
+        "close": 15,
+        "eps_qoq": 0.0714,
         "adjust_ratio": 1.0,
         "random_ratio": 1
     },
     {
-        "price": 6.850568,
-        "close": 6.546568,
-        "eps_qoq": 1.52,
-        "adjust_ratio": 0.2,
-        "random_ratio": 1
-    },
-    {
-        "price": 9.1077,
-        "close": 9.0508,
-        "eps_qoq": 0.0569,
+        "price": 10,
+        "close": 10,
+        "eps_qoq": 0.1,
         "adjust_ratio": 1.0,
         "random_ratio": 1
     },
     {
-        "price": 10.1426,
-        "close": 10.1249,
-        "eps_qoq": 0.0177,
+        "price": 25,
+        "close": 25,
+        "eps_qoq": 0.0714,
+        "adjust_ratio": 1.0,
+        "random_ratio": 1
+    },
+    {
+        "price": 7,
+        "close": 7,
+        "eps_qoq": -0.1211,
+        "adjust_ratio": 0.4,
+        "random_ratio": 1
+    },
+    {
+        "price": 5,
+        "close": 5,
+        "eps_qoq": 0.0588,
+        "adjust_ratio": 1.0,
+        "random_ratio": 1
+    },
+    {
+        "price": 8,
+        "close": 8,
+        "eps_qoq": -0.1237,
+        "adjust_ratio": 0.45,
+        "random_ratio": 1
+    },
+    {
+        "price": 6,
+        "close": 6,
+        "eps_qoq": 0.0345,
+        "adjust_ratio": 1.0,
+        "random_ratio": 1
+    },
+    {
+        "price": 9,
+        "close": 9,
+        "eps_qoq": 0.0256,
+        "adjust_ratio": 1.0,
+        "random_ratio": 1
+    },
+    {
+        "price": 10,
+        "close": 10,
+        "eps_qoq": 0.0567,
         "adjust_ratio": 1.0,
         "random_ratio": 1
     }
