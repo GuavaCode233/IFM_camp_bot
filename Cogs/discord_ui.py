@@ -2048,15 +2048,25 @@ class DiscordUI(commands.Cog):
     )
     @application_checks.is_owner()
     async def test_ui(self, interaction: ntd.Interaction):
-        channel = self.bot.get_channel(1218141508675440720) # 1218141508675440720
-        await channel.purge(limit=1)
+        channel = self.bot.get_channel(1218141508675440720) # Test: 1218202818872344596
+        # await channel.purge(limit=1)
+        embed = ntd.Embed(
+            color=PURPLE,
+            title="理財大富翁 遊戲規則"
+        )
+        embed.set_image(url="https://cdn.discordapp.com/attachments/1218202818872344596/1257751433894170694/2.png?ex=66858bcd&is=66843a4d&hm=4e977e2da59ea9e27f1024fea60d39fc6b4806d1174dd75c3c2d04ea45919f1c&")
+        await channel.send(
+            embed=embed
+        )
         embed = ntd.Embed(  # 整體遊戲規則
             color=PURPLE,
-            title="理財大富翁 遊戲規則",
-            description="""小遊戲最高可獲20,000\n最低可獲2,000\n獲勝條件一：\n房子最多的，土地算一個房子\n獲勝條件二：\n總收益最多（賺的錢最多）\n總收益=\n遊戲收益\n+股票實現收益\n+其他收益（刮刮樂、輪盤或命運）\n\n房子跟土地的價值一樣，但蓋房子的時候可以便宜一點，如果走到同排可以選擇蓋房子，每塊土地限蓋一棟房子。（但必須捨棄所踩到之土地購買權）\n\n同排購屋規則：\n1.同一排沒有土地，\n只能買自己踩到的土地\n2.同一排有自己的土地\n可以選擇加蓋哪個\n3.雖踩到別人的土地（支付過路費），仍可以選擇加蓋同排自己所有的地\n\n破產解決方式（清算順序）：\n1.強制出售持有股票\n2.出售房屋，歸還房屋一半價值的錢（不計入總收入）\n3.出售土地，歸還一半價值的錢\n（不計入總收入）\n4.帳戶歸零
-                        """
+            title="大地圖"
         )
-        await channel.send(embed=embed)
+        embed.set_image(url="https://cdn.discordapp.com/attachments/1218202818872344596/1257751433407758336/1.png?ex=66858bcd&is=66843a4d&hm=a3facce82e50f17bb13724fcbe45e03c7b0e780c7baf5b823aaa784579e7c20d&")
+        await channel.send(
+            embed=embed
+        )
+
         await interaction.response.send_message(
             content="Testing UI.",
             delete_after=5.0,
